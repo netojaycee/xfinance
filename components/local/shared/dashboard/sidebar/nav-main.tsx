@@ -1,0 +1,53 @@
+"use client";
+
+import { type LucideIcon } from "lucide-react";
+import {
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
+import { MenuItem } from "@/lib/utils/menu-utils";
+
+export function NavMain({
+  items,
+}: {
+  items: MenuItem[];
+}) {
+  const pathname = usePathname();
+
+  return (
+    <SidebarGroup>
+      <SidebarMenu>
+        {items.map((item) => (
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton
+              tooltip={item.title}
+              asChild
+              isActive={
+                (pathname === item.url && item.isActive) ||
+                pathname.includes(item.url)
+              }
+              className={
+                !item.isActive
+                  ? "text-gray-400 pointer-events-none opacity-70"
+                  : ""
+              }
+            >
+              <a
+                href={item.url}
+                aria-disabled={!item.isActive}
+                target={item?.openInNewTab ? "_blank" : undefined}
+                rel={item?.openInNewTab ? "noopener noreferrer" : undefined}
+              >
+                {item.icon && <item.icon />}
+                <span>{item.title}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+}
