@@ -57,6 +57,11 @@ jobs:
           echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> build/.env
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> build/.env
           echo "PORT=${{ secrets.PORT }}" >> build/.env
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
       - name: Rsync frontend to VPS (Blue-Green)
         run: |
           # Detect current live port
@@ -118,3 +123,4 @@ jobs:
 
             # Stop old instance
             pm2 stop $OLD_NAME || true
+EOF
