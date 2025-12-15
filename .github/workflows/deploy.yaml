@@ -75,7 +75,7 @@ jobs:
           ls -la build/.next/ || exit 1
           ls -la build/package.json || exit 1
           ls -la build/next.config.ts || exit 1
-          ls -la build/public/ || echo "public/ missing, OK if empty"
+          ls -la build/public/ || exit 1  # Explicitly verify public/
           find build/ -type f
       - name: Create .env
         run: |
@@ -101,13 +101,7 @@ jobs:
           rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
       - name: Rsync public to VPS
         run: |
-          if [ -d "build/public" ]; then
-            rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/public/
-          else
-            rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/public/
-          fi
-        # run: |
-        #   rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/public/ || exit 1
+          rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/public/ || exit 1
       - name: Rsync .env to VPS
         run: |
           rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
