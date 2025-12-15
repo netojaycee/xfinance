@@ -127,3 +127,4 @@ jobs:
 
             # Stop old instance
             pm2 stop $OLD_NAME || true
+EOF
