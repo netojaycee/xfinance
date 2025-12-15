@@ -86,25 +86,33 @@ jobs:
           echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> build/.env
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> build/.env
           echo "PORT=${{ secrets.PORT }}" >> build/.env
+      # - name: Set up SSH key
+      #   run: |
+      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key
+      #     chmod 600 ssh_key
       - name: Set up SSH key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key
-          chmod 600 ssh_key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null   # validates key
       - name: Rsync .next to VPS
+        # run: |
+        #   rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/.next/ || exit 1
         run: |
-          rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/.next/ || exit 1
+           rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/.next/ || exit 1
       - name: Rsync package.json to VPS
         run: |
-          rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/package.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/package.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
       - name: Rsync next.config.ts to VPS
         run: |
-          rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
       - name: Rsync public to VPS
         run: |
-          rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/public/ || exit 1
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/public/ || exit 1
       - name: Rsync .env to VPS
         run: |
-          rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
       - name: Clean up SSH key
         run: |
           rm -f ssh_key
