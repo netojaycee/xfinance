@@ -7,6 +7,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+      NEXT_PUBLIC_COOKIE_NAME: ${{ secrets.NEXT_PUBLIC_COOKIE_NAME }}
+      NEXT_PUBLIC_GROUP_COOKIE_NAME: ${{ secrets.NEXT_PUBLIC_GROUP_COOKIE_NAME }}
+      NEXT_PUBLIC_ENTITY_COOKIE_NAME: ${{ secrets.NEXT_PUBLIC_ENTITY_COOKIE_NAME }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      NODE_ENV: ${{ secrets.NODE_ENV }}
+      PORT: ${{ secrets.PORT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
