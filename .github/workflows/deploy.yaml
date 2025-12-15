@@ -110,7 +110,7 @@ jobs:
 
             npm install --production
 
-            pm2 start npm --name $NEW_NAME -- start --watch --port $GREEN_PORT || pm2 reload $NEW_NAME
+            pm2 start npm --name $NEW_NAME -- start --watch --port $GREEN_PORT || pm2 restart $NEW_NAME
 
             # Health check
             for i in {1..10}; do
