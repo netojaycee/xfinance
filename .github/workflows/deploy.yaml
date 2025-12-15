@@ -38,6 +38,8 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
+      - run: npm install --save-dev typescript @types/react @types/node
+      - run: npm rebuild
       - name: Build Next.js app
         run: npm run build || exit 1
       - name: Verify build output
