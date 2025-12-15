@@ -91,7 +91,6 @@ jobs:
             sudo mkdir -p \$GREEN_DIR
             sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} \$GREEN_DIR
 
-EOF
 
           # Rsync files
           rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:\$GREEN_DIR/.next/
