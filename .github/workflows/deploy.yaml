@@ -37,17 +37,11 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: frontend-build
           path: build
-      - name: Verify artifact
-        run: |
-          ls -la build/
-          ls -la build/.next/
-          ls -la build/public/
       - name: Create .env
         run: |
           echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" > build/.env
@@ -63,9 +57,9 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-      - name: Rsync frontend to VPS (Blue-Green)
+      - name: Deploy Blue-Green Frontend
         run: |
-          # Detect current live port
+          # Detect live color on VPS
           LIVE_PORT=$(ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "curl -s http://127.0.0.1:3800/api/v1/health > /dev/null && echo 3800 || echo 3801")
 
@@ -85,19 +79,25 @@ jobs:
 
           echo "Deploying $NEW_NAME on port $GREEN_PORT"
 
-          # Create green folder on VPS
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "sudo mkdir -p $GREEN_DIR && sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} $GREEN_DIR"
+          # Ensure green folder exists and is owned by deploy user
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            sudo mkdir -p $GREEN_DIR
+            sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} $GREEN_DIR
+          "
 
-          # Rsync files from runner to VPS green folder
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/.next/
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/public/
+          # Rsync files to VPS
           rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/package.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
           rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
           rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/.next/
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/public/
 
-      - name: Start Green instance & switch Nginx (nvm aware)
-        run: |
+          # Debug: confirm package.json exists
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            ls -la $GREEN_DIR
+          "
+
+          # Start new instance and switch Nginx
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
 
@@ -108,10 +108,8 @@ jobs:
 
             cd $GREEN_DIR
 
-            # Install dependencies using npm from nvm
             npm install --production
 
-            # Start new PM2 instance
             pm2 start npm --name $NEW_NAME -- start --watch --port $GREEN_PORT || pm2 reload $NEW_NAME
 
             # Health check
@@ -125,6 +123,4 @@ jobs:
             sudo nginx -t
             sudo systemctl reload nginx
 
-            # Stop old instance
             pm2 stop $OLD_NAME || true
-EOF
