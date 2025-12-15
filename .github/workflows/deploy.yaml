@@ -1,53 +1,21 @@
-name: Deploy Frontend (Next.js)
+name: Deploy Frontend (Next.js) Blue-Green
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
-      # - run: npm run lint
-      # - run: npm run test:unit
-
   build:
-    needs: test
     runs-on: ubuntu-latest
-    env:
-      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
-      NEXT_PUBLIC_COOKIE_NAME: ${{ secrets.NEXT_PUBLIC_COOKIE_NAME }}
-      NEXT_PUBLIC_GROUP_COOKIE_NAME: ${{ secrets.NEXT_PUBLIC_GROUP_COOKIE_NAME }}
-      NEXT_PUBLIC_ENTITY_COOKIE_NAME: ${{ secrets.NEXT_PUBLIC_ENTITY_COOKIE_NAME }}
-      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-      NODE_ENV: ${{ secrets.NODE_ENV }}
-      PORT: ${{ secrets.PORT }}
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-
       - run: npm ci
-
-      - name: Build Next.js app
-        run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: |
@@ -62,15 +30,12 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
     steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: frontend-build
           path: build
-
-      - name: Create .env file
+      - name: Create .env
         run: |
           echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" > build/.env
           echo "NEXT_PUBLIC_COOKIE_NAME=${{ secrets.NEXT_PUBLIC_COOKIE_NAME }}" >> build/.env
@@ -79,14 +44,7 @@ jobs:
           echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> build/.env
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> build/.env
           echo "PORT=${{ secrets.PORT }}" >> build/.env
-
-      - name: Verify artifact paths
-        run: |
-          ls -la build
-          ls -la build/.next
-          ls -la build/public
-
-      - name: Deploy to VPS
+      - name: Deploy Frontend via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -96,23 +54,47 @@ jobs:
             set -e
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
 
-            # Create target folder and set permissions
-            sudo mkdir -p /var/www/html/frontend
-            sudo chown -R $USER:$USER /var/www/html/frontend
+            # Detect current live color
+            LIVE_PORT=$(curl -s http://127.0.0.1:3800/api/v1/health > /dev/null 2>&1 && echo 3800 || echo 3801)
+            if [ "$LIVE_PORT" = "3800" ]; then
+              GREEN_DIR=/var/www/html/frontend-green
+              GREEN_PORT=3801
+              OLD_PORT=3800
+              OLD_NAME=frontend-blue
+              NEW_NAME=frontend-green
+            else
+              GREEN_DIR=/var/www/html/frontend-blue
+              GREEN_PORT=3800
+              OLD_PORT=3801
+              OLD_NAME=frontend-green
+              NEW_NAME=frontend-blue
+            fi
 
-            # Rsync build artifact
-            rsync -avz --delete $PWD/build/.next/ /var/www/html/frontend/.next/
-            rsync -avz --delete $PWD/build/public/ /var/www/html/frontend/public/
-            rsync -avz $PWD/build/package.json /var/www/html/frontend/
-            rsync -avz $PWD/build/next.config.ts /var/www/html/frontend/
-            rsync -avz $PWD/build/.env /var/www/html/frontend/
+            echo "Deploying $NEW_NAME on port $GREEN_PORT"
 
-            # Install dependencies and reload PM2
-            cd /var/www/html/frontend
+            sudo mkdir -p $GREEN_DIR
+            sudo chown -R $USER:$USER $GREEN_DIR
+
+            rsync -avz --delete ~/build/.next/ $GREEN_DIR/.next/
+            rsync -avz --delete ~/build/public/ $GREEN_DIR/public/
+            rsync -avz ~/build/package.json $GREEN_DIR/
+            rsync -avz ~/build/next.config.ts $GREEN_DIR/
+            rsync -avz ~/build/.env $GREEN_DIR/
+
+            cd $GREEN_DIR
             npm install --production
-            pm2 reload frontend || pm2 start npm --name frontend -- start
 
-            # Fix permissions and reload Nginx
-            sudo chown -R www-data:www-data /var/www/html/frontend
-            sudo chmod -R 755 /var/www/html/frontend
+            pm2 start npm --name $NEW_NAME -- start --watch --port $GREEN_PORT || pm2 reload $NEW_NAME
+
+            # Health check
+            for i in {1..10}; do
+              curl -s http://127.0.0.1:$GREEN_PORT/api/v1/health | grep '"status":"ok"' && break
+              sleep 2
+            done
+
+            # Switch Nginx upstream
+            sudo sed -i "s/server 127.0.0.1:$OLD_PORT;/server 127.0.0.1:$GREEN_PORT;/" /etc/nginx/sites-available/frontend
+            sudo nginx -t
             sudo systemctl reload nginx
+
+            pm2 stop $OLD_NAME
