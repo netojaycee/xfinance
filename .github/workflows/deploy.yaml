@@ -64,64 +64,62 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
       - name: Rsync frontend to VPS (Blue-Green)
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} <<EOF
-            set -e
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
-            [ -s "\$HOME/.nvm/nvm.sh" ] && \. "\$HOME/.nvm/nvm.sh"
+          # Detect current live port
+          LIVE_PORT=$(ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "curl -s http://127.0.0.1:3800/api/v1/health > /dev/null && echo 3800 || echo 3801")
 
-            # Detect live port
-            LIVE_PORT=\$(curl -s http://127.0.0.1:3800/api/v1/health > /dev/null && echo 3800 || echo 3801)
+          if [ "$LIVE_PORT" = "3800" ]; then
+            GREEN_DIR=/var/www/html/frontend-green
+            GREEN_PORT=3801
+            OLD_PORT=3800
+            OLD_NAME=frontend-blue
+            NEW_NAME=frontend-green
+          else
+            GREEN_DIR=/var/www/html/frontend-blue
+            GREEN_PORT=3800
+            OLD_PORT=3801
+            OLD_NAME=frontend-green
+            NEW_NAME=frontend-blue
+          fi
 
-            if [ "\$LIVE_PORT" = "3800" ]; then
-              GREEN_DIR=/var/www/html/frontend-green
-              GREEN_PORT=3801
-              OLD_PORT=3800
-              OLD_NAME=frontend-blue
-              NEW_NAME=frontend-green
-            else
-              GREEN_DIR=/var/www/html/frontend-blue
-              GREEN_PORT=3800
-              OLD_PORT=3801
-              OLD_NAME=frontend-green
-              NEW_NAME=frontend-blue
-            fi
+          echo "Deploying $NEW_NAME on port $GREEN_PORT"
 
-            echo "Deploying \$NEW_NAME on port \$GREEN_PORT"
+          # Create green folder on VPS
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "sudo mkdir -p $GREEN_DIR && sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} $GREEN_DIR"
 
-            sudo mkdir -p \$GREEN_DIR
-            sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} \$GREEN_DIR
-
-
-          # Rsync files
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:\$GREEN_DIR/.next/
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:\$GREEN_DIR/public/
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/package.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:\$GREEN_DIR/
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:\$GREEN_DIR/
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:\$GREEN_DIR/
+          # Rsync files from runner to VPS green folder
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/.next/
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/public/
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/package.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
 
       - name: Start Green instance & switch Nginx
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} <<EOF
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             set -e
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
-            [ -s "\$HOME/.nvm/nvm.sh" ] && \. "\$HOME/.nvm/nvm.sh"
 
-            cd \$GREEN_DIR
+            # Navigate to green folder
+            cd $GREEN_DIR
+
+            # Install dependencies
             npm install --production
 
-            # Start new Green process using NVM and Next.js
-            pm2 start "bash -c 'source ~/.nvm/nvm.sh && cd \$GREEN_DIR && PORT=\$GREEN_PORT npx next start'" --name \$NEW_NAME || pm2 restart \$NEW_NAME
-            pm2 save
+            # Start new PM2 instance
+            pm2 start npm --name $NEW_NAME -- start --watch --port $GREEN_PORT || pm2 reload $NEW_NAME
 
             # Wait for health check
             for i in {1..10}; do
-              curl -s http://127.0.0.1:\$GREEN_PORT/api/v1/health | grep '"status":"ok"' && break
+              curl -s http://127.0.0.1:$GREEN_PORT/api/v1/health | grep '"status":"ok"' && break
               sleep 2
             done
 
             # Switch Nginx upstream
-            sudo sed -i "s/server 127.0.0.1:\$OLD_PORT;/server 127.0.0.1:\$GREEN_PORT;/" /etc/nginx/sites-available/frontend
+            sudo sed -i "s/server 127.0.0.1:$OLD_PORT;/server 127.0.0.1:$GREEN_PORT;/" /etc/nginx/sites-available/frontend
             sudo nginx -t
             sudo systemctl reload nginx
 
-            pm2 stop \$OLD_NAME || true
+            # Stop old instance
+            pm2 stop $OLD_NAME || true
