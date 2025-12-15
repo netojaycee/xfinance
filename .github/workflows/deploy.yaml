@@ -43,6 +43,11 @@ jobs:
         with:
           name: frontend-build
           path: build
+      - name: Verify artifact
+        run: |
+          ls -la build/
+          ls -la build/.next/
+          ls -la build/public/
       - name: Create .env
         run: |
           echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" > build/.env
@@ -83,11 +88,12 @@ jobs:
             sudo mkdir -p $GREEN_DIR
             sudo chown -R $USER:$USER $GREEN_DIR
 
-            rsync -avz --delete ~/build/.next/ $GREEN_DIR/.next/
-            rsync -avz --delete ~/build/public/ $GREEN_DIR/public/
-            rsync -avz ~/build/package.json $GREEN_DIR/
-            rsync -avz ~/build/next.config.ts $GREEN_DIR/
-            rsync -avz ~/build/.env $GREEN_DIR/
+            # ✅ Use correct artifact paths
+            rsync -avz --delete build/.next/ $GREEN_DIR/.next/
+            rsync -avz --delete build/public/ $GREEN_DIR/public/
+            rsync -avz build/package.json $GREEN_DIR/
+            rsync -avz build/next.config.ts $GREEN_DIR/
+            rsync -avz build/.env $GREEN_DIR/
 
             cd $GREEN_DIR
             npm install --production
