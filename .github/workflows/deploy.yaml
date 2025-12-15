@@ -80,7 +80,13 @@ jobs:
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> build/.env
           echo "PORT=${{ secrets.PORT }}" >> build/.env
 
-      - name: Deploy to VPS (rsync + PM2)
+      - name: Verify artifact paths
+        run: |
+          ls -la build
+          ls -la build/.next
+          ls -la build/public
+
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -88,25 +94,25 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
-            [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
 
+            # Create target folder and set permissions
             sudo mkdir -p /var/www/html/frontend
             sudo chown -R $USER:$USER /var/www/html/frontend
 
-            rsync -avz --delete ~/build/.next/ /var/www/html/frontend/.next/
-            rsync -avz --delete ~/build/public/ /var/www/html/frontend/public/
-            rsync -avz ~/build/package.json /var/www/html/frontend/
-            rsync -avz ~/build/next.config.ts /var/www/html/frontend/
-            rsync -avz ~/build/.env /var/www/html/frontend/
+            # Rsync build artifact
+            rsync -avz --delete $PWD/build/.next/ /var/www/html/frontend/.next/
+            rsync -avz --delete $PWD/build/public/ /var/www/html/frontend/public/
+            rsync -avz $PWD/build/package.json /var/www/html/frontend/
+            rsync -avz $PWD/build/next.config.ts /var/www/html/frontend/
+            rsync -avz $PWD/build/.env /var/www/html/frontend/
 
+            # Install dependencies and reload PM2
             cd /var/www/html/frontend
             npm install --production
-
             pm2 reload frontend || pm2 start npm --name frontend -- start
 
+            # Fix permissions and reload Nginx
             sudo chown -R www-data:www-data /var/www/html/frontend
             sudo chmod -R 755 /var/www/html/frontend
-
             sudo systemctl reload nginx
