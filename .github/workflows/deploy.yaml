@@ -1,0 +1,118 @@
+name: Deploy Frontend (Next.js)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      # - run: npm run lint
+      # - run: npm run test:unit
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Build Next.js app
+        run: npm run build || exit 1
+      - name: Verify build output
+        run: |
+          ls -la .next || exit 1
+          ls -la package.json || exit 1
+          ls -la next.config.ts || exit 1
+          ls -la public || exit 1
+          find .next -type f
+          find public -type f || echo "No files in public/, this is okay if empty"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: |
+            .next/
+            package.json
+            next.config.ts
+            public/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: build/
+      - name: Verify artifact download
+        run: |
+          ls -la build/ || exit 1
+          ls -la build/.next/ || exit 1
+          ls -la build/package.json || exit 1
+          ls -la build/next.config.ts || exit 1
+          ls -la build/public/ || exit 1  # Explicitly verify public/
+          find build/ -type f
+      - name: Create .env
+        run: |
+          echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" >> build/.env
+          echo "NEXT_PUBLIC_COOKIE_NAME=${{ secrets.NEXT_PUBLIC_COOKIE_NAME }}" >> build/.env
+          echo "NEXT_PUBLIC_GROUP_COOKIE_NAME=${{ secrets.NEXT_PUBLIC_GROUP_COOKIE_NAME }}" >> build/.env
+          echo "NEXT_PUBLIC_ENTITY_COOKIE_NAME=${{ secrets.NEXT_PUBLIC_ENTITY_COOKIE_NAME }}" >> build/.env
+          echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> build/.env
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> build/.env
+          echo "PORT=${{ secrets.PORT }}" >> build/.env
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key
+          chmod 600 ssh_key
+      - name: Rsync .next to VPS
+        run: |
+          rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/.next/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/.next/ || exit 1
+      - name: Rsync package.json to VPS
+        run: |
+          rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/package.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
+      - name: Rsync next.config.ts to VPS
+        run: |
+          rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
+      - name: Rsync public to VPS
+        run: |
+          rsync -avz --delete -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/public/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/public/ || exit 1
+      - name: Rsync .env to VPS
+        run: |
+          rsync -avz -e "ssh -i ssh_key -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/html/frontend/ || exit 1
+      - name: Clean up SSH key
+        run: |
+          rm -f ssh_key
+      - name: Finalize deployment on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
+            [ -s "$HOME/.nvm/nvm.sh" ] && \. "$HOME/.nvm/nvm.sh"
+            mkdir -p /var/www/html/frontend/.next
+            mkdir -p /var/www/html/frontend/public
+            cd /var/www/html/frontend
+            npm install --production || exit 1
+            pm2 reload frontend || exit 1
+            sudo chown -R www-data:www-data /var/www/html/frontend
+            sudo chmod -R 755 /var/www/html/frontend
+            sudo systemctl reload nginx || exit 1
