@@ -13,7 +13,7 @@ const ErrorPage = ({ error, reset }: { error: Error & { digest?: string }; reset
       <div className="max-w-125 flex flex-col gap-2 items-center justify-center text-center ">
         <h1 className="text-2xl font-semibold">{errorMessage}</h1>
         <p className="text-gray-600">
-          Apologies for the inconvenience, but an error has occurred. Please retry your request.
+          Apologies for the inconvenience, an error has occurred. Please retry your request.
         </p>
       </div>
       <div className="flex items-center justify-center gap-4">
