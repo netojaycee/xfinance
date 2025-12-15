@@ -95,22 +95,26 @@ jobs:
           rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/next.config.ts ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
           rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" build/.env ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$GREEN_DIR/
 
-      - name: Start Green instance & switch Nginx
+      - name: Start Green instance & switch Nginx (nvm aware)
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             set -e
+
+            # Load nvm (adjust path if needed)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
 
-            # Navigate to green folder
             cd $GREEN_DIR
 
-            # Install dependencies
+            # Install dependencies using npm from nvm
             npm install --production
 
             # Start new PM2 instance
             pm2 start npm --name $NEW_NAME -- start --watch --port $GREEN_PORT || pm2 reload $NEW_NAME
 
-            # Wait for health check
+            # Health check
             for i in {1..10}; do
               curl -s http://127.0.0.1:$GREEN_PORT/api/v1/health | grep '"status":"ok"' && break
               sleep 2
