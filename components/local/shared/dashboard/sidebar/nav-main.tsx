@@ -9,12 +9,9 @@ import {
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import { MenuItem } from "@/lib/utils/menu-utils";
+import Link from "next/link";
 
-export function NavMain({
-  items,
-}: {
-  items: MenuItem[];
-}) {
+export function NavMain({ items }: { items: MenuItem[] }) {
   const pathname = usePathname();
 
   return (
@@ -35,7 +32,8 @@ export function NavMain({
                   : ""
               }
             >
-              <a
+              <Link
+                prefetch
                 href={item.url}
                 aria-disabled={!item.isActive}
                 target={item?.openInNewTab ? "_blank" : undefined}
@@ -43,7 +41,7 @@ export function NavMain({
               >
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

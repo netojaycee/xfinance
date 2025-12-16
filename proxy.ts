@@ -32,7 +32,7 @@ const isProtected = protectedPaths.some((path) => pathname === path);
     // 1. If no user is found, redirect to the login page with a redirect query
     if (!user) {
       const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      // loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
 

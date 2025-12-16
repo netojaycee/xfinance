@@ -43,7 +43,7 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
   const { mutate: stopEntityImpersonation } = useStopEntityImpersonation({
     onSuccess: () => {
       toast.info("Switched back to group view.");
-      window.location.reload(); // Reload to reflect changes
+      window.location.href = '/dashboard'; 
     },
     onError: (error) => {
       toast.error(error.message || "Failed to switch view.");
@@ -71,7 +71,7 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
           </div>
         </SidebarMenuButton>
       </div>
-      <Separator className="my-2" />
+      {/* <Separator className="" /> */}
       <SidebarHeader>
         {user && user.systemRole === ENUM_ROLE.SUPERADMIN && <GroupSwitcher />}
         {user &&
@@ -89,9 +89,9 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
       <SidebarContent className="scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-primary">
         <NavMain items={menuData} />
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <NavUser user={user} />
-      </SidebarFooter>
+      </SidebarFooter> */}
       <SidebarRail />
     </Sidebar>
   );
