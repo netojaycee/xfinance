@@ -51,23 +51,23 @@ export function GroupSwitcher() {
   const { mutate: impersonate, isPending: isImpersonating } =
     useImpersonateGroup({
       onSuccess: () => {
-        toast.success("Switched group successfully!");
+        // toast.success("Switched group successfully!");
         window.location.href = "/dashboard";
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to switch group.");
+        // toast.error(error.message || "Failed to switch group.");
       },
     });
 
   const { mutate: stopEntityImpersonating, isPending: isStoppingEntityImpersonation } =
     useStopEntityImpersonation({
       onSuccess: () => {
-        toast.success("Switched to SuperAdmin view.");
+        // toast.success("Switched to SuperAdmin view.");
         window.location.href = "/dashboard";
       },
       onError: (error) => {
         // This error will be for the entity part, but we can show a generic message
-        toast.error(error.message || "Failed to fully switch view.");
+        // toast.error(error.message || "Failed to fully switch view.");
       },
     });
 
@@ -78,7 +78,7 @@ export function GroupSwitcher() {
         stopEntityImpersonating();
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to switch view.");
+        // toast.error(error.message || "Failed to switch view.");
       },
     });
 
@@ -104,7 +104,7 @@ export function GroupSwitcher() {
 
   // Switch to a group (view_as: ADMIN)
   const switchToGroup = (group: Group) => {
-    console.log("Switching to group:", group);
+    // console.log("Switching to group:", group);
     impersonate({ groupId: group.id, groupName: group.name });
     setOpen(false);
   };

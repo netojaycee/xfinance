@@ -3,6 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import StatCardSmall from "./StatCardSmall";
+import { Plus } from "lucide-react";
 
 export default function CustomersHeader() {
   return (
@@ -13,10 +14,10 @@ export default function CustomersHeader() {
           <p className="text-muted-foreground">Manage customer information and relationships</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-full">
+          <Button variant="outline" className="rounded-xl">
             Export
           </Button>
-          <Button className="rounded-full">+ New Customer</Button>
+          <Button className="rounded-xl"><Plus /> New Customer</Button>
         </div>
       </div>
 

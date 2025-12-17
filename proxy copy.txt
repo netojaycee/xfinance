@@ -24,11 +24,7 @@ export async function proxy(request: NextRequest) {
 
   // Check if the requested path is one of the protected routes
 //   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
-const isProtected = protectedPaths.some((path) => {
-  // Only /dashboard should be exact, others should match subpaths
-  if (path === '/dashboard') return pathname === path;
-  return pathname === path || pathname.startsWith(path + '/');
-});
+const isProtected = protectedPaths.some((path) => pathname === path);
   if (isProtected) {
     // Get user session data from the cookies
     const { user } = await getAppSession();
@@ -45,21 +41,6 @@ const isProtected = protectedPaths.some((path) => {
       user.systemRole === ENUM_ROLE.SUPERADMIN ||
       user.systemRole === ENUM_ROLE.ADMIN
     ) {
-      // If on a module root (e.g., /sales), redirect to first submodule
-      const pathSegment = pathname.split('/')[1];
-      const required = routePermissions.get(pathSegment);
-      if (pathname === `/${pathSegment}` && Array.isArray(required) && required.length > 0) {
-        // Map permission to submodule route (e.g., 'sales:customers:view' => 'customers')
-        let submodule = '';
-        if (required[0].includes(':')) {
-          const parts = required[0].split(':');
-          submodule = parts[1];
-        }
-        if (submodule) {
-          const redirectUrl = new URL(`/${pathSegment}/${submodule}`, request.url);
-          return NextResponse.redirect(redirectUrl);
-        }
-      }
       return NextResponse.next();
     }
 
@@ -67,48 +48,25 @@ const isProtected = protectedPaths.some((path) => {
     if (user.systemRole === ENUM_ROLE.USER) {
       const pathSegment = pathname.split('/')[1]; // e.g., 'sales'
       const required = routePermissions.get(pathSegment);
-      const userPermissions = user.permissions || [];
 
       // If the route is in our permission map, we need to validate access
       if (required) {
+        const userPermissions = user.permissions || [];
         let hasPermission = false;
-        let firstPermittedSubmodule = null;
 
-        // If required is a string, treat as single permission
+        // Check for a single required permission (e.g., for 'dashboard')
         if (typeof required === 'string') {
           hasPermission = userPermissions.includes(required);
-        } else if (Array.isArray(required)) {
-          // Find the first permission the user has
-          for (const perm of required) {
-            if (userPermissions.includes(perm)) {
-              hasPermission = true;
-              firstPermittedSubmodule = perm;
-              break;
-            }
-          }
+        }
+        // Check if user has at least one of the required permissions for the section
+        else if (Array.isArray(required)) {
+          hasPermission = required.some((p) => userPermissions.includes(p));
         }
 
         // If the user has NO permissions for this entire section, redirect them.
         if (!hasPermission) {
           const dashboardUrl = new URL('/dashboard', request.url);
           return NextResponse.redirect(dashboardUrl);
-        }
-
-        // If user is on the module root (e.g., /sales), redirect to first permitted submodule
-        if (pathname === `/${pathSegment}` && Array.isArray(required) && firstPermittedSubmodule) {
-          // Map permission to submodule route
-          // Example: 'sales:customers:view' => 'customers', etc.
-          // You may want a more robust mapping if submodule names differ
-          let submodule = '';
-          if (firstPermittedSubmodule.includes(':')) {
-            // e.g., 'sales:customers:view' => 'customers'
-            const parts = firstPermittedSubmodule.split(':');
-            submodule = parts[1];
-          }
-          if (submodule) {
-            const redirectUrl = new URL(`/${pathSegment}/${submodule}`, request.url);
-            return NextResponse.redirect(redirectUrl);
-          }
         }
       }
     }

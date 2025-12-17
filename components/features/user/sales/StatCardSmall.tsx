@@ -13,11 +13,11 @@ export default function StatCardSmall({
   subtitle?: string;
 }) {
   return (
-    <Card className="rounded-2xl shadow-sm">
-      <CardHeader>
+    <Card className="rounded-2xl shadow-sm gap-0">
+      <CardHeader className="">
         <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="">
         <div className="text-2xl font-bold text-indigo-900">{value}</div>
         {subtitle && <div className="text-sm text-muted-foreground">{subtitle}</div>}
       </CardContent>

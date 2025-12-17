@@ -40,7 +40,7 @@ export default function Header({
 }) {
   return (
     <header
-    className="h-16 flex items-center justify-between bg-white border-b gap-2 shadow sticky px-2 top-0 z-10"
+    className="h-16 flex items-center justify-between bg-white border-b gap-2 shadow-none sticky px-2 top-0 z-10"
     >
       {/* Left Section */}
       <div className="flex items-center gap-2">

@@ -36,13 +36,13 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
     [user, role]
   );
 
-  console.log(menuData)
+  // console.log(menuData)
 
   const { data: entities, isLoading: isLoadingEntities } = useEntities();
 
   const { mutate: stopEntityImpersonation } = useStopEntityImpersonation({
     onSuccess: () => {
-      toast.info("Switched back to group view.");
+      // toast.info("Switched back to group view.");
       window.location.href = '/dashboard'; 
     },
     onError: (error) => {
@@ -55,7 +55,7 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
       stopEntityImpersonation();
     }
     setSelectedTab(tab);
-    console.log("Selected tab in parent:", tab);
+    // console.log("Selected tab in parent:", tab);
   };
 
   return (
