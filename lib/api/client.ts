@@ -20,11 +20,11 @@ interface ApiErrorResponse {
 }
 
 // Get the backend URL from environment variables
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-if (!API_BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL is not defined in your environment variables');
-}
+// if (!API_BASE_URL) {
+//   throw new Error('NEXT_PUBLIC_API_URL is not defined in your environment variables');
+// }
 
 /**
  * A generic API client for making requests to the backend.
@@ -41,7 +41,8 @@ export const apiClient = async <T>(
 ): Promise<T> => {
   // Clean the endpoint to prevent double slashes
   const cleanedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-  const url = `${API_BASE_URL}/api/v1/${cleanedEndpoint}`;
+  // const url = `${API_BASE_URL}/api/v1/${cleanedEndpoint}`;
+  const url = `/api/${cleanedEndpoint}`; // Use the rewrites defined in next.config.ts
 
   const defaultOptions: RequestInit = {
     headers: {
