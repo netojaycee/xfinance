@@ -1,7 +1,6 @@
-import React from 'react'
+import SalesReceipts from "@/components/features/user/sales/sales-receipt/SalesReceipts";
+import React from "react";
 
-export default function SalesReceipt() {
-  return (
-    <div>SalesReceipt</div>
-  )
+export default function SalesReceiptPage() {
+  return <SalesReceipts />;
 }

@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Column } from "@/components/local/custom/custom-table";
 
-export const paymentReceived = [
+export const salesReceipts = [
   {
     id: "RCP-2025-001",
     customer: "Walk-in Customer",
@@ -84,7 +84,7 @@ const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
 };
 
-export const PaymentReceivedColumns: Column<(typeof paymentReceived)[0]>[] = [
+export const SalesReceiptColumns: Column<(typeof salesReceipts)[0]>[] = [
   { key: "id", title: "Receipt No.", className: "text-xs" },
   { key: "customer", title: "Customer", className: "text-xs" },
   { key: "date", title: "Date", className: "text-xs" },
@@ -94,9 +94,7 @@ export const PaymentReceivedColumns: Column<(typeof paymentReceived)[0]>[] = [
     title: "Amount",
     className: "text-xs",
     render: (value) => (
-      <span className="text-xs">
-        ₦{(value / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k
-      </span>
+      <span className="text-xs">₦{(value / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k</span>
     ),
   },
   {

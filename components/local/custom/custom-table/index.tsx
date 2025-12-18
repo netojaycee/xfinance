@@ -31,8 +31,10 @@ interface CustomTableProps<T> {
     searchComponent?: boolean;
     filterComponent?: boolean;
     statusComponent?: boolean;
+    methodsComponent?: boolean;
   };
   statusOptions?: string[];
+  methodsOptions?: string[];
 }
 
 export function CustomTable<T extends { [key: string]: any }>({
@@ -46,8 +48,10 @@ export function CustomTable<T extends { [key: string]: any }>({
     searchComponent = true,
     filterComponent = false,
     statusComponent = false,
+    methodsComponent = false,
   } = {},
   statusOptions = [],
+  methodsOptions = [],
 }: CustomTableProps<T>) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -81,47 +85,69 @@ export function CustomTable<T extends { [key: string]: any }>({
     <div className={cn("w-full bg-white p-4 rounded-2xl shadow-md", className)}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-normal text-base">{tableTitle}</h2>
-        <div className="flex items-center gap-2">{searchComponent && (
-          <div className="relative w-64">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-              <Search className="w-4 h-4" />
-            </span>
-            <Input
-              placeholder={searchPlaceholder || "Search..."}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 w-64 bg-gray-100 rounded-2xl"
-            />
-          </div>
-        )}
-        {statusComponent && (
-          // select component for status filter
-          <Select
-            onValueChange={(value) => {
-              // handle status change here, e.g., set a state
-            }}
-            defaultValue={statusOptions[0] || ""}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <div className="flex items-center gap-2">
+          {searchComponent && (
+            <div className="relative w-64">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <Search className="w-4 h-4" />
+              </span>
+              <Input
+                placeholder={searchPlaceholder || "Search..."}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 w-64 bg-gray-100 rounded-2xl"
+              />
+            </div>
+          )}
+          {statusComponent && (
+            // select component for status filter
+            <Select
+              onValueChange={(value) => {
+                // handle status change here, e.g., set a state
+              }}
+              defaultValue={statusOptions[0] || ""}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
-        {filterComponent && (
-          <Button variant="outline" className="rounded-2xl">
-            <Filter /> Filter
-          </Button>
-        )}
-        {/* Pagination Controls */}
-        {/* <div className="flex gap-2 items-center">
+           {methodsComponent && (
+            // select component for status filter
+            <Select
+              onValueChange={(value) => {
+                // handle status change here, e.g., set a state
+              }}
+              defaultValue={methodsOptions[0] || ""}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {methodsOptions.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {filterComponent && (
+            <Button variant="outline" className="rounded-2xl">
+              <Filter /> Filter
+            </Button>
+          )}
+          {/* Pagination Controls */}
+          {/* <div className="flex gap-2 items-center">
           <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
             Prev
           </Button>

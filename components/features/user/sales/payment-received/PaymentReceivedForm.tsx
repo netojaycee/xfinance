@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -22,104 +22,110 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Plus, Trash2 } from "lucide-react";
-import { paymentTermsOptions, customerOptions } from "../util/data";
-import { invoiceSchema } from "../util/schema";
+import { Calendar, CreditCard, FileText } from "lucide-react";
 import { format } from "date-fns";
 
-type InvoiceFormData = z.infer<typeof invoiceSchema>;
+// Dummy data for select fields
+const invoiceOptions = [
+  { label: "INV-2025-1248", value: "INV-2025-1248" },
+  { label: "INV-2025-1247", value: "INV-2025-1247" },
+];
+const paymentMethodOptions = [
+  { label: "Bank Transfer", value: "bank_transfer" },
+  { label: "Cash", value: "cash" },
+  { label: "Card", value: "card" },
+];
+const depositToOptions = [
+  { label: "Main Account", value: "main_account" },
+  { label: "Savings Account", value: "savings_account" },
+];
+
+const paymentSchema = z.object({
+  invoice: z.string().min(1, "Invoice is required"),
+  paymentDate: z.date(),
+  amount: z.number().min(0.01, "Amount is required"),
+  paymentMethod: z.string().min(1, "Payment method is required"),
+  depositTo: z.string().min(1, "Deposit account is required"),
+  reference: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type PaymentFormData = z.infer<typeof paymentSchema>;
 
 export default function PaymentReceivedForm() {
   const [submitting, setSubmitting] = useState(false);
-
-  const form = useForm<InvoiceFormData>({
-    resolver: zodResolver(invoiceSchema),
+  const form = useForm<PaymentFormData>({
+    resolver: zodResolver(paymentSchema),
     defaultValues: {
-      customer: "",
-      invoiceNumber: "INV-2025-XXXX",
-      invoiceDate: new Date(),
-      dueDate: new Date(),
-      paymentTerms: "",
-      currency: "USD",
-      lineItems: [{ description: "", quantity: 1, rate: 0 }],
+      invoice: "",
+      paymentDate: new Date(),
+      amount: 0,
+      paymentMethod: "",
+      depositTo: "",
+      reference: "",
       notes: "",
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "lineItems",
-  });
+  const paymentAmount = form.watch("amount") || 0;
 
-  // Calculate subtotal, tax, total
-  const subtotal = form
-    .watch("lineItems")
-    .reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
-  const tax = subtotal * 0.1;
-  const total = subtotal + tax;
-
-  const onSubmit = async (values: InvoiceFormData) => {
+  const onSubmit = async (values: PaymentFormData) => {
     setSubmitting(true);
     // ...API logic here...
     setTimeout(() => setSubmitting(false), 800);
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div className="w-full">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* --- Invoice Details --- */}
-          <div className="p-4 bg-blue-50 rounded-xl">
-            <h4 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
-              <Calendar className="w-4 h-4" /> Invoice Details
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          {/* --- Select Invoice --- */}
+          <div className="rounded-xl bg-linear-to-b from-blue-100 to-white p-4 border border-blue-200">
+            <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+              <FileText className="w-5 h-5" /> Select Invoice
+            </h4>
+            <FormField
+              control={form.control}
+              name="invoice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Invoice <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select invoice to record payment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {invoiceOptions.map((inv) => (
+                          <SelectItem key={inv.value} value={inv.value}>
+                            {inv.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* --- Payment Details --- */}
+          <div className="rounded-xl border border-green-200 bg-linear-to-b from-green-50 to-white p-4">
+            <h4 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
+              <CreditCard className="w-5 h-5" /> Payment Details
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="customer"
+                name="paymentDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer *</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select customer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {customerOptions.map((c) => (
-                            <SelectItem key={c} value={c}>
-                              {c}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="invoiceNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Invoice Number *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="invoiceDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Invoice Date *</FormLabel>
+                    <FormLabel>
+                      Payment Date <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="date"
@@ -135,17 +141,20 @@ export default function PaymentReceivedForm() {
               />
               <FormField
                 control={form.control}
-                name="dueDate"
+                name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date *</FormLabel>
+                    <FormLabel>
+                      Amount <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        type="date"
-                        value={format(field.value, "yyyy-MM-dd")}
-                        onChange={(e) =>
-                          field.onChange(new Date(e.target.value))
-                        }
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={field.value}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        placeholder="$ 0.00"
                       />
                     </FormControl>
                     <FormMessage />
@@ -154,22 +163,24 @@ export default function PaymentReceivedForm() {
               />
               <FormField
                 control={form.control}
-                name="paymentTerms"
+                name="paymentMethod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Terms</FormLabel>
+                    <FormLabel>
+                      Payment Method <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select terms" />
+                          <SelectValue placeholder="Select payment method" />
                         </SelectTrigger>
                         <SelectContent>
-                          {paymentTermsOptions.map((pt) => (
-                            <SelectItem key={pt} value={pt}>
-                              {pt}
+                          {paymentMethodOptions.map((pm) => (
+                            <SelectItem key={pm.value} value={pm.value}>
+                              {pm.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -181,22 +192,26 @@ export default function PaymentReceivedForm() {
               />
               <FormField
                 control={form.control}
-                name="currency"
+                name="depositTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
+                    <FormLabel>
+                      Deposit To <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select currency" />
+                          <SelectValue placeholder="Select account to deposit payment" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                          <SelectItem value="NGN">NGN (₦)</SelectItem>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
+                          {depositToOptions.map((d) => (
+                            <SelectItem key={d.value} value={d.value}>
+                              {d.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -205,143 +220,28 @@ export default function PaymentReceivedForm() {
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="reference"
+              render={({ field }) => (
+                <FormItem className="mt-3">
+                  <FormLabel>Reference / Transaction Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Check #1234, Transaction ID, etc."
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-          {/* --- Line Items --- */}
-          <div className="rounded-lg border p-4 bg-green-50">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-green-900 flex items-center gap-2">
-                <Plus className="w-4 h-4" /> Line Items *
-              </h4>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({ description: "", quantity: 1, rate: 0 })
-                }
-              >
-                <Plus className="w-4 h-4" /> Add Item
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {fields.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col gap-2 bg-white rounded-xl p-2 shadow-sm"
-                >
-                  <div className="flex justify-between w-full items-center">
-                    <p className="">Item {idx}</p>
-                    {fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(idx)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-400" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-[4fr_1fr_1fr_2fr] gap-2 w-full items-center">
-                    <Controller
-                      control={form.control}
-                      name={`lineItems.${idx}.description`}
-                      render={({ field }) => (
-                        <Input
-                          placeholder="Description"
-                          {...field}
-                          // className="flex-1"
-                        />
-                      )}
-                    />
-                    <Controller
-                      control={form.control}
-                      name={`lineItems.${idx}.quantity`}
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          min={1}
-                          {...field}
-                          // className="w-16"
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      )}
-                    />
-                    <Controller
-                      control={form.control}
-                      name={`lineItems.${idx}.rate`}
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          min={0}
-                          {...field}
-                          // className="w-24"
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                          prefix="$"
-                        />
-                      )}
-                    />
-                    <span className=" text-right font-semibold rounded-xl bg-gray-200 h-9 flex items-center justify-center">
-                      {form.watch(`currency`) === "NGN"
-                        ? "₦"
-                        : form.watch(`currency`) === "GBP"
-                        ? "£"
-                        : "$"}
-                      {(
-                        (form.watch(`lineItems.${idx}.quantity`) || 0) *
-                        (form.watch(`lineItems.${idx}.rate`) || 0)
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Subtotal, Tax, Total */}
-            <div className="mt-2 flex flex-col gap-1 text-sm bg-white rounded-xl p-3">
-              <div className="flex justify-between items-center">
-                <p className="text-base font-normal">Subtotal:</p>
-                <span className="font-semibold">
-                  {form.watch("currency") === "NGN"
-                    ? "₦"
-                    : form.watch("currency") === "GBP"
-                    ? "£"
-                    : "$"}
-                  {subtotal.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-base font-normal">Tax (10%):</p>
-                <span className="font-semibold">
-                  {form.watch("currency") === "NGN"
-                    ? "₦"
-                    : form.watch("currency") === "GBP"
-                    ? "£"
-                    : "$"}
-                  {tax.toLocaleString()}
-                </span>
-              </div>
-              <hr />
-              <div className="flex justify-between items-center">
-                <p className="text-base font-normal">Total:</p>
-                <span className="text-xl text-primary font-semibold">
-                  {form.watch("currency") === "NGN"
-                    ? "₦"
-                    : form.watch("currency") === "GBP"
-                    ? "£"
-                    : "$"}
-                  {total.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-          {/* --- Additional Information --- */}
-          <div className="rounded-lg border p-4 bg-purple-50">
+
+          {/* --- Additional Notes --- */}
+          <div className="rounded-xl border border-purple-200 bg-linear-to-b from-purple-50 to-white p-4">
             <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-              <Calendar className="w-4 h-4" /> Additional Information
+              <FileText className="w-5 h-5" /> Additional Notes
             </h4>
             <FormField
               control={form.control}
@@ -351,7 +251,7 @@ export default function PaymentReceivedForm() {
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Additional notes or payment instructions..."
+                      placeholder="Add any additional notes about this payment..."
                       {...field}
                     />
                   </FormControl>
@@ -359,14 +259,29 @@ export default function PaymentReceivedForm() {
                 </FormItem>
               )}
             />
+            <div className="mt-3 flex items-center justify-between bg-white rounded-lg px-3 py-2 border text-base">
+              <span>Payment Amount:</span>
+              <span className="font-bold">
+                $
+                {paymentAmount.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+            </div>
           </div>
+
           {/* --- Actions --- */}
-          <div className="flex justify-end gap-2 border-t pt-1 pb-3">
+          <div className="flex justify-end gap-2 border-t pt-4 pb-3">
             <Button variant="outline" type="button">
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Please wait..." : "Create Invoice"}
+            <Button
+              type="submit"
+              className="bg-primary text-white flex items-center gap-2 px-6"
+              disabled={submitting}
+            >
+              <CreditCard className="w-4 h-4" />
+              {submitting ? "Please wait..." : "Record Payment"}
             </Button>
           </div>
         </form>

@@ -1,13 +1,22 @@
 import {
-  Eye, DollarSign, Edit3, Send, Download, Trash2, MoreVertical,
+  Eye,
+  DollarSign,
+  Edit3,
+  Send,
+  Download,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Column } from "@/components/local/custom/custom-table";
-
 
 export const invoices = [
   {
@@ -92,7 +101,6 @@ export const invoices = [
   },
 ];
 
-
 const statusColors: Record<string, string> = {
   Sent: "bg-indigo-100 text-indigo-700",
   Paid: "bg-green-100 text-green-700",
@@ -101,24 +109,33 @@ const statusColors: Record<string, string> = {
 };
 
 export const InvoiceColumns: Column<(typeof invoices)[0]>[] = [
-  { key: "id", title: "Invoice #" },
-  { key: "customer", title: "Customer" },
-  { key: "date", title: "Date" },
-  { key: "dueDate", title: "Due Date" },
+  { key: "id", title: "Invoice #", className: "text-xs" },
+  { key: "customer", title: "Customer", className: "text-xs" },
+  { key: "date", title: "Date", className: "text-xs" },
+  { key: "dueDate", title: "Due Date", className: "text-xs" },
   {
     key: "amount",
     title: "Amount",
+    className: "text-xs",
     render: (value) => (
       <span>
-        {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value)}
+        {new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(value)}
       </span>
     ),
   },
   {
     key: "status",
     title: "Status",
+    className: "text-xs",
     render: (value) => (
-      <Badge className={`${statusColors[value] || ""} px-3 py-1 rounded-full text-[10px] font-medium`}>
+      <Badge
+        className={`${
+          statusColors[value] || ""
+        } px-3 py-1 rounded-full text-[10px] font-medium`}
+      >
         {value}
       </Badge>
     ),
@@ -126,6 +143,8 @@ export const InvoiceColumns: Column<(typeof invoices)[0]>[] = [
   {
     key: "actions",
     title: "",
+    className: "w-8 text-xs",
+
     render: (_, row) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -134,29 +153,59 @@ export const InvoiceColumns: Column<(typeof invoices)[0]>[] = [
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onSelect={e => { e.preventDefault(); console.log("view", row.id); }}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              console.log("view", row.id);
+            }}
+          >
             <Eye className="size-4 mr-2" /> View
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={e => { e.preventDefault(); console.log("record payment", row.id); }}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              console.log("record payment", row.id);
+            }}
+          >
             <DollarSign className="size-4 mr-2" /> Record payment
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={e => { e.preventDefault(); console.log("edit", row.id); }}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              console.log("edit", row.id);
+            }}
+          >
             <Edit3 className="size-4 mr-2" /> Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={e => { e.preventDefault(); console.log("send", row.id); }}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              console.log("send", row.id);
+            }}
+          >
             <Send className="size-4 mr-2" /> Send to customer
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={e => { e.preventDefault(); console.log("download", row.id); }}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              console.log("download", row.id);
+            }}
+          >
             <Download className="size-4 mr-2" /> Download PDF
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem data-variant="destructive" onSelect={e => { e.preventDefault(); console.log("delete", row.id); }}>
+          <DropdownMenuItem
+            data-variant="destructive"
+            onSelect={(e) => {
+              e.preventDefault();
+              console.log("delete", row.id);
+            }}
+          >
             <Trash2 className="size-4 mr-2" /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),
     searchable: false,
-    className: "w-8",
   },
 ];

@@ -6,6 +6,7 @@ import CustomerStatCardSmall from "./CustomerStatCardSmall";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import CustomerForm from "./CustomerForm";
+import { MODULES } from "@/lib/types/enums";
 
 export default function CustomersHeader() {
   const [open, setOpen] = React.useState(false);
@@ -51,7 +52,12 @@ export default function CustomersHeader() {
         />
       </div>
 
-      <CustomModal title="Add New Customer" open={open} onOpenChange={setOpen}>
+      <CustomModal
+        title="Add New Customer"
+        module={MODULES.SALES}
+        open={open}
+        onOpenChange={setOpen}
+      >
         <CustomerForm />
       </CustomModal>
     </div>

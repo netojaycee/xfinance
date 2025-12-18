@@ -7,6 +7,7 @@ import { FileText, Send, Clock, CheckCircle } from "lucide-react";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import Invoice from "./InvoiceForm";
+import { MODULES } from "@/lib/types/enums";
 
 export default function InvoicesHeader() {
   const [open, setOpen] = React.useState(false);
@@ -62,6 +63,7 @@ export default function InvoicesHeader() {
                 customer details"
         open={open}
         onOpenChange={setOpen}
+        module={MODULES.SALES}
       >
         <Invoice />
       </CustomModal>

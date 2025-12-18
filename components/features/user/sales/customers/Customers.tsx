@@ -62,6 +62,9 @@ const columns: Column<(typeof customers)[0]>[] = [
   {
     key: "name",
     title: "Customer",
+
+    className: "text-xs",
+
     render: (value, row) => (
       <div className="flex items-center gap-3">
         <div className="w-7 h-7 rounded-full bg-indigo-200 flex items-center justify-center text-gray-500 font-semibold text-xs">
@@ -77,13 +80,15 @@ const columns: Column<(typeof customers)[0]>[] = [
   {
     key: "email",
     title: "Contact",
+    className: "text-xs",
+
     render: (value, row) => (
       <div className="flex flex-col gap-0.5">
         <span className="flex items-center gap-1 text-sm text-gray-700">
-         <Mail className="w-3 h-3" />
+          <Mail className="w-3 h-3" />
           {row.email}
         </span>
-        <span className="flex items-center gap-1 text-xs text-gray-400">
+        <span className="flex items-center gap-1 text-gray-400">
           <Phone className="w-3 h-3" />
           {row.phone}
         </span>
@@ -93,28 +98,37 @@ const columns: Column<(typeof customers)[0]>[] = [
   {
     key: "location",
     title: "Location",
+    className: "text-xs",
+
     render: (value) => (
-      <span className="flex items-center gap-1 text-sm text-gray-700">
+      <span className="flex items-center gap-1 text-gray-700">
         <MapPin className="w-3 h-3" />
         {value}
       </span>
     ),
   },
-  { key: "invoices", title: "Invoices" },
+  { key: "invoices", title: "Invoices", className: "text-xs" },
   {
     key: "outstanding",
     title: "Outstanding",
+    className: "text-xs",
+
     render: (value) => (
-      <span className="font-normal text-gray-700 text-sm">
-        {new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(value)}
+      <span className="font-normal text-gray-700">
+        {new Intl.NumberFormat("en-NG", {
+          style: "currency",
+          currency: "NGN",
+        }).format(value)}
       </span>
     ),
   },
   {
     key: "status",
     title: "Status",
+    className: "text-xs",
+
     render: (value) => (
-      <Badge className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[9px] font-medium">
+      <Badge className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
         {value}
       </Badge>
     ),
@@ -122,6 +136,8 @@ const columns: Column<(typeof customers)[0]>[] = [
   {
     key: "actions",
     title: "",
+    className: "w-8 text-xs",
+
     render: (_, row) => {
       const handleView = () => console.log("view details", row.id);
       const handleEdit = () => console.log("edit", row.id);
@@ -190,7 +206,6 @@ const columns: Column<(typeof customers)[0]>[] = [
       );
     },
     searchable: false,
-    className: "w-8",
   },
 ];
 

@@ -7,6 +7,8 @@ import { FileText, Send, Clock, CheckCircle } from "lucide-react";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import Invoice from "./PaymentReceivedForm";
+import PaymentReceivedForm from "./PaymentReceivedForm";
+import { MODULES } from "@/lib/types/enums";
 
 export default function PaymentReceivedHeader() {
   const [open, setOpen] = React.useState(false);
@@ -36,30 +38,30 @@ export default function PaymentReceivedHeader() {
           title="Total Paid"
           value={<span className="text-xl">₦1.4M</span>}
           subtitle="6 paid invoices"
-          icon={<FileText className="h-5 w-5 text-muted-foreground" />}
+          color="blue"
         />
         <PaymentReceivedStatCardSmall
           title="This Month Paid"
           value={<span className="text-xl">₦0</span>}
           subtitle="Payments received this month"
-          icon={<Send className="h-5 w-5 text-muted-foreground" />}
+          color="green"
         />
         <PaymentReceivedStatCardSmall
           title="Partial Payments"
           value={<span className="text-xxl">0</span>}
           subtitle="Invoices partially paid"
-          icon={<Clock className="h-5 w-5 text-red-400" />}
+          color="orange"
         />
       </div>
 
       <CustomModal
-        title="Create New Invoice"
-        description="Create a new invoice with line items, payment terms, and
-                customer details"
+        title="Record Payment"
+        description="Record a payment received for invoice"
         open={open}
         onOpenChange={setOpen}
+        module={MODULES.SALES}
       >
-        <Invoice />
+        <PaymentReceivedForm />
       </CustomModal>
     </div>
   );

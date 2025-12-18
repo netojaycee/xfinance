@@ -113,7 +113,7 @@ export const userMenu = [
       PERMISSIONS.PURCHASES_EXPENSES_VIEW,
       PERMISSIONS.PURCHASES_DEBIT_NOTES_VIEW,
     ],
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Products",

@@ -99,7 +99,7 @@ export default function Header({
               </Avatar>
               <div className="hidden md:flex md:flex-col md:items-start">
                 <span className="font-lato text-sm font-semibold">
-                  {user?.firstName || "Anonymous"} {user?.lastName || ""}
+                  {user?.firstName || "Anonymous"}
                 </span>
               </div>
               <ChevronDown className="ml-auto hidden size-4 text-muted-foreground md:block" />
