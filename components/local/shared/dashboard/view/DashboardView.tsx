@@ -46,8 +46,8 @@ const DashboardView = ({ type }: { type: userNode }) => {
 
     // Final check to ensure the determined role is a valid, expected role.
     if (Object.values(ENUM_ROLE).includes(determinedRole)) {
-      // setRole(determinedRole);
-      setRole(ENUM_ROLE.USER);
+      setRole(determinedRole);
+      // setRole(ENUM_ROLE.USER);
       setStatus("completed");
     } else {
       // This case handles if the role is somehow invalid or not one of the three.
