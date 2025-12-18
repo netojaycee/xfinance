@@ -3,6 +3,14 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Filter, Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface Column<T> {
   key: string;
@@ -17,6 +25,14 @@ interface CustomTableProps<T> {
   data: T[];
   pageSize?: number;
   className?: string;
+  tableTitle?: string;
+  searchPlaceholder?: string;
+  display?: {
+    searchComponent?: boolean;
+    filterComponent?: boolean;
+    statusComponent?: boolean;
+  };
+  statusOptions?: string[];
 }
 
 export function CustomTable<T extends { [key: string]: any }>({
@@ -24,6 +40,14 @@ export function CustomTable<T extends { [key: string]: any }>({
   data,
   pageSize = 10,
   className,
+  tableTitle,
+  searchPlaceholder,
+  display: {
+    searchComponent = true,
+    filterComponent = false,
+    statusComponent = false,
+  } = {},
+  statusOptions = [],
 }: CustomTableProps<T>) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -35,7 +59,9 @@ export function CustomTable<T extends { [key: string]: any }>({
       columns.some((col) => {
         if (col.searchable === false) return false;
         const value = row[col.key];
-        return value && value.toString().toLowerCase().includes(search.toLowerCase());
+        return (
+          value && value.toString().toLowerCase().includes(search.toLowerCase())
+        );
       })
     );
   }, [search, data, columns]);
@@ -52,16 +78,50 @@ export function CustomTable<T extends { [key: string]: any }>({
   }, [totalPages, page]);
 
   return (
-    <div className={cn("w-full", className)}>
-      <div className="flex items-center justify-between mb-2">
-        <Input
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-64"
-        />
+    <div className={cn("w-full bg-white p-4 rounded-2xl shadow-md", className)}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-normal text-base">{tableTitle}</h2>
+        <div className="flex items-center gap-2">{searchComponent && (
+          <div className="relative w-64">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+              <Search className="w-4 h-4" />
+            </span>
+            <Input
+              placeholder={searchPlaceholder || "Search..."}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 w-64 bg-gray-100 rounded-2xl"
+            />
+          </div>
+        )}
+        {statusComponent && (
+          // select component for status filter
+          <Select
+            onValueChange={(value) => {
+              // handle status change here, e.g., set a state
+            }}
+            defaultValue={statusOptions[0] || ""}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {filterComponent && (
+          <Button variant="outline" className="rounded-2xl">
+            <Filter /> Filter
+          </Button>
+        )}
         {/* Pagination Controls */}
-        <div className="flex gap-2 items-center">
+        {/* <div className="flex gap-2 items-center">
           <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
             Prev
           </Button>
@@ -71,6 +131,7 @@ export function CustomTable<T extends { [key: string]: any }>({
           <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}>
             Next
           </Button>
+        </div> */}
         </div>
       </div>
       <div className="overflow-x-auto rounded-md border">
@@ -78,7 +139,13 @@ export function CustomTable<T extends { [key: string]: any }>({
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.key} className={cn("px-4 py-2 text-left font-semibold text-gray-700", col.className)}>
+                <th
+                  key={col.key}
+                  className={cn(
+                    "px-4 py-2 text-left font-semibold text-gray-700",
+                    col.className
+                  )}
+                >
                   {col.title}
                 </th>
               ))}
@@ -87,7 +154,10 @@ export function CustomTable<T extends { [key: string]: any }>({
           <tbody>
             {pagedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center py-8 text-gray-400">
+                <td
+                  colSpan={columns.length}
+                  className="text-center py-8 text-gray-400"
+                >
                   No data found
                 </td>
               </tr>
@@ -95,8 +165,13 @@ export function CustomTable<T extends { [key: string]: any }>({
               pagedData.map((row, rowIndex) => (
                 <tr key={rowIndex} className="border-t hover:bg-gray-50">
                   {columns.map((col) => (
-                    <td key={col.key} className={cn("px-4 py-2", col.className)}>
-                      {col.render ? col.render(row[col.key], row, rowIndex) : row[col.key]}
+                    <td
+                      key={col.key}
+                      className={cn("px-4 py-2", col.className)}
+                    >
+                      {col.render
+                        ? col.render(row[col.key], row, rowIndex)
+                        : row[col.key]}
                     </td>
                   ))}
                 </tr>

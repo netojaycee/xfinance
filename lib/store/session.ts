@@ -41,14 +41,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
   hasPermission: (permissionKey: PermissionKey) => {
-    const { user } = get();
+    const { user, group, entity } = get();
     if (!user) return false;
 
     const perm = PERMISSIONS[permissionKey];
     const role = user.systemRole; // Or determined role from DashboardView logic
 
-    if (role === ENUM_ROLE.SUPERADMIN) return true;
-    if (role === ENUM_ROLE.ADMIN) return true;
+    if (role === ENUM_ROLE.SUPERADMIN && group && entity) return true;
+    if (role === ENUM_ROLE.ADMIN && entity) return true;
     return (user.permissions || []).includes(perm);
   },
 }));

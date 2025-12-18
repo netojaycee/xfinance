@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function StatCardSmall({
+export default function CustomerStatCardSmall({
   title,
   value,
   subtitle,
@@ -13,7 +13,7 @@ export default function StatCardSmall({
   subtitle?: string;
 }) {
   return (
-    <Card className="rounded-2xl shadow-sm gap-0">
+    <Card className="rounded-xl shadow-sm gap-0">
       <CardHeader className="">
         <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
       </CardHeader>

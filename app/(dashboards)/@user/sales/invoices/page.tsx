@@ -1,7 +1,6 @@
-import React from 'react'
+import Invoices from "@/components/features/user/sales/invoices/Invoices";
+import React from "react";
 
-export default function Invoices() {
-  return (
-    <div>invoices</div>
-  )
+export default function InvoicesPage() {
+  return <Invoices />;
 }
