@@ -1,7 +1,6 @@
-import React from 'react'
+import PaymentMade from "@/components/features/user/purchases/payment-made/PaymentMade";
+import React from "react";
 
-export default function PaymentMade() {
-  return (
-    <div>PaymentMade</div>
-  )
+export default function PaymentMadePage() {
+  return <PaymentMade />;
 }

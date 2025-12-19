@@ -116,6 +116,8 @@ export function GroupSwitcher() {
     setOpen(false);
   };
 
+  console.log(groups)
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -129,8 +131,8 @@ export function GroupSwitcher() {
                 {activeGroup ? (
                   <Image
                     src={
-                      activeGroup?.logo?.url
-                        ? activeGroup?.logo?.url
+                      activeGroup?.logo?.secureUrl
+                        ? activeGroup?.logo?.secureUrl
                         : `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(
                             activeGroup.name
                           )}`
@@ -206,8 +208,8 @@ export function GroupSwitcher() {
                         {group ? (
                           <Image
                             src={
-                              group?.logo?.url
-                                ? group?.logo?.url
+                              group?.logo?.secureUrl
+                                ? group?.logo?.secureUrl
                                 : `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(
                                     group.name
                                   )}`

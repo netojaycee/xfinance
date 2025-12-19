@@ -34,18 +34,42 @@ export type AppSession = {
 export type Group = {
   id: string;
   name: string;
+  legalName: string;
   logo: {
-    url: string;
+    secure_url: string;
     public_id: string;
   } | null;
-  subscription?: any
+  taxId: string;
+  industry: string;
+  address: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+  email: string;
+  phone: string;
+  website?: string | null;
+  subscriptionId?: string | null;
+  billingCycle?: string | null;
+  // entities, groupRoles, users can be added as needed
+  subscription?: any;
 };
 
 export type Entity = {
   id: string;
   name: string;
-  logo: {
-    url: string;
-    public_id: string;
-  } | null;
+  groupId: string;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  currency?: string | null;
+  email?: string | null;
+  legalName?: string | null;
+  phoneNumber?: string | null;
+  postalCode?: string | null;
+  state?: string | null;
+  taxId?: string | null;
+  website?: string | null;
+  yearEnd?: string | null;
+  // Add related types for customer, invoice, users, receipt, vendor, expenses as needed
 };

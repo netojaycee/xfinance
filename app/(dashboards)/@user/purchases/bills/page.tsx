@@ -1,7 +1,6 @@
-import React from 'react'
+import Bills from "@/components/features/user/purchases/bills/Bills";
+import React from "react";
 
 export default function BillsPage() {
-  return (
-    <div>BillsPage</div>
-  )
+  return <Bills />;
 }

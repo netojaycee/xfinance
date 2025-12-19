@@ -5,10 +5,34 @@ import { z } from "zod";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Building2, User2, CreditCard, Globe, Hash, Mail, Phone, MapPin, User, Landmark } from "lucide-react";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Building2,
+  User2,
+  CreditCard,
+  Globe,
+  Hash,
+  Mail,
+  Phone,
+  MapPin,
+  User,
+  Landmark,
+} from "lucide-react";
 
 // --- Zod Schemas ---
 const basicInfoSchema = z.object({
@@ -123,10 +147,14 @@ export default function VendorsForm() {
       return await basicInfoSchema.safeParseAsync(form.getValues().basicInfo);
     }
     if (step === 1) {
-      return await contactDetailsSchema.safeParseAsync(form.getValues().contactDetails);
+      return await contactDetailsSchema.safeParseAsync(
+        form.getValues().contactDetails
+      );
     }
     if (step === 2) {
-      return await financialInfoSchema.safeParseAsync(form.getValues().financialInfo);
+      return await financialInfoSchema.safeParseAsync(
+        form.getValues().financialInfo
+      );
     }
     return { success: true };
   };
@@ -156,18 +184,50 @@ export default function VendorsForm() {
   return (
     <FormProvider {...form}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-xl mx-auto">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="max-w-xl mx-auto"
+        >
           <Tabs value={String(step)} className="mb-4">
             <TabsList className="w-full flex bg-yellow-50 rounded-t-xl">
-              <TabsTrigger value="0" className={step === 0 ? "text-orange-600 font-bold border-b-2 border-orange-400" : ""}>Basic Info</TabsTrigger>
-              <TabsTrigger value="1" className={step === 1 ? "text-yellow-600 font-bold border-b-2 border-yellow-400" : ""}>Contact Details</TabsTrigger>
-              <TabsTrigger value="2" className={step === 2 ? "text-amber-600 font-bold border-b-2 border-amber-400" : ""}>Financial Info</TabsTrigger>
+              <TabsTrigger
+                value="0"
+                className={
+                  step === 0
+                    ? "text-orange-600 font-bold border-b-2 border-orange-400"
+                    : ""
+                }
+              >
+                Basic Info
+              </TabsTrigger>
+              <TabsTrigger
+                value="1"
+                className={
+                  step === 1
+                    ? "text-yellow-600 font-bold border-b-2 border-yellow-400"
+                    : ""
+                }
+              >
+                Contact Details
+              </TabsTrigger>
+              <TabsTrigger
+                value="2"
+                className={
+                  step === 2
+                    ? "text-amber-600 font-bold border-b-2 border-amber-400"
+                    : ""
+                }
+              >
+                Financial Info
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="0">
-              <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-yellow-50 p-6 mt-2 mb-4 border">
+              <div className="rounded-2xl bg-linear-to-br from-orange-50 to-yellow-50 p-6 mt-2 mb-4 border">
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 className="text-orange-500" />
-                  <span className="font-semibold text-lg">Company Information</span>
+                  <span className="font-semibold text-lg">
+                    Company Information
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -177,14 +237,21 @@ export default function VendorsForm() {
                       <FormItem>
                         <FormLabel>Vendor Type *</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <SelectTrigger className="w-full bg-white">
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Supplier">Supplier</SelectItem>
-                              <SelectItem value="Contractor">Contractor</SelectItem>
-                              <SelectItem value="Consultant">Consultant</SelectItem>
+                              <SelectItem value="Contractor">
+                                Contractor
+                              </SelectItem>
+                              <SelectItem value="Consultant">
+                                Consultant
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -212,7 +279,10 @@ export default function VendorsForm() {
                       <FormItem className="md:col-span-2">
                         <FormLabel>Display Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Name to display on transactions" {...field} />
+                          <Input
+                            placeholder="Name to display on transactions"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -248,7 +318,7 @@ export default function VendorsForm() {
               </div>
             </TabsContent>
             <TabsContent value="1">
-              <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 p-6 mt-2 mb-4 border">
+              <div className="rounded-2xl bg-linear-to-br from-blue-50 to-cyan-50 p-6 mt-2 mb-4 border">
                 <div className="flex items-center gap-2 mb-4">
                   <User2 className="text-blue-500" />
                   <span className="font-semibold text-lg">Primary Contact</span>
@@ -335,7 +405,9 @@ export default function VendorsForm() {
                 </div>
                 <div className="mt-6 flex items-center gap-2 mb-2">
                   <MapPin className="text-green-500" />
-                  <span className="font-semibold text-base">Billing Address</span>
+                  <span className="font-semibold text-base">
+                    Billing Address
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -397,7 +469,10 @@ export default function VendorsForm() {
                       <FormItem>
                         <FormLabel>Country</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <SelectTrigger className="w-full bg-white">
                               <SelectValue placeholder="Select country" />
                             </SelectTrigger>
@@ -416,10 +491,12 @@ export default function VendorsForm() {
               </div>
             </TabsContent>
             <TabsContent value="2">
-              <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 p-6 mt-2 mb-4 border">
+              <div className="rounded-2xl bg-linear-to-br from-purple-50 to-violet-50 p-6 mt-2 mb-4 border">
                 <div className="flex items-center gap-2 mb-4">
                   <CreditCard className="text-purple-500" />
-                  <span className="font-semibold text-lg">Payment Information</span>
+                  <span className="font-semibold text-lg">
+                    Payment Information
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -429,14 +506,19 @@ export default function VendorsForm() {
                       <FormItem>
                         <FormLabel>Payment Terms</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <SelectTrigger className="w-full bg-white">
                               <SelectValue placeholder="Select terms" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Net 30">Net 30</SelectItem>
                               <SelectItem value="Net 60">Net 60</SelectItem>
-                              <SelectItem value="Due on Receipt">Due on Receipt</SelectItem>
+                              <SelectItem value="Due on Receipt">
+                                Due on Receipt
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -451,7 +533,10 @@ export default function VendorsForm() {
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <SelectTrigger className="w-full bg-white">
                               <SelectValue placeholder="Select currency" />
                             </SelectTrigger>
@@ -473,7 +558,10 @@ export default function VendorsForm() {
                       <FormItem>
                         <FormLabel>Account Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="Vendor account number" {...field} />
+                          <Input
+                            placeholder="Vendor account number"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -499,13 +587,20 @@ export default function VendorsForm() {
                       <FormItem className="md:col-span-2">
                         <FormLabel>Default Expense Account</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <SelectTrigger className="w-full bg-white">
                               <SelectValue placeholder="Select account" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Office Supplies">Office Supplies</SelectItem>
-                              <SelectItem value="Consulting">Consulting</SelectItem>
+                              <SelectItem value="Office Supplies">
+                                Office Supplies
+                              </SelectItem>
+                              <SelectItem value="Consulting">
+                                Consulting
+                              </SelectItem>
                               <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                           </Select>
@@ -517,7 +612,9 @@ export default function VendorsForm() {
                 </div>
                 <div className="mt-6 flex items-center gap-2 mb-2">
                   <Landmark className="text-violet-500" />
-                  <span className="font-semibold text-base">Banking Details (Optional)</span>
+                  <span className="font-semibold text-base">
+                    Banking Details (Optional)
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -566,7 +663,10 @@ export default function VendorsForm() {
                       <FormItem className="md:col-span-2">
                         <FormLabel>Internal Notes</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Add any internal notes about this vendor..." {...field} />
+                          <Textarea
+                            placeholder="Add any internal notes about this vendor..."
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -588,7 +688,11 @@ export default function VendorsForm() {
               </Button>
             )}
             {step === 2 && (
-              <Button type="submit" className="bg-orange-500 text-white" disabled={loading}>
+              <Button
+                type="submit"
+                className="bg-orange-500 text-white"
+                disabled={loading}
+              >
                 {loading ? "Creating..." : "Create Vendor"}
               </Button>
             )}

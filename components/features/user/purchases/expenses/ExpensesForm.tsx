@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { z } from "zod";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Calendar, FileText, User, Tag, DollarSign, CreditCard, Layers, UploadCloud } from "lucide-react";
+import { FileText, User, DollarSign, CreditCard, Layers, UploadCloud } from "lucide-react";
 
 const expenseSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -18,8 +18,8 @@ const expenseSchema = z.object({
   category: z.string().min(1, "Category is required"),
   paymentMethod: z.string().min(1, "Payment method is required"),
   account: z.string().min(1, "Account is required"),
-  amount: z.coerce.number().min(0.01, "Amount is required"),
-  taxAmount: z.coerce.number().min(0, ""),
+  amount: z.number().min(0.01, "Amount is required"),
+  taxAmount: z.number().min(0, ""),
   description: z.string().optional(),
   tags: z.string().optional(),
   attachments: z.any().optional(),
@@ -152,7 +152,7 @@ export default function ExpensesForm() {
           </div>
 
           {/* Payment Details */}
-          <div className="rounded-2xl border bg-gradient-to-br from-green-50 to-white p-4">
+          <div className="rounded-2xl border bg-linear-to-br from-green-50 to-white p-4">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="text-green-500 w-5 h-5" />
               <span className="font-semibold text-base">Payment Details</span>
@@ -205,7 +205,7 @@ export default function ExpensesForm() {
           </div>
 
           {/* Amount Details */}
-          <div className="rounded-2xl border bg-gradient-to-br from-pink-50 to-white p-4">
+          <div className="rounded-2xl border bg-linear-to-br from-pink-50 to-white p-4">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="text-pink-500 w-5 h-5" />
               <span className="font-semibold text-base">Amount Details</span>
@@ -245,7 +245,7 @@ export default function ExpensesForm() {
           </div>
 
           {/* Additional Details */}
-          <div className="rounded-2xl border bg-gradient-to-br from-blue-50 to-white p-4">
+          <div className="rounded-2xl border bg-linear-to-br from-blue-50 to-white p-4">
             <div className="flex items-center gap-2 mb-2">
               <Layers className="text-blue-400 w-5 h-5" />
               <span className="font-semibold text-base">Additional Details</span>
