@@ -3,26 +3,23 @@
 import * as React from "react";
 
 import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
 import { GroupSwitcher } from "./group-switcher";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenuButton,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { getSidebarMenu } from "@/lib/utils/menu-utils";
-import { Separator } from "@/components/ui/separator";
 import { ENUM_ROLE } from "@/lib/types/enums";
 import { UserPayload } from "@/lib/types";
 import Logo from "../../Logo";
 import GroupEntitySwitcher from "./group-entity-switcher";
 import { EntitySwitcher } from "./entity-switcher";
-import { useEntities } from "@/lib/api/queries/entityQueries";
-import { useStopEntityImpersonation } from "@/lib/api/mutations/authMutations";
 import { toast } from "sonner";
+import { useEntities } from "@/lib/api/hooks/useEntity";
+import { useStopEntityImpersonation } from "@/lib/api/hooks/useAuth";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   role: ENUM_ROLE;
@@ -43,7 +40,7 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
   const { mutate: stopEntityImpersonation } = useStopEntityImpersonation({
     onSuccess: () => {
       // toast.info("Switched back to group view.");
-      window.location.href = '/dashboard'; 
+      window.location.href = "/dashboard";
     },
     onError: (error) => {
       toast.error(error.message || "Failed to switch view.");

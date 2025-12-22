@@ -30,14 +30,9 @@ import { useDebounce } from "use-debounce";
 import { ENUM_ROLE } from "@/lib/types/enums";
 import { Group } from "@/lib/types";
 import { useSessionStore } from "@/lib/store/session";
-import { useGroups } from "@/lib/api/queries/groupQueries";
-import {
-  useImpersonateGroup,
-  useStopGroupImpersonation,
-  useStopEntityImpersonation,
-} from "@/lib/api/mutations/authMutations";
-import { toast } from "sonner";
 import NoData from "@/components/local/shared/NoData";
+import { useImpersonateGroup, useStopEntityImpersonation, useStopGroupImpersonation } from "@/lib/api/hooks/useAuth";
+import { useGroups } from "@/lib/api/hooks/useGroup";
 
 export function GroupSwitcher() {
   const { isMobile } = useSidebar();

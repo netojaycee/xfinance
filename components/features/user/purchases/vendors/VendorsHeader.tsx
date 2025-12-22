@@ -36,7 +36,7 @@ export default function VendorsHeader() {
         onOpenChange={setOpen}
         module={MODULES.PURCHASES}
       >
-        <VendorsForm />{" "}
+        <VendorsForm  />{" "}
       </CustomModal>
     </div>
   );

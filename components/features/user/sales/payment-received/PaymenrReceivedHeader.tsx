@@ -61,7 +61,7 @@ export default function PaymentReceivedHeader() {
         onOpenChange={setOpen}
         module={MODULES.SALES}
       >
-        <PaymentReceivedForm />
+        <PaymentReceivedForm  />
       </CustomModal>
     </div>
   );

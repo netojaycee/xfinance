@@ -1,17 +1,19 @@
 "use client";
-import { Badge } from "@/components/ui/badge";
 import InvoicesHeader from "./InvoicesHeader";
 import { CustomTable } from "@/components/local/custom/custom-table";
 
-import { InvoiceColumns, invoices } from "./InvoiceColumns";
+import { InvoiceColumns } from "./InvoiceColumns";
 import { AccountsReceivableAgingChart } from "./AccountsReceivableAgingChart";
 import { MonthlyInvoiceRevenue } from "./MonthlyInvoiceRevenue";
+import { useInvoices } from "@/lib/api/hooks/useSales";
 
 export default function Invoices() {
+  const { data, isLoading } = useInvoices();
+  const invoices = data?.invoices || [];
+
   return (
     <div className="space-y-4">
-      <InvoicesHeader />
-      {/* Placeholder for customers table/list - import and implement later */}
+      <InvoicesHeader loading={isLoading} stats={data?.stats} />
       <CustomTable
         searchPlaceholder="Search invoices..."
         tableTitle="All Invoices"
@@ -24,6 +26,7 @@ export default function Invoices() {
           filterComponent: true,
           searchComponent: true,
         }}
+        loading={isLoading}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

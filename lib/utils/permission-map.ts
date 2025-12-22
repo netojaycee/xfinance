@@ -68,6 +68,7 @@ export const routePermissions = new Map<string, string | string[]>([
   ["quick-sale", PERMISSIONS.QUICK_SALE_VIEW],
 
   ["online-store", PERMISSIONS.ONLINE_STORE_MANAGEMENT_VIEW],
+  ["assets", PERMISSIONS.ASSETS_VIEW],
 
   [
     "banking",

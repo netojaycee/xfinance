@@ -22,8 +22,8 @@ import Logout from "./Logout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ENUM_ROLE } from "@/lib/types/enums";
-import CustomBreadcrumb from "./CustomBreadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import CustomBreadcrumb from "../custom/custom-breadcrumb";
 
 export default function Header({
   user,
@@ -43,7 +43,7 @@ export default function Header({
     className="h-16 flex items-center justify-between bg-white border-b gap-2 shadow-none sticky px-2 top-0 z-10"
     >
       {/* Left Section */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" style={{ flexBasis: "40%", maxWidth: "40%" }}>
         <SidebarTrigger />
         <CustomBreadcrumb
           role={role}

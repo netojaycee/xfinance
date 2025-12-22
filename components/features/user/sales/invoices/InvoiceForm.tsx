@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { useCreateInvoice, useUpdateInvoice } from "@/lib/api/hooks/useSales";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,26 +25,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar, Plus, Trash2 } from "lucide-react";
-import { paymentTermsOptions, customerOptions } from "../util/data";
-import { invoiceSchema } from "../util/schema";
 import { format } from "date-fns";
+import { paymentTermsOptions } from "../customers/utils/data";
+import { useCustomers } from "@/lib/api/hooks/useSales";
+import { invoiceSchema } from "./utils/schema";
+
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
-export default function InvoiceForm() {
-  const [submitting, setSubmitting] = useState(false);
+interface InvoiceFormProps {
+  invoice?: Partial<InvoiceFormData> & { id?: string };
+  isEditMode?: boolean;
+  onSuccess?: () => void;
+}
+
+export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: InvoiceFormProps) {
+  const { data, isLoading: customersLoading } = useCustomers();
+  const createInvoice = useCreateInvoice();
+  const updateInvoice = useUpdateInvoice();
+
+  const customers = data?.customers || [];
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      customer: "",
-      invoiceNumber: "INV-2025-XXXX",
-      invoiceDate: new Date(),
-      dueDate: new Date(),
-      paymentTerms: "",
-      currency: "USD",
-      lineItems: [{ description: "", quantity: 1, rate: 0 }],
-      notes: "",
+      customerId: invoice?.customerId || "",
+      invoiceDate: invoice?.invoiceDate ? new Date(invoice.invoiceDate) : new Date(),
+      dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(),
+      paymentTerms: invoice?.paymentTerms || "",
+      currency: invoice?.currency || "USD",
+      lineItems: invoice?.lineItems || [{ description: "", quantity: 1, rate: 0 }],
+      notes: invoice?.notes || "",
     },
   });
 
@@ -58,11 +71,60 @@ export default function InvoiceForm() {
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
+  useEffect(() => {
+    if (invoice) {
+      form.reset({
+        customerId: invoice?.customerId || "",
+        invoiceDate: invoice?.invoiceDate ? new Date(invoice.invoiceDate) : new Date(),
+        dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(),
+        paymentTerms: invoice?.paymentTerms || "",
+        currency: invoice?.currency || "USD",
+        lineItems: invoice?.lineItems || [{ description: "", quantity: 1, rate: 0 }],
+        notes: invoice?.notes || "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice]);
+
   const onSubmit = async (values: InvoiceFormData) => {
-    setSubmitting(true);
-    // ...API logic here...
-    setTimeout(() => setSubmitting(false), 800);
+    try {
+      // Transform lineItems to array of strings (e.g., description or JSON string)
+      const items = values.lineItems.map(item =>
+        typeof item === 'string' ? item : JSON.stringify(item)
+      );
+      // Calculate total as integer
+      const subtotal = values.lineItems.reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
+      const tax = subtotal * 0.1;
+      const total = Math.round(subtotal + tax);
+      const payload: any = {
+        ...values,
+        items,
+        total,
+      };
+      delete payload.lineItems;
+      if (isEditMode && invoice?.id) {
+        await updateInvoice.mutateAsync({ id: invoice.id, data: payload });
+      } else {
+        await createInvoice.mutateAsync(payload);
+      }
+    } catch (error) {
+      // error handled below
+    }
   };
+
+  useEffect(() => {
+    if (createInvoice.isSuccess || updateInvoice.isSuccess) {
+      toast.success("Invoice saved successfully");
+      if (onSuccess) onSuccess();
+    }
+    if (createInvoice.isError) {
+      toast.error(createInvoice.error?.message || "Failed to create invoice");
+    }
+    if (updateInvoice.isError) {
+      toast.error(updateInvoice.error?.message || "Failed to update invoice");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createInvoice.isSuccess, createInvoice.isError, updateInvoice.isSuccess, updateInvoice.isError]);
 
   return (
     <div className="w-full max-w-lg mx-auto">
@@ -73,10 +135,10 @@ export default function InvoiceForm() {
             <h4 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
               <Calendar className="w-4 h-4" /> Invoice Details
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
+            <div className="mb-4">
+               <FormField
                 control={form.control}
-                name="customer"
+                name="customerId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Customer *</FormLabel>
@@ -84,16 +146,21 @@ export default function InvoiceForm() {
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        disabled={customersLoading}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select customer" />
+                          <SelectValue placeholder={customersLoading ? "Loading customers..." : "Select customer"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {customerOptions.map((c) => (
-                            <SelectItem key={c} value={c}>
-                              {c}
-                            </SelectItem>
-                          ))}
+                          {Array.isArray(customers) && customers.length > 0 ? (
+                            customers.map((c: any) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>No customers found</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -101,19 +168,22 @@ export default function InvoiceForm() {
                   </FormItem>
                 )}
               />
-              <FormField
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             
+              {/* <FormField
                 control={form.control}
                 name="invoiceNumber"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Invoice Number *</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <FormField
                 control={form.control}
                 name="invoiceDate"
@@ -365,8 +435,8 @@ export default function InvoiceForm() {
             <Button variant="outline" type="button">
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Please wait..." : "Create Invoice"}
+            <Button type="submit" disabled={createInvoice.isPending || updateInvoice.isPending}>
+              {(createInvoice.isPending || updateInvoice.isPending) ? "Please wait..." : (isEditMode ? "Update Invoice" : "Create Invoice")}
             </Button>
           </div>
         </form>

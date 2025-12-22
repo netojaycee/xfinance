@@ -35,7 +35,7 @@ export default function BillsHeader() {
         onOpenChange={setOpen}
         module={MODULES.PURCHASES}
       >
-        <BillsForm />
+        <BillsForm  />
       </CustomModal>
     </div>
   );

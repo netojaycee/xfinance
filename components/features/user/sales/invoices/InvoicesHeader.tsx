@@ -8,8 +8,15 @@ import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import Invoice from "./InvoiceForm";
 import { MODULES } from "@/lib/types/enums";
+import { InvoiceStats } from "./utils/types";
 
-export default function InvoicesHeader() {
+export default function InvoicesHeader({
+  stats,
+  loading,
+}: {
+  stats?: InvoiceStats;
+  loading: boolean;
+}) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="mb-6">
@@ -31,29 +38,47 @@ export default function InvoicesHeader() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <InvoiceStatCardSmall
-          title="Draft"
+        {/* <InvoiceStatCardSmall
+          title="Pending"
           value={<span className="text-3xl">8 invoices</span>}
           subtitle="$42,500"
           icon={<FileText className="h-5 w-5 text-muted-foreground" />}
+        /> */}
+        <InvoiceStatCardSmall
+          title="Draft"
+          value={
+            <span className="text-3xl">{stats?.draft?.count} invoices</span>
+          }
+          subtitle={`$${stats?.draft?.total.toLocaleString()}`}
+          icon={<FileText className="h-5 w-5 text-muted-foreground" />}
+          loading={loading}
         />
         <InvoiceStatCardSmall
           title="Sent"
-          value={<span className="text-3xl">15 invoices</span>}
-          subtitle="$128,400"
+          value={
+            <span className="text-3xl">{stats?.sent?.count} invoices</span>
+          }
+          subtitle={`$${stats?.sent?.total.toLocaleString()}`}
           icon={<Send className="h-5 w-5 text-muted-foreground" />}
+          loading={loading}
         />
         <InvoiceStatCardSmall
           title="Overdue"
-          value={<span className="text-3xl">3 invoices</span>}
-          subtitle="$18,200"
+          value={
+            <span className="text-3xl">{stats?.overdue?.count} invoices</span>
+          }
+          subtitle={`$${stats?.overdue?.total.toLocaleString()}`}
           icon={<Clock className="h-5 w-5 text-red-400" />}
+          loading={loading}
         />
         <InvoiceStatCardSmall
           title="Paid"
-          value={<span className="text-3xl">47 invoices</span>}
-          subtitle="$524,800"
+          value={
+            <span className="text-3xl">{stats?.paid?.count} invoices</span>
+          }
+          subtitle={`$${stats?.paid?.total.toLocaleString()}`}
           icon={<CheckCircle className="h-5 w-5 text-green-400" />}
+          loading={loading}
         />
       </div>
 

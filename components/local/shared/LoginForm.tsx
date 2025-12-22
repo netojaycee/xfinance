@@ -20,7 +20,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { loginSchema, LoginCredentials } from "@/lib/schema";
 import Logo from "./Logo";
-import { useLogin } from "@/lib/api/mutations/authMutations";
+import { useLogin } from "@/lib/api/hooks/useAuth";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();

@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import BillsForm from "./PaymentMadeForm";
+import PaymentMadeForm from "./PaymentMadeForm";
 
 export default function PaymentMadeHeader() {
   const [open, setOpen] = React.useState(false);
@@ -35,7 +36,7 @@ export default function PaymentMadeHeader() {
         onOpenChange={setOpen}
         module={MODULES.PURCHASES}
       >
-        <BillsForm />
+        <PaymentMadeForm  />
       </CustomModal>
     </div>
   );

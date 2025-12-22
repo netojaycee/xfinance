@@ -35,6 +35,7 @@ interface CustomTableProps<T> {
   };
   statusOptions?: string[];
   methodsOptions?: string[];
+  loading?: boolean;
 }
 
 export function CustomTable<T extends { [key: string]: any }>({
@@ -52,6 +53,7 @@ export function CustomTable<T extends { [key: string]: any }>({
   } = {},
   statusOptions = [],
   methodsOptions = [],
+  loading = false,
 }: CustomTableProps<T>) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -178,7 +180,17 @@ export function CustomTable<T extends { [key: string]: any }>({
             </tr>
           </thead>
           <tbody>
-            {pagedData.length === 0 ? (
+             {loading ? (
+              [...Array(pageSize)].map((_, i) => (
+                <tr key={i} className="border-t animate-pulse">
+                  {columns.map((col) => (
+                    <td key={col.key} className={cn("px-4 py-2", col.className)}>
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : pagedData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}

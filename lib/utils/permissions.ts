@@ -107,6 +107,15 @@ export const PERMISSIONS = {
   ONLINE_STORE_MANAGEMENT_DELETE: "onlineStore:onlineStoreManagement:delete",
   ONLINE_STORE_MANAGEMENT_EXPORT: "onlineStore:onlineStoreManagement:export",
 
+
+    ASSETS_VIEW: "assets:view",
+  ASSETS_CREATE: "assets:create",
+  ASSETS_EDIT: "assets:edit",
+  ASSETS_APPROVE: "assets:approve",
+  ASSETS_DELETE: "assets:delete",
+  ASSETS_EXPORT: "assets:export",
+
+
   HR_EMPLOYEES_VIEW: "hrAndPayroll:employees:view",
   HR_EMPLOYEES_CREATE: "hrAndPayroll:employees:create",
   HR_EMPLOYEES_EDIT: "hrAndPayroll:employees:edit",

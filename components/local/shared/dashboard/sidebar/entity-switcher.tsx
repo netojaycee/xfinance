@@ -9,14 +9,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Entity } from "@/lib/types";
-import { useImpersonateEntity } from "@/lib/api/mutations/authMutations";
-import { toast } from "sonner";
 import { useSessionStore } from "@/lib/store/session";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useImpersonateEntity } from "@/lib/api/hooks/useAuth";
 
 interface EntitySwitcherProps {
   entities: Entity[];

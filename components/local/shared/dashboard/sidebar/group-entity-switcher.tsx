@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ENUM_ROLE } from "@/lib/types/enums";
 import {
   SidebarMenu,
@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const STORAGE_KEY = "group-entity-switcher-tab";
+// const STORAGE_KEY = "group-entity-switcher-tab";
 
 export default function GroupEntitySwitcher({
   role,

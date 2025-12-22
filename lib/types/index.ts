@@ -8,8 +8,8 @@ export type UserPayload = {
   systemRole: ENUM_ROLE;
   permissions: string[];
   image: {
-    url: string;
-    pub_id: string;
+    secureUrl: string;
+    publicId: string;
   } | null;
   // Add any other user properties you expect
 };
@@ -35,9 +35,9 @@ export type Group = {
   id: string;
   name: string;
   legalName: string;
-  logo: {
-    secure_url: string;
-    public_id: string;
+  logo:  {
+    secureUrl: string;
+    publicId: string;
   } | null;
   taxId: string;
   industry: string;

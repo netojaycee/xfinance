@@ -35,7 +35,7 @@ export default function ExpensesHeader() {
         onOpenChange={setOpen}
         module={MODULES.PURCHASES}
       >
-        <ExpensesForm />
+        <ExpensesForm  />
       </CustomModal>
     </div>
   );

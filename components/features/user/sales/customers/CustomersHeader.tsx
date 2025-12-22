@@ -8,7 +8,7 @@ import { CustomModal } from "@/components/local/custom/modal";
 import CustomerForm from "./CustomerForm";
 import { MODULES } from "@/lib/types/enums";
 
-export default function CustomersHeader() {
+export default function CustomersHeader({data, loading}: {data?: any, loading: boolean}) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="mb-6">
@@ -32,23 +32,31 @@ export default function CustomersHeader() {
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <CustomerStatCardSmall
           title="Total Customers"
-          value={<span className="text-3xl">3</span>}
+          value={<span className="text-3xl">{data?.total || 0}</span>}
           subtitle="Total in system"
+                    loading={loading}
+
         />
         <CustomerStatCardSmall
           title="Active Customers"
-          value={<span className="text-3xl">3</span>}
-          subtitle="100% of total"
+          value={<span className="text-3xl">{data?.active || 0}</span>}
+          subtitle={`${((data?.active || 0) / (data?.total || 1) * 100).toFixed(2)}% of total`}
+                    loading={loading}
+
         />
         <CustomerStatCardSmall
           title="Outstanding Receivables"
           value={<span className="text-3xl">₦135,500</span>}
           subtitle="Total receivables"
+                    loading={loading}
+
         />
         <CustomerStatCardSmall
           title="Avg. Balance"
           value={<span className="text-3xl">₦45,167</span>}
           subtitle="Average per customer"
+                    loading={loading}
+
         />
       </div>
 
@@ -58,7 +66,7 @@ export default function CustomersHeader() {
         open={open}
         onOpenChange={setOpen}
       >
-        <CustomerForm />
+        <CustomerForm onSuccess={() => setOpen(false)} />
       </CustomModal>
     </div>
   );
