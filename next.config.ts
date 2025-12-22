@@ -28,7 +28,12 @@ const nextConfig: NextConfig = {
             // destination: 'http://localhost:3810/api/:path*', // proxy to local backend
           },
         ]
-      : [];
+      : [
+        {
+            source: "/api/:path*",
+            destination: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/:path*`, // proxy to remote/local backend dynamically based on env var
+          },
+      ];
   },
 };
 
