@@ -1,7 +1,8 @@
+import Item from '@/components/features/user/products/items/Item'
 import React from 'react'
 
-export default function ItemsPage() {
+export default function ItemPage() {
   return (
-    <div>ItemsPage</div>
+    <Item />
   )
 }

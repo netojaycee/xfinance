@@ -10,11 +10,11 @@ export default function Loader() {
       )}
     >
       <Image
-        className='outline-none outline-0 border-none border-0 animate-bounce duration-500 transition-transform'
-        src={"/logo.png"}
-        alt='loader'
-        width={142}
-        height={48}
+        className="outline-none outline-0 border-none border-0 animate-bounce duration-500 transition-transform"
+        src={"/images/logo.png"}
+        alt="loader"
+        width={140}
+        height={140}
         priority
       />
       {/* <div className='text-violet-500 text-2xl font-semibold'>X-Portal</div> */}

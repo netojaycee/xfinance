@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import BillsForm from "./BillsForm";
@@ -20,6 +20,7 @@ export default function BillsHeader() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl">
+            <Download />
             Export
           </Button>
           <Button onClick={() => setOpen(true)} className="rounded-xl">

@@ -2,13 +2,13 @@ import Image from "next/image";
 
 export default function Logo({ white = false }: { white?: boolean }) {
   return (
-    <div className='w-35.5 h-12 mx-auto'>
+    <div className='w-10 h-10 mx-auto'>
       <Image
-        src={white ? "/logo_white.png" : "/logo.png"}
-        alt='Hunslow Accounting Logo'
-        width={142}
-        height={48}
-        className='w-35.5 h-12 object-fit'
+        src={"/images/logo.png"}
+        alt='Xfinance Logo'
+        width={180}
+        height={180}
+        className='w-10 h-10 '
 
         priority
       />

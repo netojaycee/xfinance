@@ -30,7 +30,7 @@ export default function Wrapper({
       <AppSidebar user={user} role={role} />
       <SidebarInset>
         <Header role={role} user={user} group={group} entity={entity} loading={loading} />
-        <div className="flex-1 min-h-screen bg-[#f1f5f9]">
+        <div className="flex-1 min-h-screen bg-[#f8fafc]">
           {children}
         </div>
       </SidebarInset>

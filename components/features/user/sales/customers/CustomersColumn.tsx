@@ -31,7 +31,7 @@ export const customerColumns: Column<Customer>[] = [
           {getInitials(row.name)}
         </div>
         <div>
-          <div className="font-normal text-gray-900 text-sm line-clamp-1">{row.name}</div>
+          <div className="font-normal text-gray-900 line-clamp-1">{row.name}</div>
           <div className="text-xs text-gray-400 line-clamp-1">{row.companyName}</div>
         </div>
       </div>
@@ -44,7 +44,7 @@ export const customerColumns: Column<Customer>[] = [
 
     render: (value, row) => (
       <div className="flex flex-col gap-0.5">
-        <span className="flex items-center gap-1 text-sm text-gray-700">
+        <span className="flex items-center gap-1 text-gray-700">
           <Mail className="w-3 h-3" />
           {value}
         </span>

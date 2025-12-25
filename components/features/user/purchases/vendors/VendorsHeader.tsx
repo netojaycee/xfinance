@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, DollarSign, Calendar, Edit3 } from "lucide-react";
+import { FileText, DollarSign, Calendar, Edit3, Download } from "lucide-react";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import VendorsForm from "./VendorsForm";
@@ -21,6 +21,7 @@ export default function VendorsHeader() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl">
+            <Download />
             Export
           </Button>
           <Button onClick={() => setOpen(true)} className="rounded-xl">

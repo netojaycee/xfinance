@@ -70,14 +70,7 @@ export const routePermissions = new Map<string, string | string[]>([
   ["online-store", PERMISSIONS.ONLINE_STORE_MANAGEMENT_VIEW],
   ["assets", PERMISSIONS.ASSETS_VIEW],
 
-  [
-    "banking",
-    [
-      PERMISSIONS.BANKING_OVERVIEW_VIEW,
-      PERMISSIONS.BANKING_BANK_ACCOUNTS_VIEW,
-      PERMISSIONS.BANKING_RECONCILIATION_VIEW,
-    ],
-  ],
+  ["banking", PERMISSIONS.BANKING_VIEW],
 
   [
     "hr",
@@ -100,15 +93,7 @@ export const routePermissions = new Map<string, string | string[]>([
     ],
   ],
 
-  [
-    "reports",
-    [
-      PERMISSIONS.REPORTS_CENTER_VIEW,
-      PERMISSIONS.REPORTS_PROFIT_AND_LOSS_VIEW,
-      PERMISSIONS.REPORTS_BALANCE_SHEET_VIEW,
-      PERMISSIONS.REPORTS_CASH_FLOW_STATEMENT_VIEW,
-    ],
-  ],
+  ["reports", PERMISSIONS.REPORTS_VIEW],
 
   [
     "settings",

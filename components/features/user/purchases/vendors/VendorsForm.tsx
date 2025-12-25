@@ -172,12 +172,13 @@ export default function VendorsForm() {
   const handlePrev = () => setStep((s) => s - 1);
 
   const onSubmit = async (data: VendorFormType) => {
+    console.log(data)
     setLoading(true);
     // Simulate API
     setTimeout(() => {
       setLoading(false);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      alert("Vendor created!\n" + JSON.stringify(data, null, 2));
+      console.log("Vendor created!\n" + JSON.stringify(data, null, 2));
     }, 1200);
   };
 

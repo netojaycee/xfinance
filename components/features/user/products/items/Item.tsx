@@ -1,21 +1,21 @@
 "use client";
-import CustomersHeader from "./CustomersHeader";
 import { CustomTable } from "@/components/local/custom/custom-table";
 
 import { useCustomers } from "@/lib/api/hooks/useSales";
-import { customerColumns } from "./CustomersColumn";
+import { itemColumns, itemsData } from "./ItemColumn";
+import ItemHeader from "./ItemHeader";
 
-export default function Customers() {
+export default function Item() {
   const { data, isLoading } = useCustomers();
   const customers = data?.customers || [];
   return (
     <div className="space-y-4">
-      <CustomersHeader data={data} loading={isLoading} />
+    <ItemHeader data={data} loading={isLoading} />
       <CustomTable
-        searchPlaceholder="Search customers..."
-        tableTitle="All Customers"
-        columns={customerColumns}
-        data={customers}
+        searchPlaceholder="Search items..."
+        tableTitle="Inventory Items"
+        columns={itemColumns}
+        data={itemsData}
         pageSize={10}
         loading={isLoading}
       />

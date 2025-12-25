@@ -11,6 +11,7 @@ import {
   DollarSign,
   Calendar,
   Edit3,
+  Download,
 } from "lucide-react";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
@@ -30,6 +31,7 @@ export default function SalesReceiptHeader() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl">
+            <Download />
             Export
           </Button>
           <Button onClick={() => setOpen(true)} className="rounded-xl">

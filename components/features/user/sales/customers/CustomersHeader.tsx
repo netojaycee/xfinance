@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import CustomerStatCardSmall from "./CustomerStatCardSmall";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import CustomerForm from "./CustomerForm";
 import { MODULES } from "@/lib/types/enums";
@@ -21,6 +21,7 @@ export default function CustomersHeader({data, loading}: {data?: any, loading: b
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl">
+            <Download />
             Export
           </Button>
           <Button onClick={() => setOpen(true)} className="rounded-xl">

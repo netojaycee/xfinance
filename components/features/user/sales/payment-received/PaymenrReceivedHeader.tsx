@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import PaymentReceivedStatCardSmall from "./PaymentReceivedStatCardSmall";
-import { FileText, Send, Clock, CheckCircle } from "lucide-react";
+import { FileText, Send, Clock, CheckCircle, Download } from "lucide-react";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import Invoice from "./PaymentReceivedForm";
@@ -25,6 +25,7 @@ export default function PaymentReceivedHeader() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl">
+            <Download />
             Export
           </Button>
           <Button onClick={() => setOpen(true)} className="rounded-xl">

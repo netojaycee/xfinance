@@ -57,7 +57,7 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <div className="w-full flex items-center justify-center px-2 py-1">
+      <div className="w-full flex items-center justify-center px-2 py-1 bg-white">
         {" "}
         <SidebarMenuButton
           size="lg"
@@ -69,7 +69,7 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
         </SidebarMenuButton>
       </div>
       {/* <Separator className="" /> */}
-      <SidebarHeader>
+      <SidebarHeader className="bg-white">
         {user && user.systemRole === ENUM_ROLE.SUPERADMIN && <GroupSwitcher />}
         {user &&
           user.systemRole !== ENUM_ROLE.USER &&
@@ -83,7 +83,7 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
           />
         )}
       </SidebarHeader>
-      <SidebarContent className="scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-primary">
+      <SidebarContent className="scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-primary bg-white">
         <NavMain items={menuData} />
       </SidebarContent>
       {/* <SidebarFooter>

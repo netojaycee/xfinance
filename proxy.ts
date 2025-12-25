@@ -22,6 +22,15 @@ const protectedPaths = [
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Prevent authenticated users from accessing /auth routes
+  if (pathname.startsWith('/auth')) {
+    const { user } = await getAppSession();
+    if (user) {
+      const dashboardUrl = new URL('/dashboard', request.url);
+      return NextResponse.redirect(dashboardUrl);
+    }
+  }
+
   // Check if the requested path is one of the protected routes
 //   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
 const isProtected = protectedPaths.some((path) => {
@@ -127,8 +136,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - auth (authentication pages)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|auth).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

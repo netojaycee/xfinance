@@ -5,7 +5,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function CustomerStatCardSmall({
+export default function BankingStatCardSmall({
   title,
   value,
   subtitle,
@@ -13,7 +13,7 @@ export default function CustomerStatCardSmall({
 }: {
   title: string;
   value: any;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   loading?: boolean;
 }) {
   return (

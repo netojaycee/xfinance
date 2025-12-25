@@ -1,9 +1,10 @@
+"use client"
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Filter, Search } from "lucide-react";
+import { Download, Filter, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,12 +27,14 @@ interface CustomTableProps<T> {
   pageSize?: number;
   className?: string;
   tableTitle?: string;
+  tableSubtitle?: string;
   searchPlaceholder?: string;
   display?: {
     searchComponent?: boolean;
     filterComponent?: boolean;
     statusComponent?: boolean;
     methodsComponent?: boolean;
+    exportButton?: boolean;
   };
   statusOptions?: string[];
   methodsOptions?: string[];
@@ -44,12 +47,14 @@ export function CustomTable<T extends { [key: string]: any }>({
   pageSize = 10,
   className,
   tableTitle,
+  tableSubtitle,
   searchPlaceholder,
   display: {
     searchComponent = true,
     filterComponent = false,
     statusComponent = false,
     methodsComponent = false,
+    exportButton = false,
   } = {},
   statusOptions = [],
   methodsOptions = [],
@@ -86,7 +91,12 @@ export function CustomTable<T extends { [key: string]: any }>({
   return (
     <div className={cn("w-full bg-white p-4 rounded-2xl shadow-md", className)}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-normal text-base">{tableTitle}</h2>
+        <div>
+          <h2 className="font-normal text-base">{tableTitle}</h2>
+          {tableSubtitle && (
+            <p className="text-sm text-gray-500">{tableSubtitle}</p>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {searchComponent && (
             <div className="relative w-64">
@@ -122,7 +132,7 @@ export function CustomTable<T extends { [key: string]: any }>({
             </Select>
           )}
 
-           {methodsComponent && (
+          {methodsComponent && (
             // select component for status filter
             <Select
               onValueChange={(value) => {
@@ -146,6 +156,11 @@ export function CustomTable<T extends { [key: string]: any }>({
           {filterComponent && (
             <Button variant="outline" className="rounded-2xl">
               <Filter /> Filter
+            </Button>
+          )}
+          {exportButton && (
+            <Button variant="outline" className="rounded-2xl">
+              <Download /> Export
             </Button>
           )}
           {/* Pagination Controls */}
@@ -180,11 +195,14 @@ export function CustomTable<T extends { [key: string]: any }>({
             </tr>
           </thead>
           <tbody>
-             {loading ? (
+            {loading ? (
               [...Array(pageSize)].map((_, i) => (
                 <tr key={i} className="border-t animate-pulse">
                   {columns.map((col) => (
-                    <td key={col.key} className={cn("px-4 py-2", col.className)}>
+                    <td
+                      key={col.key}
+                      className={cn("px-4 py-2", col.className)}
+                    >
                       <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
                     </td>
                   ))}

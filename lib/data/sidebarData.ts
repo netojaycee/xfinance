@@ -125,7 +125,7 @@ export const userMenu = [
       PERMISSIONS.PRODUCTS_INVENTORY_VIEW,
       PERMISSIONS.PRODUCTS_ORDERS_VIEW,
     ],
-    isActive: true
+    isActive: true,
   },
   // {
   //   title: "Quick Sale",
@@ -146,30 +146,7 @@ export const userMenu = [
     icon: Building,
     url: "/assets",
     requiredPermission: PERMISSIONS.ASSETS_VIEW,
-    isActive: false,
-  },
-  {
-    title: "Banking",
-    icon: Landmark,
-    url: "/banking",
-    requiredPermissions: [
-      PERMISSIONS.BANKING_OVERVIEW_VIEW,
-      PERMISSIONS.BANKING_BANK_ACCOUNTS_VIEW,
-      PERMISSIONS.BANKING_RECONCILIATION_VIEW,
-    ],
-    isActive: false,
-  },
-  {
-    title: "HR & Payroll",
-    icon: Users,
-    url: "/hr",
-    requiredPermissions: [
-      PERMISSIONS.HR_PAYROLL_VIEW,
-      PERMISSIONS.HR_EMPLOYEES_VIEW,
-      PERMISSIONS.HR_ATTENDANCE_VIEW,
-      PERMISSIONS.HR_MANAGE_LEAVE_VIEW,
-    ],
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Accounts",
@@ -185,22 +162,31 @@ export const userMenu = [
     isActive: false,
   },
   {
+    title: "Banking",
+    icon: Landmark,
+    url: "/banking",
+    requiredPermission: PERMISSIONS.BANKING_VIEW,
+    isActive: true,
+  },
+  {
+    title: "HR & Payroll",
+    icon: Users,
+    url: "/hr",
+    requiredPermissions: [
+      PERMISSIONS.HR_PAYROLL_VIEW,
+      PERMISSIONS.HR_EMPLOYEES_VIEW,
+      PERMISSIONS.HR_ATTENDANCE_VIEW,
+      PERMISSIONS.HR_MANAGE_LEAVE_VIEW,
+    ],
+    isActive: false,
+  },
+
+  {
     title: "Reports",
     icon: AreaChart,
     url: "/reports",
-    // requiredPermissions: [
-    //   "reports:reportsCenter:view",
-    //   "reports:profitAndLoss:view",
-    //   "reports:balanceSheet:view",
-    //   "reports:cashFlowStatement:view",
-    // ],
-    requiredPermissions: [
-      PERMISSIONS.REPORTS_CENTER_VIEW,
-      PERMISSIONS.REPORTS_PROFIT_AND_LOSS_VIEW,
-      PERMISSIONS.REPORTS_BALANCE_SHEET_VIEW,
-      PERMISSIONS.REPORTS_CASH_FLOW_STATEMENT_VIEW,
-    ],
-    isActive: false,
+    requiredPermission: PERMISSIONS.REPORTS_VIEW,
+    isActive: true,
   },
   {
     title: "Settings",

@@ -21,10 +21,11 @@ import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import { useDeleteCustomer } from "@/lib/api/hooks/useSales";
 import { toast } from "sonner";
-import CustomerForm from "./ItemsForm";
+import CustomerForm from "./ItemForm";
 import { useRouter } from "next/navigation";
+import ItemForm from "./ItemForm";
 
-export default function CustomersActions({ row }: { row: any }) {
+export default function ItemsAction({ row }: { row: any }) {
     const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -71,14 +72,14 @@ export default function CustomersActions({ row }: { row: any }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
+          {/* <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
               router.push(`/sales/customers/${row.id}`);
             }}
           >
             <Eye className="size-4 mr-2" /> View details
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -88,20 +89,8 @@ export default function CustomersActions({ row }: { row: any }) {
             <Edit3 className="size-4 mr-2" /> Edit
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <FilePlus className="size-4 mr-2" /> Create invoice
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <FileText className="size-4 mr-2" /> View invoices
-          </DropdownMenuItem>
+        
+          
           <DropdownMenuSeparator />
           <DropdownMenuItem
             data-variant="destructive"
@@ -118,7 +107,7 @@ export default function CustomersActions({ row }: { row: any }) {
         title={"Confirm Deletion"}
         open={open}
         onOpenChange={setOpen}
-        module={MODULES.SALES}
+        module={MODULES.PRODUCTS}
       >
         <ConfirmationForm
           title={`Are you sure you want to delete ${row.name}?`}
@@ -127,12 +116,12 @@ export default function CustomersActions({ row }: { row: any }) {
         />
       </CustomModal>
       <CustomModal
-        title={`Edit Customer: ${row.name}`}
+        title={`Edit Item: ${row.name}`}
         open={editOpen}
         onOpenChange={setEditOpen}
-        module={MODULES.SALES}
+        module={MODULES.PRODUCTS}
       >
-        <CustomerForm customer={row} isEditMode onSuccess={() => setEditOpen(false)} />
+        <ItemForm item={row} isEditMode onSuccess={() => setEditOpen(false)} />
       </CustomModal>
     </>
   );

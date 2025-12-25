@@ -35,6 +35,8 @@ CustomModalProps) {
   const getGradientClass = () => {
     if (module === MODULES.PURCHASES) return "from-[#ff6a00] to-[#d28600]";
     if (module === MODULES.SALES) return "from-cyan-500 to-blue-500";
+    if (module === MODULES.PRODUCTS) return "from-green-500 to-emerald-500";
+    if (module === MODULES.ASSETS) return "from-purple-500 to-pink-500";
     return "from-cyan-500 to-blue-500";
   };
   return (
