@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  console.log("GET /api/v1/cookies called", request);
+  console.log("GET /api/v1/cookies called", request.method);
   const { user, group, entity } = await getAppSession();
   const response = NextResponse.json({ user, group, entity });
   return response;

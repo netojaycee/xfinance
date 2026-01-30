@@ -21,21 +21,23 @@ export default function RouteTabNav({ tabs, className }: RouteTabNavProps) {
   const pathname = usePathname();
 
   return (
-    <div className={cn("flex gap-2 border-b border-t border-gray-400 px-4 bg-white", className)}>
-      {tabs.map((tab) => (
-        <Can key={tab.href} do={tab.permission}>
-            <Link
-            href={tab.href}
-            prefetch
-            className={cn(
-              "px-4 py-2 text-sm font-normal",
-              (pathname === tab.href || pathname.includes(tab.href)) && "border-b-2 border-primary text-primary"
-            )}
-            >
-            {tab.label}
-            </Link>
-        </Can>
-      ))}
+    <div className={cn("overflow-x-auto bg-white border-b border-t border-gray-400", className)}>
+      <div className="flex gap-2 px-4 py-0 min-w-max">
+        {tabs.map((tab) => (
+          <Can key={tab.href} do={tab.permission}>
+              <Link
+              href={tab.href}
+              prefetch
+              className={cn(
+                "px-4 py-2 text-sm font-normal whitespace-nowrap",
+                (pathname === tab.href || pathname.includes(tab.href)) && "border-b-2 border-primary text-primary"
+              )}
+              >
+              {tab.label}
+              </Link>
+          </Can>
+        ))}
+      </div>
     </div>
   );
 }

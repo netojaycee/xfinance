@@ -107,14 +107,12 @@ export const PERMISSIONS = {
   ONLINE_STORE_MANAGEMENT_DELETE: "onlineStore:onlineStoreManagement:delete",
   ONLINE_STORE_MANAGEMENT_EXPORT: "onlineStore:onlineStoreManagement:export",
 
-
-    ASSETS_VIEW: "assets:view",
+  ASSETS_VIEW: "assets:view",
   ASSETS_CREATE: "assets:create",
   ASSETS_EDIT: "assets:edit",
   ASSETS_APPROVE: "assets:approve",
   ASSETS_DELETE: "assets:delete",
   ASSETS_EXPORT: "assets:export",
-
 
   HR_EMPLOYEES_VIEW: "hrAndPayroll:employees:view",
   HR_EMPLOYEES_CREATE: "hrAndPayroll:employees:create",
@@ -247,11 +245,15 @@ export const PERMISSIONS = {
   SETTINGS_USERS_AND_ROLES_EXPORT: "settings:usersAndRoles:export",
 
   SETTINGS_SETUP_AND_CONFIGURATION_VIEW: "settings:setupAndConfiguration:view",
-  SETTINGS_SETUP_AND_CONFIGURATION_CREATE: "settings:setupAndConfiguration:create",
+  SETTINGS_SETUP_AND_CONFIGURATION_CREATE:
+    "settings:setupAndConfiguration:create",
   SETTINGS_SETUP_AND_CONFIGURATION_EDIT: "settings:setupAndConfiguration:edit",
-  SETTINGS_SETUP_AND_CONFIGURATION_APPROVE: "settings:setupAndConfiguration:approve",
-  SETTINGS_SETUP_AND_CONFIGURATION_DELETE: "settings:setupAndConfiguration:delete",
-  SETTINGS_SETUP_AND_CONFIGURATION_EXPORT: "settings:setupAndConfiguration:export",
+  SETTINGS_SETUP_AND_CONFIGURATION_APPROVE:
+    "settings:setupAndConfiguration:approve",
+  SETTINGS_SETUP_AND_CONFIGURATION_DELETE:
+    "settings:setupAndConfiguration:delete",
+  SETTINGS_SETUP_AND_CONFIGURATION_EXPORT:
+    "settings:setupAndConfiguration:export",
 
   SETTINGS_SALES_SETTINGS_VIEW: "settings:salesSettings:view",
   SETTINGS_SALES_SETTINGS_CREATE: "settings:salesSettings:create",
@@ -294,6 +296,14 @@ export const PERMISSIONS = {
   SETTINGS_EMAIL_SETTINGS_APPROVE: "settings:emailSettings:approve",
   SETTINGS_EMAIL_SETTINGS_DELETE: "settings:emailSettings:delete",
   SETTINGS_EMAIL_SETTINGS_EXPORT: "settings:emailSettings:export",
+
+  // ADDED PAYROLL ADD TO BACKEND
+  SETTINGS_PAYROLL_SETTINGS_VIEW: "settings:payrollSettings:view",
+  SETTINGS_PAYROLL_SETTINGS_CREATE: "settings:payrollSettings:create",
+  SETTINGS_PAYROLL_SETTINGS_EDIT: "settings:payrollSettings:edit",
+  SETTINGS_PAYROLL_SETTINGS_APPROVE: "settings:payrollSettings:approve",
+  SETTINGS_PAYROLL_SETTINGS_DELETE: "settings:payrollSettings:delete",
+  SETTINGS_PAYROLL_SETTINGS_EXPORT: "settings:payrollSettings:export",
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

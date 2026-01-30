@@ -4,7 +4,7 @@ import { UserPayload } from '@/lib/types';
 import { LoginCredentials } from '@/lib/schema';
 
 export const loginUser = (credentials: LoginCredentials): Promise<UserPayload> => {
-  return apiClient<UserPayload>("/auth/login", {
+  return apiClient<UserPayload>("auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
   });

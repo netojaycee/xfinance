@@ -159,7 +159,7 @@ export const userMenu = [
       PERMISSIONS.ACCOUNTS_CURRENCY_ADJUSTMENT_VIEW,
       PERMISSIONS.ACCOUNTS_BUDGET_VIEW,
     ],
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Banking",
@@ -178,7 +178,7 @@ export const userMenu = [
       PERMISSIONS.HR_ATTENDANCE_VIEW,
       PERMISSIONS.HR_MANAGE_LEAVE_VIEW,
     ],
-    isActive: false,
+    isActive: true,
   },
 
   {
@@ -203,6 +203,6 @@ export const userMenu = [
       PERMISSIONS.SETTINGS_GENERAL_SETTINGS_VIEW,
       PERMISSIONS.SETTINGS_EMAIL_SETTINGS_VIEW,
     ],
-    isActive: false,
+    isActive: true,
   },
 ];

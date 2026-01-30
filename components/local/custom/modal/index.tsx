@@ -37,6 +37,8 @@ CustomModalProps) {
     if (module === MODULES.SALES) return "from-cyan-500 to-blue-500";
     if (module === MODULES.PRODUCTS) return "from-green-500 to-emerald-500";
     if (module === MODULES.ASSETS) return "from-purple-500 to-pink-500";
+    if (module === MODULES.HR_PAYROLL) return "from-indigo-500 to-violet-500";
+    if (module === MODULES.ACCOUNTS) return "from-teal-500 to-cyan-500";
     return "from-cyan-500 to-blue-500";
   };
   return (

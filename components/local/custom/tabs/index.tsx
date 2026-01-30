@@ -43,15 +43,15 @@ export function CustomTabs({ tabs, storageKey }: CustomTabsProps) {
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <div className="w-full relative bg-white h-10">
-        <div className=" border-t-[0.3px] border-[#e2e8f0] absolute top-0 w-full"></div>
-        <div className=" border-t-[0.3px] border-[#e2e8f0] absolute bottom-0 w-full"></div>
-        <TabsList className={`bg-transparent shadow-none space-x-5 px-4`}>
+      <div className="w-full relative ">
+        {/* <div className=" border-t-[0.3px] border-[#e2e8f0] absolute top-0 w-full"></div>
+        <div className=" border-t-[0.3px] border-[#e2e8f0] absolute bottom-0 w-full"></div> */}
+        <TabsList className={`bg-transparent shadow-none space-x-5`}>
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className='font-normal relative  data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold  data-[state=active]:text-primary data-[state=active]:after:content-[""] data-[state=active]:after:block data-[state=active]:after:absolute data-[state=active]:after:left-1 data-[state=active]:after:right-1  data-[state=active]:after:-bottom-2 data-[state=active]:after:border-b-2 data-[state=active]:after:border-current underline-offset-14'
+              className='font-normal relative  data-[state=active]:bg-primary data-[state=active]:shadow-none data-[state=active]:font-semibold  data-[state=active]:text-white border border-black bg-white text-black'
             >
               {tab.title}
             </TabsTrigger>
@@ -59,7 +59,7 @@ export function CustomTabs({ tabs, storageKey }: CustomTabsProps) {
         </TabsList>
       </div>
       {tabs.map((tab) => (
-        <TabsContent className="px-4" key={tab.value} value={tab.value}>
+        <TabsContent className="" key={tab.value} value={tab.value}>
           {tab.content}
         </TabsContent>
       ))}
