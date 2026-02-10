@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useSessionStore } from "@/lib/store/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,13 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
+import { useCreateJournal } from "@/lib/api/hooks/useAccounts";
 
 // Zod schema for Journal Entry Line
 const journalLineSchema = z.object({
   accountId: z.string().min(1, "Account is required"),
-  debit: z.coerce.number().default(0),
-  credit: z.coerce.number().default(0),
+  debit: z.coerce.number().pipe(z.number()).default(0),
+  credit: z.coerce.number().pipe(z.number()).default(0),
 });
 
 // Zod schema for Manual Journal Entry
@@ -62,8 +64,11 @@ const generateReferenceNumber = () => {
 };
 
 export default function ManualJournalForm({ onSuccess }: ManualJournalFormProps) {
+  const { entity, user } = useSessionStore();
+  const createJournal = useCreateJournal();
+
   const form = useForm<ManualJournalFormData>({
-    resolver: zodResolver(manualJournalSchema),
+    resolver: zodResolver(manualJournalSchema) as any,
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
       referenceNumber: generateReferenceNumber(),
@@ -89,13 +94,41 @@ export default function ManualJournalForm({ onSuccess }: ManualJournalFormProps)
       return;
     }
     try {
-      console.log("Manual Journal Entry submitted:", values);
-      toast.success("Journal entry posted successfully");
-      if (onSuccess) onSuccess();
+      const payload = {
+        description: values.description,
+        date: new Date(values.date).toISOString(),
+        entityId: entity.entityId || "",
+        lines: values.journalLines.map((line) => ({
+          account: line.accountId,
+          debit: Math.round((line.debit || 0) * 100),
+          credit: Math.round((line.credit || 0) * 100),
+        })),
+      };
+
+      await createJournal.mutateAsync(payload);
     } catch (error) {
-      toast.error("Failed to post journal entry");
+      // error handled below
     }
   };
+
+  useEffect(() => {
+    if (createJournal.isSuccess) {
+      toast.success("Journal entry posted successfully");
+      form.reset({
+        date: new Date().toISOString().split("T")[0],
+        referenceNumber: generateReferenceNumber(),
+        description: "",
+        journalLines: [{ accountId: "", debit: 0, credit: 0 }],
+      });
+      if (onSuccess) onSuccess();
+    }
+    if (createJournal.isError) {
+      toast.error(
+        createJournal.error?.message || "Failed to post journal entry"
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createJournal.isSuccess, createJournal.isError]);
 
   const handleAddLine = () => {
     append({ accountId: "", debit: 0, credit: 0 });
@@ -311,11 +344,18 @@ export default function ManualJournalForm({ onSuccess }: ManualJournalFormProps)
             </Button>
             <Button
               type="submit"
-              disabled={!isBalanced}
+              disabled={!isBalanced || createJournal.isPending}
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               title={!isBalanced ? "Journal entry must be balanced" : ""}
             >
-              Post Entry
+              {createJournal.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Posting...</span>
+                </>
+              ) : (
+                <span>Post Entry</span>
+              )}
             </Button>
           </div>
         </form>

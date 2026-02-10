@@ -24,7 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, Trash2, Copy, FileText, AlertCircle } from "lucide-react";
+import { Calendar, Plus, Trash2, Copy, FileText, AlertCircle, Loader2 } from "lucide-react";
+import { useCreateBudget } from "@/lib/api/hooks/useAccounts";
+import { BudgetPeriodTypeEnum } from "@/lib/api/hooks/types/accountsTypes";
 
 // Zod schema for Set Budget Form
 const budgetLineSchema = z.object({
@@ -48,7 +50,7 @@ interface SetBudgetFormProps {
 }
 
 // Mock data
-const periodTypeOptions = ["Monthly", "Quarterly", "Annual"];
+const periodTypeOptions = ["Monthly", "Quarterly", "Yearly"];
 const monthOptions = [
   "January 2025",
   "February 2025",
@@ -91,6 +93,8 @@ const getTypeBadgeColor = (type: string) => {
 };
 
 export default function SetBudgetForm({ onSuccess }: SetBudgetFormProps) {
+  const createBudget = useCreateBudget();
+
   const form = useForm<SetBudgetFormData>({
     resolver: zodResolver(setBudgetSchema),
     defaultValues: {
@@ -122,13 +126,47 @@ export default function SetBudgetForm({ onSuccess }: SetBudgetFormProps) {
 
   const onSubmit = async (values: SetBudgetFormData) => {
     try {
-      console.log("Set Budget submitted:", values);
-      toast.success("Budget set successfully");
-      if (onSuccess) onSuccess();
+      const fiscalYear = values.fiscalYear.replace("FY ", "");
+      const monthValue = `${fiscalYear}-${String(
+        new Date(`${values.month} 2025`).getMonth() + 1
+      ).padStart(2, "0")}`;
+
+      const payload = {
+        name: values.budgetName || `Budget - ${values.month}`,
+        periodType: values.periodType as BudgetPeriodTypeEnum,
+        month: monthValue,
+        fiscalYear: fiscalYear,
+        note: values.notes,
+        lines: values.budgetLines.map((line) => ({
+          accountId: line.account,
+          amount: Math.round(parseFloat(line.budgetAmount) * 100),
+        })),
+      };
+
+      await createBudget.mutateAsync(payload);
     } catch (error) {
-      toast.error("Failed to set budget");
+      // error handled below
     }
   };
+
+  useEffect(() => {
+    if (createBudget.isSuccess) {
+      toast.success("Budget set successfully");
+      form.reset({
+        periodType: "Monthly",
+        month: "November 2025",
+        fiscalYear: "FY 2025",
+        budgetName: "",
+        budgetLines: [{ account: "4000", budgetAmount: "" }],
+        notes: "",
+      });
+      if (onSuccess) onSuccess();
+    }
+    if (createBudget.isError) {
+      toast.error(createBudget.error?.message || "Failed to set budget");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createBudget.isSuccess, createBudget.isError]);
 
   const handleCopyFromPreviousPeriod = () => {
     // Mock implementation - would populate from previous period
@@ -474,9 +512,19 @@ export default function SetBudgetForm({ onSuccess }: SetBudgetFormProps) {
               <Button
                 type="submit"
                 className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg py-6 font-semibold flex items-center justify-center gap-2"
+                disabled={createBudget.isPending}
               >
-                <Calendar className="w-4 h-4" />
-                Set Budget
+                {createBudget.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Setting...
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-4 h-4" />
+                    Set Budget
+                  </>
+                )}
               </Button>
             </div>
           </div>

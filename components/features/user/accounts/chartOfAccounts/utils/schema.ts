@@ -6,8 +6,8 @@ export const chartOfAccountsSchema = z.object({
   accountName: z.string().min(1, "Account name is required"),
   primaryCategory: z.string().min(1, "Primary category is required"),
   subcategory: z.string().optional(),
-  description: z.string().optional(),
-  status: z.string().default("Active"),
+  description: z.string().default(""),
+  status: z.string().min(1, "Status is required"),
 });
 
 

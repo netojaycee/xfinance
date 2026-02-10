@@ -6,16 +6,24 @@ import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import ExpensesForm from "./ExpensesForm";
 import { MODULES } from "@/lib/types/enums";
+import { ExpensesResponse } from "./types";
 
-export default function ExpensesHeader() {
+interface ExpensesHeaderProps {
+  loading?: boolean;
+  data?: ExpensesResponse;
+}
+
+export default function ExpensesHeader({ loading = false, data }: ExpensesHeaderProps) {
   const [open, setOpen] = React.useState(false);
+  const totalExpenses = data?.totalCount || 0;
+
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold text-indigo-900">Expenses</h2>
           <p className="text-muted-foreground">
-            Track and manage business expenses{" "}
+            Track and manage business expenses ({totalExpenses} expenses)
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -36,7 +44,7 @@ export default function ExpensesHeader() {
         onOpenChange={setOpen}
         module={MODULES.PURCHASES}
       >
-        <ExpensesForm  />
+        <ExpensesForm onSuccess={() => setOpen(false)} />
       </CustomModal>
     </div>
   );

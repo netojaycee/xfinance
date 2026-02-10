@@ -8,14 +8,17 @@ import EmployeeForm from "./LeaveManagementForm";
 import { MODULES } from "@/lib/types/enums";
 import LeaveManagementStatCardSmall from "./LeaveManagementStatCardSmall";
 import LeaveManagementForm from "./LeaveManagementForm";
+import { EmployeeStats } from "@/lib/api/hooks/types/hrTypes";
+
+interface LeaveManagementHeaderProps {
+  stats?: EmployeeStats;
+  loading: boolean;
+}
 
 export default function LeaveManagementHeader({
-  data,
+  stats,
   loading,
-}: {
-  data?: any;
-  loading: boolean;
-}) {
+}: LeaveManagementHeaderProps) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="mb-6">
@@ -40,28 +43,28 @@ export default function LeaveManagementHeader({
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <LeaveManagementStatCardSmall
           title="Total Requests"
-          value={data?.totalRequests || 0}
+          value={stats?.totalOnLeave || 0}
           subtitle="Filters apply"
           loading={loading}
           icon={<Calendar size={18} />}
         />
         <LeaveManagementStatCardSmall
           title="Pending Approval"
-          value={data?.pendingApproval || 0}
+          value={0}
           subtitle="Filters apply"
           loading={loading}
           icon={<Clock size={18} />}
         />
         <LeaveManagementStatCardSmall
           title="Approved"
-          value={data?.approved || 0}
+          value={stats?.totalOnLeave || 0}
           subtitle="Filters apply"
           loading={loading}
           icon={<CheckCircle size={18} />}
         />
         <LeaveManagementStatCardSmall
           title="Total Leave Days"
-          value={data?.totalLeaveDays || 0}
+          value={stats?.totalOnLeave || 0}
           subtitle="Filters apply"
           loading={loading}
           icon={<Calendar size={18} />}

@@ -14,7 +14,7 @@ type BillRow = {
   vendor: string;
   dueDate: string;
   amount: string;
-  status: "Unpaid" | "Paid" | string;
+  status: "unpaid" | "paid" | "draft" | string;
 };
 
 type BillColumn = {
@@ -26,7 +26,7 @@ type BillColumn = {
 
 export const billsColumns: BillColumn[] = [
   {
-    key: "billNo",
+    key: "billNumber",
     title: "Bill #",
     className: "text-xs",
     render: (value: unknown) => (
@@ -34,36 +34,55 @@ export const billsColumns: BillColumn[] = [
     ),
   },
   {
-    key: "date",
+    key: "billDate",
     title: "Date",
     className: "text-xs",
-    render: (value: unknown) => (
-      <span className="text-xs">{value as string}</span>
-    ),
+    render: (value: unknown) => {
+      const date = new Date(value as string);
+      const formatted = date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+      return <span className="text-xs">{formatted}</span>;
+    },
   },
   {
     key: "vendor",
     title: "Vendor",
     className: "text-xs",
     render: (value: unknown) => (
-      <span className="text-xs font-medium">{value as string}</span>
+      <span className="text-xs font-medium">{(value as any).displayName}</span>
     ),
   },
   {
     key: "dueDate",
     title: "Due Date",
     className: "text-xs",
-    render: (value: unknown) => (
-      <span className="text-xs">{value as string}</span>
-    ),
+    render: (value: unknown) => {
+      const date = new Date(value as string);
+      const formatted = date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+      return <span className="text-xs">{formatted}</span>;
+    },
   },
   {
-    key: "amount",
+    key: "total",
     title: "Amount",
     className: "text-xs",
-    render: (value: unknown) => (
-      <span className="text-xs font-semibold">{value as string}</span>
-    ),
+    render: (value: unknown) => {
+      const amount = parseFloat(value as string);
+      const formatted = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(amount);
+      return (
+        <span className="text-xs font-semibold">{formatted}</span>
+      );
+    },
   },
   {
     key: "status",
@@ -73,8 +92,8 @@ export const billsColumns: BillColumn[] = [
       const status = value as string;
       let badgeClass = "";
       let text = status;
-      if (status === "Paid") badgeClass = "bg-green-100 text-green-700";
-      else if (status === "Unpaid")
+      if (status === "paid") badgeClass = "bg-green-100 text-green-700";
+      else if (status === "unpaid")
         badgeClass = "bg-yellow-100 text-yellow-700";
       else badgeClass = "bg-gray-100 text-gray-700";
       return (

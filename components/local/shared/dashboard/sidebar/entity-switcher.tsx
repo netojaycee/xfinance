@@ -32,7 +32,8 @@ export function EntitySwitcher({ entities, isLoading }: EntitySwitcherProps) {
     useImpersonateEntity({
       onSuccess: () => {
         // toast.success("Switched entity successfully!");
-        window.location.reload();
+        // window.location.reload();
+        window.location.href = "/dashboard";
       },
       onError: (error) => {
         // toast.error(error.message || "Failed to switch entity.");
@@ -55,6 +56,7 @@ export function EntitySwitcher({ entities, isLoading }: EntitySwitcherProps) {
           entityId: firstEntity.id,
           entityName: firstEntity.name,
         });
+
       }
     }
   }, [entities, currentEntity, impersonateEntity]);

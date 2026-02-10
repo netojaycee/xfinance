@@ -1,35 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Table } from "lucide-react";
+import { Collection } from "@/lib/api/hooks/types/productsTypes";
 
-// CollectionCardGrid: Card grid for collections (see attached image)
-export default function CollectionCardGrid() {
-  const collections = [
-    {
-      name: "Best Sellers",
-      items: 24,
-      description: "Top selling products",
-      value: "$48,500",
-    },
-    {
-      name: "New Arrivals",
-      items: 12,
-      description: "Recently added items",
-      value: "$18,900",
-    },
-    {
-      name: "Premium Collection",
-      items: 18,
-      description: "High-end products",
-      value: "$72,000",
-    },
-    {
-      name: "Seasonal Sale",
-      items: 32,
-      description: "Discounted items",
-      value: "$38,400",
-    },
-  ];
+interface CollectionCardGridProps {
+  collections: Collection[];
+  loading: boolean;
+  currentPage: number;
+  rowsPerPage: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+  onSearch: (value: string) => void;
+  searchValue: string;
+}
+
+export default function CollectionCardGrid({
+  collections,
+  loading,
+  currentPage,
+  rowsPerPage,
+  totalCount,
+  onPageChange,
+  onSearch,
+  searchValue,
+}: CollectionCardGridProps) {
+  const totalPages = Math.ceil(totalCount / rowsPerPage);
+
   return (
     <>
       <div className="flex justify-end my-4">
@@ -37,41 +33,97 @@ export default function CollectionCardGrid() {
           <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
             <Search className="w-4 h-4" />
           </span>
-          <Input className="w-full pl-9" placeholder="Search collections..." />
+          <Input
+            className="w-full pl-9"
+            placeholder="Search collections..."
+            value={searchValue}
+            onChange={(e) => onSearch(e.target.value)}
+          />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {collections.map((col, i) => (
-          <div
-            key={col.name}
-            className="bg-white rounded-xl shadow-sm border p-4 flex flex-col relative"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-indigo-100 rounded-xl p-2 flex items-center justify-center">
-                <Table className="w-4 h-4" />
-              </div>
-              <span className="absolute top-4 right-4 bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1 rounded-full">
-                {col.items} items
-              </span>
+
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-xl shadow-sm border p-4 animate-pulse"
+            >
+              <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
+              <div className="h-3 bg-gray-200 rounded mb-4 w-1/2"></div>
+              <div className="h-8 bg-gray-200 rounded"></div>
             </div>
-            <div className="font-semibold text-base text-gray-800 mb-1">
-              {col.name}
-            </div>
-            <div className="text-gray-400 text-sm mb-4">{col.description}</div>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs text-gray-400">Total Value</div>
-                <div className="text-lg font-semibold text-blue-700">
-                  {col.value}
+          ))}
+        </div>
+      ) : collections.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No collections found</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {collections.map((col) => (
+              <div
+                key={col.id}
+                className="bg-white rounded-xl shadow-sm border p-4 flex flex-col relative hover:shadow-md transition"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-indigo-100 rounded-xl p-2 flex items-center justify-center">
+                    <Table className="w-4 h-4" />
+                  </div>
+                  <span className="absolute top-4 right-4 bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1 rounded-full">
+                    {col.featured ? "Featured" : "Regular"}
+                  </span>
+                </div>
+                <div className="font-semibold text-base text-gray-800 mb-1">
+                  {col.name}
+                </div>
+                <div className="text-gray-400 text-sm mb-4 line-clamp-2">
+                  {col.description}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-gray-400">Status</div>
+                    <div className="text-sm font-semibold">
+                      {col.visibility ? (
+                        <span className="text-green-600">Visible</span>
+                      ) : (
+                        <span className="text-gray-500">Hidden</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button className="border border-gray-200 rounded-xl px-4 py-2 font-semibold text-gray-700 bg-white hover:bg-gray-50 transition">
+                    Edit
+                  </Button>
                 </div>
               </div>
-              <Button className="border border-gray-200 rounded-xl px-4 py-2 font-semibold text-gray-700 bg-white hover:bg-gray-50 transition">
-                View Items
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-6">
+            <p className="text-sm text-gray-500">
+              Page {currentPage} of {totalPages} ({totalCount} total)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={() => onPageChange(currentPage - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                disabled={currentPage === totalPages}
+                onClick={() => onPageChange(currentPage + 1)}
+              >
+                Next
               </Button>
             </div>
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </>
   );
 }

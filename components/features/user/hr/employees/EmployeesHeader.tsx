@@ -7,14 +7,17 @@ import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import EmployeeForm from "./EmployeeForm";
 import { MODULES } from "@/lib/types/enums";
+import { EmployeeStats } from "@/lib/api/hooks/types/hrTypes";
+
+interface EmployeesHeaderProps {
+  stats?: EmployeeStats;
+  loading: boolean;
+}
 
 export default function EmployeesHeader({
-  data,
+  stats,
   loading,
-}: {
-  data?: any;
-  loading: boolean;
-}) {
+}: EmployeesHeaderProps) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="mb-6">
@@ -39,25 +42,25 @@ export default function EmployeesHeader({
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <EmployeesStatCardSmall
           title="Total Employees"
-          value={<span className="text-3xl">{data?.total || 0}</span>}
+          value={<span className="text-3xl">{stats?.totalEmployees || 0}</span>}
           subtitle="Total in system"
           loading={loading}
         />
         <EmployeesStatCardSmall
           title="Active"
-          value={<span className="text-3xl">{data?.active || 0}</span>}
+          value={<span className="text-3xl">{stats?.totalActive || 0}</span>}
           subtitle="Currently working"
           loading={loading}
         />
         <EmployeesStatCardSmall
           title="On Leave"
-          value={<span className="text-3xl">{data?.onLeave || 0}</span>}
+          value={<span className="text-3xl">{stats?.totalOnLeave || 0}</span>}
           subtitle="Today"
           loading={loading}
         />
         <EmployeesStatCardSmall
           title="New Hires (Month)"
-          value={<span className="text-3xl">{data?.newHires || 0}</span>}
+          value={<span className="text-3xl">{stats?.totalHiredThisMonth || 0}</span>}
           subtitle="Onboarding"
           loading={loading}
         />

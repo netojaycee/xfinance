@@ -42,7 +42,7 @@ export default function PayrollRecordsHeader({
           }
           value={
             <span className="text-3xl font-bold text-[#2d3a7b]">
-              {data?.employees ?? 0}
+              {(data as any)?.employees ?? 0}
             </span>
           }
           subtitle={<span className="text-gray-400">Active payroll</span>}

@@ -7,16 +7,24 @@ import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import VendorsForm from "./VendorsForm";
 import { MODULES } from "@/lib/types/enums";
+import { VendorsResponse } from "./types";
 
-export default function VendorsHeader() {
+interface VendorsHeaderProps {
+  loading?: boolean;
+  data?: VendorsResponse;
+}
+
+export default function VendorsHeader({ loading = false, data }: VendorsHeaderProps) {
   const [open, setOpen] = React.useState(false);
+  const totalVendors = data?.totalCount || 0;
+
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold text-indigo-900">Vendors</h2>
           <p className="text-muted-foreground">
-            Manage vendor information and payables
+            Manage vendor information and payables ({totalVendors} vendors)
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -37,7 +45,7 @@ export default function VendorsHeader() {
         onOpenChange={setOpen}
         module={MODULES.PURCHASES}
       >
-        <VendorsForm  />{" "}
+        <VendorsForm  onSuccess={() => setOpen(false)} />{" "}
       </CustomModal>
     </div>
   );

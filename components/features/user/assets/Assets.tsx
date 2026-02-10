@@ -2,14 +2,36 @@
 import React from "react";
 import AssetsHeader from "./AssetsHeader";
 import { CustomTable } from "@/components/local/custom/custom-table";
-import { assetsColumns, assetsData } from "./AssetsColumn";
+import { assetsColumns } from "./AssetsColumn";
+import { useAssets } from "@/lib/api/hooks/useAssets";
+import { useDebounce } from "use-debounce";
 
 export default function Assets() {
-  const [data, setData] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+
+  const { data: assetsResponse, isLoading: loading } = useAssets({
+    search: debouncedSearchTerm,
+  });
+
+
+  console.log(assetsResponse, "Fetched assets response:"); // Debug log to check fetched data
+  const assetsData = (assetsResponse as any)?.data || [];
+  const summary = (assetsResponse as any)?.summary || {
+    total: 0,
+    inUse: 0,
+    inStorage: 0,
+    retired: 0,
+    sold: 0,
+    damaged: 0,
+    totalValue: 0,
+  };
+
+
+
   return (
     <div className="flex flex-col gap-4 p-4">
-      <AssetsHeader data={data} loading={loading} />
+      <AssetsHeader summary={summary} loading={loading} />
       <CustomTable
         searchPlaceholder="Search assets..."
         tableTitle="Fixed Assets"
@@ -17,6 +39,8 @@ export default function Assets() {
         data={assetsData}
         pageSize={10}
         loading={loading}
+        onSearchChange={setSearchTerm}
+        display={{ searchComponent: true }}
       />
     </div>
   );

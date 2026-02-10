@@ -6,16 +6,24 @@ import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import BillsForm from "./BillsForm";
+import { BillsResponse } from "./types";
 
-export default function BillsHeader() {
+interface BillsHeaderProps {
+  loading?: boolean;
+  data?: BillsResponse;
+}
+
+export default function BillsHeader({ loading = false, data }: BillsHeaderProps) {
   const [open, setOpen] = React.useState(false);
+  const totalBills = data?.total || 0;
+
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold text-indigo-900">Bills</h2>
           <p className="text-muted-foreground">
-            Manage vendor bills and accounts payable
+            Manage vendor bills and accounts payable ({totalBills} bills)
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -36,7 +44,7 @@ export default function BillsHeader() {
         onOpenChange={setOpen}
         module={MODULES.PURCHASES}
       >
-        <BillsForm  />
+        <BillsForm onSuccess={() => setOpen(false)} />
       </CustomModal>
     </div>
   );

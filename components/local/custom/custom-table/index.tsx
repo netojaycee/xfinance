@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,9 @@ interface CustomTableProps<T> {
   tableTitle?: string;
   tableSubtitle?: string;
   searchPlaceholder?: string;
+  onSearchChange?: (value: string) => void;
+  onStatusChange?: (value: string) => void;
+  onMethodsChange?: (value: string) => void;
   display?: {
     searchComponent?: boolean;
     filterComponent?: boolean;
@@ -49,6 +52,9 @@ export function CustomTable<T extends { [key: string]: any }>({
   tableTitle,
   tableSubtitle,
   searchPlaceholder,
+  onSearchChange,
+  onStatusChange,
+  onMethodsChange,
   display: {
     searchComponent = true,
     filterComponent = false,
@@ -63,25 +69,25 @@ export function CustomTable<T extends { [key: string]: any }>({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  // Filter data by search
-  const filteredData = useMemo(() => {
-    if (!search) return data;
-    return data.filter((row) =>
-      columns.some((col) => {
-        if (col.searchable === false) return false;
-        const value = row[col.key];
-        return (
-          value && value.toString().toLowerCase().includes(search.toLowerCase())
-        );
-      })
-    );
-  }, [search, data, columns]);
+  // Filter data by search - DISABLED (using API-side filtering instead)
+  // const filteredData = useMemo(() => {
+  //   if (!search) return data;
+  //   return data.filter((row) =>
+  //     columns.some((col) => {
+  //       if (col.searchable === false) return false;
+  //       const value = row[col.key];
+  //       return (
+  //         value && value.toString().toLowerCase().includes(search.toLowerCase())
+  //       );
+  //     })
+  //   );
+  // }, [search, data, columns]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const totalPages = Math.ceil(data.length / pageSize);
   const pagedData = useMemo(
-    () => filteredData.slice((page - 1) * pageSize, page * pageSize),
-    [filteredData, page, pageSize]
+    () => data.slice((page - 1) * pageSize, page * pageSize),
+    [data, page, pageSize],
   );
 
   React.useEffect(() => {
@@ -106,7 +112,10 @@ export function CustomTable<T extends { [key: string]: any }>({
               <Input
                 placeholder={searchPlaceholder || "Search..."}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  onSearchChange?.(e.target.value);
+                }}
                 className="pl-8 w-64 bg-gray-100 rounded-2xl"
               />
             </div>
@@ -115,7 +124,7 @@ export function CustomTable<T extends { [key: string]: any }>({
             // select component for status filter
             <Select
               onValueChange={(value) => {
-                // handle status change here, e.g., set a state
+                onStatusChange?.(value);
               }}
               defaultValue={statusOptions[0] || ""}
             >
@@ -133,10 +142,10 @@ export function CustomTable<T extends { [key: string]: any }>({
           )}
 
           {methodsComponent && (
-            // select component for status filter
+            // select component for methods filter
             <Select
               onValueChange={(value) => {
-                // handle status change here, e.g., set a state
+                onMethodsChange?.(value);
               }}
               defaultValue={methodsOptions[0] || ""}
             >
@@ -186,7 +195,7 @@ export function CustomTable<T extends { [key: string]: any }>({
                   key={col.key}
                   className={cn(
                     "px-4 py-2 text-left font-semibold text-gray-700",
-                    col.className
+                    col.className,
                   )}
                 >
                   {col.title}

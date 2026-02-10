@@ -1,5 +1,6 @@
 "use client";
-import { useRef } from "react";
+
+import { useRef, useState } from "react";
 import { z } from "zod";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +24,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { FileText, Layers, UploadCloud, Plus, Trash2 } from "lucide-react";
+import { useCreateBill, useVendors } from "@/lib/api/hooks/usePurchases";
+import { toast } from "sonner";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Description required"),
@@ -32,9 +35,9 @@ const lineItemSchema = z.object({
 
 const billSchema = z.object({
   vendor: z.string().min(1, "Vendor required"),
-  billDate: z.string().min(1, "Bill date required"),
+  billDate: z.date(),
   billNumber: z.string().min(1, "Bill number required"),
-  dueDate: z.string().min(1, "Due date required"),
+  dueDate: z.date(),
   poNumber: z.string().optional(),
   paymentTerms: z.string().min(1, "Payment terms required"),
   lineItems: z.array(lineItemSchema).min(1, "At least 1 item"),
@@ -49,9 +52,9 @@ type BillFormType = z.infer<typeof billSchema>;
 
 const defaultValues: BillFormType = {
   vendor: "",
-  billDate: format(new Date(), "yyyy-MM-dd"),
+  billDate: new Date(),
   billNumber: "",
-  dueDate: "",
+  dueDate: new Date(),
   poNumber: "",
   paymentTerms: "Net 30",
   lineItems: [{ description: "", quantity: 1, rate: 0 }],
@@ -62,7 +65,14 @@ const defaultValues: BillFormType = {
   attachments: undefined,
 };
 
-export default function BillsForm() {
+export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [billStatus, setbillStatus] = useState<"Draft" | "paid">("Draft");
+  const createBill = useCreateBill();
+  const { data: vendorsData, isLoading: vendorsLoading } = useVendors();
+
+  const vendors = (vendorsData as any)?.vendors || [];
+
   const form = useForm<BillFormType>({
     resolver: zodResolver(billSchema),
     defaultValues,
@@ -80,25 +90,59 @@ export default function BillsForm() {
     .reduce(
       (sum, item) =>
         sum + (Number(item.quantity) || 0) * (Number(item.rate) || 0),
-      0
+      0,
     );
   const discount = Number(form.watch("discount")) || 0;
   const taxPercent = Number(form.watch("tax")) || 0;
   const taxAmount = ((subtotal - discount) * taxPercent) / 100;
   const total = subtotal - discount + taxAmount;
 
-  const onSubmit =
-    (status: "draft" | "submitted") => (values: BillFormType) => {
-      const payload = { ...values, status };
-      console.log(payload);
-    };
+  const onSubmit = async (values: BillFormType) => {
+    try {
+      setIsSubmitting(true);
+
+      // Create FormData for multipart request
+      const formData = new FormData();
+      formData.append("billDate", values.billDate.toISOString());
+      formData.append("billNumber", values.billNumber);
+      formData.append("vendorId", values.vendor);
+      formData.append("dueDate", values.dueDate.toISOString());
+      if (values.poNumber) formData.append("poNumber", values.poNumber);
+      formData.append("paymentTerms", values.paymentTerms);
+
+      // Add line items as array
+      values.lineItems.forEach((item) => {
+        formData.append("items", JSON.stringify(item));
+      });
+
+      formData.append("total", Math.round(total).toString());
+      formData.append("category", values.category);
+      if (values.notes) formData.append("notes", values.notes);
+
+      // Add attachment if provided
+      if (values.attachments && values.attachments[0]) {
+        formData.append("attachment", values.attachments[0]);
+      }
+
+      formData.append("status", billStatus);
+      await createBill.mutateAsync(formData);
+      toast.success("Bill created successfully!");
+      form.reset();
+      setIsSubmitting(false);
+      onSuccess?.();
+    } catch (error) {
+      toast.error("Failed to create bill. Please try again.");
+      console.error("Error creating bill:", error);
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <FormProvider {...form}>
       <Form {...form}>
         <form
           className="max-w-lg mx-auto space-y-6"
-          onSubmit={form.handleSubmit(onSubmit("submitted"))}
+          onSubmit={form.handleSubmit(onSubmit)}
         >
           {/* Bill Information */}
           <div className="rounded-2xl border bg-linear-to-br from-pink-50 to-white p-4">
@@ -117,20 +161,29 @@ export default function BillsForm() {
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        disabled={vendorsLoading}
                       >
                         <SelectTrigger className="w-full bg-white">
-                          <SelectValue placeholder="Select vendor" />
+                          <SelectValue
+                            placeholder={
+                              vendorsLoading
+                                ? "Loading vendors..."
+                                : "Select vendor"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Office Supplies Inc">
-                            Office Supplies Inc
-                          </SelectItem>
-                          <SelectItem value="Tech Solutions LLC">
-                            Tech Solutions LLC
-                          </SelectItem>
-                          <SelectItem value="Cloud Services Pro">
-                            Cloud Services Pro
-                          </SelectItem>
+                          {Array.isArray(vendors) && vendors.length > 0 ? (
+                            vendors.map((v: any) => (
+                              <SelectItem key={v.id} value={v.id}>
+                                {v.displayName || v.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-vendors" disabled>
+                              No vendors found
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -145,7 +198,17 @@ export default function BillsForm() {
                   <FormItem>
                     <FormLabel>Bill Date *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        value={
+                          field.value instanceof Date
+                            ? format(field.value, "yyyy-MM-dd")
+                            : field.value
+                        }
+                        onChange={(e) =>
+                          field.onChange(new Date(e.target.value))
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -171,7 +234,17 @@ export default function BillsForm() {
                   <FormItem>
                     <FormLabel>Due Date *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        value={
+                          field.value instanceof Date
+                            ? format(field.value, "yyyy-MM-dd")
+                            : field.value
+                        }
+                        onChange={(e) =>
+                          field.onChange(new Date(e.target.value))
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,7 +342,14 @@ export default function BillsForm() {
                     render={({ field }) => (
                       <FormItem className="col-span-1">
                         <FormControl>
-                          <Input type="number" min={1} {...field} />
+                          <Input
+                            type="number"
+                            min={1}
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -281,7 +361,15 @@ export default function BillsForm() {
                     render={({ field }) => (
                       <FormItem className="col-span-1">
                         <FormControl>
-                          <Input type="number" min={0} step="0.01" {...field} />
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -333,6 +421,9 @@ export default function BillsForm() {
                           step="0.01"
                           className="w-20 inline-block"
                           {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                     </FormItem>
@@ -354,6 +445,9 @@ export default function BillsForm() {
                             step="0.01"
                             className="w-14 inline-block"
                             {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
                           />
                         </FormControl>
                       </FormItem>
@@ -480,14 +574,28 @@ export default function BillsForm() {
             </Button>
             <div className="flex gap-2 items-center">
               <Button
-                type="button"
-                variant="secondary"
-                onClick={form.handleSubmit(onSubmit("draft"))}
+                type="submit"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setbillStatus("Draft");
+                  form.handleSubmit(onSubmit)();
+                }}
               >
-                Save as Draft
+                {isSubmitting ? "Please wait..." : "Save as Draft"}
               </Button>
-              <Button type="submit" className="bg-pink-600 text-white">
-                Create Bill
+              <Button
+                type="submit"
+                className="bg-pink-600 text-white"
+                disabled={isSubmitting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setbillStatus("paid");
+                  form.handleSubmit(onSubmit)();
+                }}
+              >
+                {isSubmitting ? "Creating..." : "Create Bill"}
               </Button>
             </div>
           </div>

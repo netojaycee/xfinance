@@ -44,9 +44,13 @@ export const apiClient = async <T>(
   // const url = `${API_BASE_URL}/api/v1/${cleanedEndpoint}`;
   const url = `/api/${cleanedEndpoint}`; // Use the rewrites defined in next.config.ts
 
+  // Check if body is FormData (for file uploads)
+  const isFormData = options.body instanceof FormData;
+
   const defaultOptions: RequestInit = {
     headers: {
-      'Content-Type': 'application/json',
+      // Only set Content-Type for JSON, not for FormData (browser handles it)
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options.headers,
     },
     credentials: 'include', // Always send cookies

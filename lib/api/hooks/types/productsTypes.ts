@@ -1,0 +1,139 @@
+/**
+ * Collection Types
+ */
+export interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  visibility: boolean;
+  featured: boolean;
+  image?: {
+    publicId: string;
+    secureUrl: string;
+  };
+  entityId: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CollectionsResponse {
+  collections: Collection[];
+  total: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/**
+ * Item Types
+ */
+export enum ItemTypeEnum {
+  Product = "product",
+  Service = "service",
+}
+
+export enum ItemStatusEnum {
+  InStock = "in_stock",
+  OutOfStock = "out_of_stock",
+}
+
+export interface Item {
+  id: string;
+  name: string;
+  category: string;
+  sku: string;
+  unit: string;
+  description: string;
+  sellingPrice: number;
+  costPrice?: number;
+  rate?: number;
+  taxable: boolean;
+  currentStock: number;
+  lowStock: number;
+  type: ItemTypeEnum;
+  status: ItemStatusEnum;
+  unitPrice: number;
+  entityId: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ItemsResponse {
+  items: Item[];
+  total: number;
+  totalInStock: number;
+  totalOutOfStock: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/**
+ * Inventory Types
+ */
+export interface InventoryMovement {
+  id: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  reason: string;
+  previousStock: number;
+  newStock: number;
+  createdAt: string;
+}
+
+export interface InventoryMovementsResponse {
+  movements: InventoryMovement[];
+  total: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface LowStockItem {
+  id: string;
+  name: string;
+  sku: string;
+  currentStock: number;
+  lowStock: number;
+  stockPercentage: number;
+}
+
+/**
+ * Form Types
+ */
+export interface CollectionFormData {
+  name: string;
+  slug: string;
+  description: string;
+  image?: File;
+  visible: boolean;
+  featured: boolean;
+}
+
+export interface ItemProductFormData {
+  name: string;
+  sku: string;
+  category: string;
+  unit: string;
+  description?: string;
+  sellingPrice: number;
+  costPrice?: number;
+  taxable: boolean;
+  trackInventory: boolean;
+  currentStock: number;
+  lowStockAlert: number;
+  sellOnline?: boolean;
+  type: ItemTypeEnum;
+}
+
+export interface ItemServiceFormData {
+  name: string;
+  category: string;
+  unit: string;
+  description?: string;
+  rate: number;
+  taxable: boolean;
+  type: ItemTypeEnum;
+}

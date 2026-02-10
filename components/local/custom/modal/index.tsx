@@ -39,6 +39,9 @@ CustomModalProps) {
     if (module === MODULES.ASSETS) return "from-purple-500 to-pink-500";
     if (module === MODULES.HR_PAYROLL) return "from-indigo-500 to-violet-500";
     if (module === MODULES.ACCOUNTS) return "from-teal-500 to-cyan-500";
+    if (module === MODULES.BUDGET) return "from-yellow-500 to-orange-500";
+    if (module === MODULES.ENTITY) return "from-gray-500 to-gray-700";
+    if (module === MODULES.GROUP) return "from-blue-500 to-indigo-500";
     return "from-cyan-500 to-blue-500";
   };
   return (

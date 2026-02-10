@@ -1,17 +1,31 @@
 "use client";
+import React from "react";
 import AttendanceHeader from "./AttendanceHeader";
 import { CustomTable } from "@/components/local/custom/custom-table";
 
-import { useCustomers } from "@/lib/api/hooks/useSales";
+import { useEmployees } from "@/lib/api/hooks/useHR";
 import { attendanceColumns } from "./AttendanceColumn";
 import { CustomTabs } from "@/components/local/custom/tabs";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import AttendanceForm from "./AttendanceForm";
+import { useDebounce } from "use-debounce";
 
 export default function Attendance() {
-  const { data, isLoading } = useCustomers();
-  const customers = data?.customers || [];
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+
+  const { data: employeesResponse, isLoading } = useEmployees({
+    search: debouncedSearchTerm,
+  });
+
+  const employees = (employeesResponse as any)?.employees || [];
+  const stats = (employeesResponse as any)?.stats;
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between">
@@ -36,15 +50,16 @@ export default function Attendance() {
             value: "record",
             content: (
               <div className="space-y-4">
-                <AttendanceHeader data={data} loading={isLoading} />
+                <AttendanceHeader stats={stats} loading={isLoading} />
                 <CustomTable
                   searchPlaceholder="Search employees..."
                   tableTitle="Today's Attendance"
                   columns={attendanceColumns}
-                  data={customers as any}
+                  data={employees as any}
                   pageSize={10}
                   loading={isLoading}
-                  display={{ filterComponent: true }}
+                  onSearchChange={handleSearchChange}
+                  display={{ filterComponent: true, searchComponent: true }}
                 />
               </div>
             ),
@@ -55,7 +70,7 @@ export default function Attendance() {
             content: (
               <>
                 <AttendanceForm
-                  employees={customers as any}
+                  employees={employees as any}
                   onSubmit={(data) => {
                     // handle attendance form submission here
                     console.log("Attendance submitted:", data);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,7 +30,6 @@ import { paymentTermsOptions } from "../customers/utils/data";
 import { useCustomers } from "@/lib/api/hooks/useSales";
 import { invoiceSchema } from "./utils/schema";
 
-
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 interface InvoiceFormProps {
@@ -39,22 +38,33 @@ interface InvoiceFormProps {
   onSuccess?: () => void;
 }
 
-export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: InvoiceFormProps) {
+export default function InvoiceForm({
+  invoice,
+  isEditMode = false,
+  onSuccess,
+}: InvoiceFormProps) {
+  const [invoiceStatus, setInvoiceStatus] = useState<"Draft" | "Paid">("Draft");
   const { data, isLoading: customersLoading } = useCustomers();
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
 
   const customers = data?.customers || [];
 
+  // console.log("Fetched customers for invoice form:", invoice); // Debug log to check fetched customers
+
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       customerId: invoice?.customerId || "",
-      invoiceDate: invoice?.invoiceDate ? new Date(invoice.invoiceDate) : new Date(),
+      invoiceDate: invoice?.invoiceDate
+        ? new Date(invoice.invoiceDate)
+        : new Date(),
       dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(),
       paymentTerms: invoice?.paymentTerms || "",
       currency: invoice?.currency || "USD",
-      lineItems: invoice?.lineItems || [{ description: "", quantity: 1, rate: 0 }],
+      lineItems: invoice?.lineItems || [
+        { description: "", quantity: 1, rate: 0 },
+      ],
       notes: invoice?.notes || "",
     },
   });
@@ -75,11 +85,15 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
     if (invoice) {
       form.reset({
         customerId: invoice?.customerId || "",
-        invoiceDate: invoice?.invoiceDate ? new Date(invoice.invoiceDate) : new Date(),
+        invoiceDate: invoice?.invoiceDate
+          ? new Date(invoice.invoiceDate)
+          : new Date(),
         dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(),
         paymentTerms: invoice?.paymentTerms || "",
         currency: invoice?.currency || "USD",
-        lineItems: invoice?.lineItems || [{ description: "", quantity: 1, rate: 0 }],
+        lineItems: invoice?.lineItems || [
+          { description: "", quantity: 1, rate: 0 },
+        ],
         notes: invoice?.notes || "",
       });
     }
@@ -89,17 +103,21 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
   const onSubmit = async (values: InvoiceFormData) => {
     try {
       // Transform lineItems to array of strings (e.g., description or JSON string)
-      const items = values.lineItems.map(item =>
-        typeof item === 'string' ? item : JSON.stringify(item)
+      const items = values.lineItems.map((item) =>
+        typeof item === "string" ? item : JSON.stringify(item),
       );
       // Calculate total as integer
-      const subtotal = values.lineItems.reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
+      const subtotal = values.lineItems.reduce(
+        (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
+        0,
+      );
       const tax = subtotal * 0.1;
       const total = Math.round(subtotal + tax);
       const payload: any = {
         ...values,
         items,
         total,
+        status: invoiceStatus,
       };
       delete payload.lineItems;
       if (isEditMode && invoice?.id) {
@@ -124,7 +142,12 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
       toast.error(updateInvoice.error?.message || "Failed to update invoice");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createInvoice.isSuccess, createInvoice.isError, updateInvoice.isSuccess, updateInvoice.isError]);
+  }, [
+    createInvoice.isSuccess,
+    createInvoice.isError,
+    updateInvoice.isSuccess,
+    updateInvoice.isError,
+  ]);
 
   return (
     <div className="w-full max-w-lg mx-auto">
@@ -136,7 +159,7 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
               <Calendar className="w-4 h-4" /> Invoice Details
             </h4>
             <div className="mb-4">
-               <FormField
+              <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
@@ -149,7 +172,13 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
                         disabled={customersLoading}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder={customersLoading ? "Loading customers..." : "Select customer"} />
+                          <SelectValue
+                            placeholder={
+                              customersLoading
+                                ? "Loading customers..."
+                                : "Select customer"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {Array.isArray(customers) && customers.length > 0 ? (
@@ -159,7 +188,9 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="" disabled>No customers found</SelectItem>
+                            <SelectItem value="no-customers" disabled>
+                              No customers found
+                            </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -170,7 +201,6 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             
               {/* <FormField
                 control={form.control}
                 name="invoiceNumber"
@@ -359,8 +389,8 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
                       {form.watch(`currency`) === "NGN"
                         ? "₦"
                         : form.watch(`currency`) === "GBP"
-                        ? "£"
-                        : "$"}
+                          ? "£"
+                          : "$"}
                       {(
                         (form.watch(`lineItems.${idx}.quantity`) || 0) *
                         (form.watch(`lineItems.${idx}.rate`) || 0)
@@ -378,8 +408,8 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
                   {form.watch("currency") === "NGN"
                     ? "₦"
                     : form.watch("currency") === "GBP"
-                    ? "£"
-                    : "$"}
+                      ? "£"
+                      : "$"}
                   {subtotal.toLocaleString()}
                 </span>
               </div>
@@ -389,8 +419,8 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
                   {form.watch("currency") === "NGN"
                     ? "₦"
                     : form.watch("currency") === "GBP"
-                    ? "£"
-                    : "$"}
+                      ? "£"
+                      : "$"}
                   {tax.toLocaleString()}
                 </span>
               </div>
@@ -401,8 +431,8 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
                   {form.watch("currency") === "NGN"
                     ? "₦"
                     : form.watch("currency") === "GBP"
-                    ? "£"
-                    : "$"}
+                      ? "£"
+                      : "$"}
                   {total.toLocaleString()}
                 </span>
               </div>
@@ -435,8 +465,34 @@ export default function InvoiceForm({ invoice, isEditMode = false, onSuccess }: 
             <Button variant="outline" type="button">
               Cancel
             </Button>
-            <Button type="submit" disabled={createInvoice.isPending || updateInvoice.isPending}>
-              {(createInvoice.isPending || updateInvoice.isPending) ? "Please wait..." : (isEditMode ? "Update Invoice" : "Create Invoice")}
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={createInvoice.isPending || updateInvoice.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                setInvoiceStatus("Draft");
+                form.handleSubmit(onSubmit)();
+              }}
+            >
+              {createInvoice.isPending || updateInvoice.isPending
+                ? "Please wait..."
+                : "Save as Draft"}
+            </Button>
+            <Button
+              type="submit"
+              disabled={createInvoice.isPending || updateInvoice.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                setInvoiceStatus("Paid");
+                form.handleSubmit(onSubmit)();
+              }}
+            >
+              {createInvoice.isPending || updateInvoice.isPending
+                ? "Please wait..."
+                : isEditMode
+                  ? "Update Invoice"
+                  : "Create Invoice"}
             </Button>
           </div>
         </form>

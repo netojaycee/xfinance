@@ -5,6 +5,7 @@ export enum ENUM_ROLE {
 }
 
 export enum MODULES {
+    // USER MODULES
     PURCHASES = 'purchases',
     SALES = 'sales',
     DASHBOARD = 'dashboard',
@@ -14,7 +15,13 @@ export enum MODULES {
     BANKING = 'banking',
     HR_PAYROLL = 'hr_payroll',
     REPORTS = 'reports',
-    SETTINGS = 'settings'
+    SETTINGS = 'settings',
+    // ADMIN MODULES
+    BUDGET = 'budget',
+    ENTITY = 'entity',
+    // SUPERADMIN MODULES
+    GROUP = "group",
+    SUBSCRIPTION = "subscription"
 
 }
 

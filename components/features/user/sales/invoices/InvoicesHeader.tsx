@@ -6,7 +6,7 @@ import InvoiceStatCardSmall from "./InvoiceStatCardSmall";
 import { FileText, Send, Clock, CheckCircle, Download } from "lucide-react";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
-import Invoice from "./InvoiceForm";
+import InvoiceForm from "./InvoiceForm";
 import { MODULES } from "@/lib/types/enums";
 import { InvoiceStats } from "./utils/types";
 
@@ -91,7 +91,7 @@ export default function InvoicesHeader({
         onOpenChange={setOpen}
         module={MODULES.SALES}
       >
-        <Invoice />
+        <InvoiceForm onSuccess={() => setOpen(false)} />
       </CustomModal>
     </div>
   );

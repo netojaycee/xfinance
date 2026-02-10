@@ -29,3 +29,30 @@ export type InvoicesResponse = {
     currentPage: number;
     limit: number;
 };
+
+export interface PaidInvoice {
+    id: string;
+    invoiceNumber: string;
+    customerName: string;
+    total: number;
+    invoiceDate: string;
+    dueDate: string;
+}
+
+export interface CurrentMonthStats {
+    month: string;
+    total: number;
+    count: number;
+}
+
+export type PaidInvoicesResponse = {
+    paidInvoices: PaidInvoice[];
+    totalPaidAmount: number;
+    totalPaidCount: number;
+    currentMonthStats: CurrentMonthStats;
+    currentMonth: string;
+    totalCountFiltered: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+};

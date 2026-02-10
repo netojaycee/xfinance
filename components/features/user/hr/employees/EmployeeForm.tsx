@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useCreateCustomer, useUpdateCustomer } from "@/lib/api/hooks/useSales";
+import { useCreateEmployee, useUpdateEmployee } from "@/lib/api/hooks/useHR";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,8 +42,8 @@ export default function EmployeeForm({
   onSuccess,
 }: EmployeeFormProps) {
 
-  const createCustomer = useCreateCustomer();
-  const updateCustomer = useUpdateCustomer();
+  const createEmployee = useCreateEmployee();
+  const updateEmployee = useUpdateEmployee(employee?.id || "");
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema) as any,
@@ -121,10 +121,62 @@ export default function EmployeeForm({
 
   const onSubmit = async (values: EmployeeFormData) => {
     try {
+      const formData = new FormData();
+      
+      // Basic fields
+      formData.append("firstName", values.firstName || "");
+      formData.append("lastName", values.lastName || "");
+      formData.append("email", values.email || "");
+      formData.append("phoneNumber", values.phoneNumber || "");
+      formData.append("dateOfBirth", values.dateOfBirth ? new Date(values.dateOfBirth).toISOString() : "");
+      formData.append("employeeId", values.employeeId || "");
+      formData.append("department", values.department || "");
+      formData.append("position", values.jobTitle || "");
+      formData.append("employmentType", values.employmentType || "");
+      formData.append("dateOfHire", values.hireDate ? new Date(values.hireDate).toISOString() : "");
+      formData.append("reportingManager", values.reportsTo || "");
+      formData.append("anualLeave", String(values.annualLeaveDays || 0));
+      formData.append("salary", String(Math.round(Number(values.baseSalary) * 100) || 0));
+      formData.append("allowances", String(Math.round(Number(values.allowances) * 100) || 0));
+      formData.append("perFrequency", values.payFrequency || "");
+      formData.append("currency", values.currency || "");
+      formData.append("bankName", values.bankName || "");
+      formData.append("acountType", values.accountType || "");
+      formData.append("accountNumber", values.accountNumber || "");
+      formData.append("routingNumber", values.routingNumber || "");
+      formData.append("note", values.note || "");
+      
+      // Address Info as JSON
+      formData.append(
+        "addressInfo",
+        JSON.stringify({
+          address: values.address || "",
+          city: values.city || "",
+          province: values.state || "",
+          postalCode: values.postalCode || "",
+          country: values.country || "",
+        })
+      );
+      
+      // Emergency Contact as JSON
+      formData.append(
+        "emergencyContact",
+        JSON.stringify({
+          contactName: values.emergencyContactName,
+          contactPhone: values.emergencyContactPhone,
+          relationship: values.emergencyContactRelationship,
+        })
+      );
+      
+      // Profile Picture (if it's a File)
+      if (values.profilePicture instanceof File) {
+        formData.append("profileImage", values.profilePicture);
+      }
+      
       if (isEditMode && employee?.id) {
-        await updateCustomer.mutateAsync({ id: employee.id, data: values });
+        await updateEmployee.mutateAsync(formData);
       } else {
-        await createCustomer.mutateAsync(values);
+        await createEmployee.mutateAsync(formData);
       }
     } catch (error) {
       // error handled below
@@ -132,18 +184,18 @@ export default function EmployeeForm({
   };
 
   useEffect(() => {
-    if (createCustomer.isSuccess || updateCustomer.isSuccess) {
-      toast.success("Customer saved successfully");
+    if (createEmployee.isSuccess || updateEmployee.isSuccess) {
+      toast.success("Employee saved successfully");
       if (onSuccess) onSuccess();
     }
-    if (createCustomer.isError) {
-      toast.error(createCustomer.error?.message || "Failed to create customer");
+    if (createEmployee.isError) {
+      toast.error(createEmployee.error?.message || "Failed to create employee");
     }
-    if (updateCustomer.isError) {
-      toast.error(updateCustomer.error?.message || "Failed to update customer");
+    if (updateEmployee.isError) {
+      toast.error(updateEmployee.error?.message || "Failed to update employee");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createCustomer.isSuccess, createCustomer.isError, updateCustomer.isSuccess, updateCustomer.isError]);
+  }, [createEmployee.isSuccess, createEmployee.isError, updateEmployee.isSuccess, updateEmployee.isError]);
 
   return (
     <div className="w-full">
@@ -645,8 +697,8 @@ export default function EmployeeForm({
            <div className="flex flex-wrap justify-end gap-2 border-t pt-3">
               <Button variant={"outline"}>Cancel</Button>
               <Button type="button" variant="secondary">Save as Draft</Button>
-              <Button type="submit" className="bg-linear-to-r from-indigo-500 to-purple-500 text-white" disabled={createCustomer.isPending || updateCustomer.isPending}>
-                {(createCustomer.isPending || updateCustomer.isPending) ? (
+              <Button type="submit" className="bg-linear-to-r from-indigo-500 to-purple-500 text-white" disabled={createEmployee.isPending || updateEmployee.isPending}>
+                {(createEmployee.isPending || updateEmployee.isPending) ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" /> <span>Please wait</span>
                   </>

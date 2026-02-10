@@ -23,8 +23,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, AlertCircle } from "lucide-react";
+import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { ChartOfAccountsFormData, chartOfAccountsSchema } from "./utils/schema";
+import { useCreateAccount, useUpdateAccount } from "@/lib/api/hooks/useAccounts";
+import { AccountCategoryEnum, AccountSubCategoryEnum } from "@/lib/api/hooks/types/accountsTypes";
 
 // Zod schema for Chart of Accounts
 
@@ -55,8 +57,11 @@ export default function ChartOfAccountsForm({
   isEditMode = false,
   onSuccess,
 }: ChartOfAccountsFormProps) {
+  const createAccount = useCreateAccount();
+  const updateAccount = useUpdateAccount(account?.id || "");
+
   const form = useForm<ChartOfAccountsFormData>({
-    resolver: zodResolver(chartOfAccountsSchema),
+    resolver: zodResolver(chartOfAccountsSchema) as any,
     defaultValues: {
       accountType: account?.accountType || "",
       accountCode: account?.accountCode || "",
@@ -84,15 +89,45 @@ export default function ChartOfAccountsForm({
 
   const onSubmit = async (values: ChartOfAccountsFormData) => {
     try {
-      console.log("Chart of Accounts submitted:", values);
+      const payload = {
+        name: values.accountName,
+        code: values.accountCode,
+        category: values.accountType as AccountCategoryEnum,
+        subCategory: values.primaryCategory,
+        description: values.description,
+        type: values.accountType,
+      };
+
+      if (isEditMode && account?.id) {
+        await updateAccount.mutateAsync(payload);
+      } else {
+        await createAccount.mutateAsync(payload);
+      }
+    } catch (error) {
+      // error handled below
+    }
+  };
+
+  useEffect(() => {
+    if (createAccount.isSuccess || updateAccount.isSuccess) {
       toast.success(
         `Account ${isEditMode ? "updated" : "created"} successfully`,
       );
       if (onSuccess) onSuccess();
-    } catch (error) {
-      toast.error("Failed to save account");
     }
-  };
+    if (createAccount.isError) {
+      toast.error(createAccount.error?.message || "Failed to create account");
+    }
+    if (updateAccount.isError) {
+      toast.error(updateAccount.error?.message || "Failed to update account");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    createAccount.isSuccess,
+    createAccount.isError,
+    updateAccount.isSuccess,
+    updateAccount.isError,
+  ]);
 
   const selectedAccountType = form.watch("accountType");
   const subcategoryOptions = selectedAccountType
@@ -352,8 +387,14 @@ export default function ChartOfAccountsForm({
               <Button
                 type="submit"
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                disabled={createAccount.isPending || updateAccount.isPending}
               >
-                {isEditMode ? (
+                {createAccount.isPending || updateAccount.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Please wait</span>
+                  </>
+                ) : isEditMode ? (
                   <>
                     <span>Update Account</span>
                     <ArrowRight className="h-4 w-4" />

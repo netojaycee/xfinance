@@ -24,7 +24,7 @@ const purchasesFormSchema = z.object({
   billNumberPrefix: z.string().min(1, "Bill prefix is required"),
   purchaseOrderPrefix: z.string().min(1, "PO prefix is required"),
   approvalRequired: z.boolean().default(false),
-  approvalThreshold: z.string().regex(/^\d+(\.\d{1,2})?$/, "Valid amount required"),
+  approvalThreshold: z.string().regex(/^\d+(\.\d{1,2})?$/, "Valid amount required").default("5000"),
   threeWayMatching: z.boolean().default(false),
 });
 
@@ -36,7 +36,7 @@ interface PurchasesFormProps {
 
 export default function PurchasesForm({ onSuccess }: PurchasesFormProps) {
   const form = useForm<PurchasesFormData>({
-    resolver: zodResolver(purchasesFormSchema),
+    resolver: zodResolver(purchasesFormSchema) as any,
     defaultValues: {
       billNumberPrefix: "BILL-",
       purchaseOrderPrefix: "PO-",

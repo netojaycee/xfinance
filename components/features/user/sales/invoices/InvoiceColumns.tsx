@@ -64,7 +64,7 @@ export const InvoiceColumns: Column<Invoice>[] = [
       <span>
         {new Intl.NumberFormat("en-US", {
           style: "currency",
-          currency: "USD",
+          currency: "NGN",
         }).format(value)}
       </span>
     ),

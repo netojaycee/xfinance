@@ -33,7 +33,8 @@ import {
   User,
   Landmark,
 } from "lucide-react";
-
+import { useCreateVendor, useUpdateVendor } from "@/lib/api/hooks/usePurchases";
+import { toast } from "sonner";
 // --- Zod Schemas ---
 const basicInfoSchema = z.object({
   vendorType: z.string().min(1, "Vendor type is required"),
@@ -113,7 +114,7 @@ const defaultValues: VendorFormType = {
   },
 };
 
-export default function VendorsForm() {
+export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const form = useForm<VendorFormType>({
@@ -171,15 +172,47 @@ export default function VendorsForm() {
   };
   const handlePrev = () => setStep((s) => s - 1);
 
+  const createVendor = useCreateVendor();
+  const updateVendor = useUpdateVendor();
+
   const onSubmit = async (data: VendorFormType) => {
-    console.log(data)
-    setLoading(true);
-    // Simulate API
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      setLoading(true);
+      // Transform form data to API schema
+      const payload = {
+        name: data.basicInfo.vendorName,
+        type: data.basicInfo.vendorType,
+        displayName: data.basicInfo.displayName || data.basicInfo.vendorName,
+        taxId: data.basicInfo.taxId || "",
+        website: data.basicInfo.website || "",
+        companyName: data.contactDetails.contactName,
+        jobTitle: data.contactDetails.title || "",
+        email: data.contactDetails.email,
+        phone: data.contactDetails.phone,
+        city: data.contactDetails.city || "",
+        province: data.contactDetails.state || "",
+        postalCode: data.contactDetails.zip || "",
+        country: data.contactDetails.country || "",
+        paymentTerms: data.financialInfo.paymentTerms || "",
+        currency: data.financialInfo.currency || "USD",
+        accountNumber: data.financialInfo.accountNumber || "",
+        creditLimit: data.financialInfo.creditLimit || "",
+        expenseAccount: data.financialInfo.defaultExpenseAccount || "",
+        bankName: data.financialInfo.bankName || "",
+        accountName: data.contactDetails.contactName,
+        routingNumber: data.financialInfo.routingNumber || "",
+        internalNote: data.financialInfo.internalNotes || "",
+      };
+
+      await createVendor.mutateAsync(payload);
+      toast.success("Vendor created successfully");
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      console.log("Vendor created!\n" + JSON.stringify(data, null, 2));
-    }, 1200);
+      setLoading(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error creating vendor:", error);
+      setLoading(false);
+    }
   };
 
   return (
@@ -246,11 +279,11 @@ export default function VendorsForm() {
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Supplier">Supplier</SelectItem>
-                              <SelectItem value="Contractor">
+                              <SelectItem value="supplier">Supplier</SelectItem>
+                              <SelectItem value="contractor">
                                 Contractor
                               </SelectItem>
-                              <SelectItem value="Consultant">
+                              <SelectItem value="consultant">
                                 Consultant
                               </SelectItem>
                             </SelectContent>

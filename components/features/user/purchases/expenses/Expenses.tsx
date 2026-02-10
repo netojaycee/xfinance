@@ -1,59 +1,60 @@
 "use client";
+import { useState } from "react";
 import { CustomTable } from "@/components/local/custom/custom-table";
-
-// Vendor data and columns
 import { expensesColumns } from "./ExpensesColumns";
 import ExpensesHeader from "./ExpensesHeader";
-
-
-export const expenseData = [
-  {
-    expenseNo: "EXP-2025-142",
-    date: "2025-11-04",
-    vendor: "Office Supplies Inc",
-    category: "Office Supplies",
-    submittedBy: "Sarah Chen",
-    amount: "$1,250",
-    status: "Approved",
-  },
-  {
-    expenseNo: "EXP-2025-141",
-    date: "2025-11-03",
-    vendor: "Tech Solutions LLC",
-    category: "IT & Software",
-    submittedBy: "Mike Johnson",
-    amount: "$5,400",
-    status: "Pending",
-  },
-  {
-    expenseNo: "EXP-2025-140",
-    date: "2025-11-02",
-    vendor: "Cloud Services Pro",
-    category: "IT & Software",
-    submittedBy: "Emily Davis",
-    amount: "$2,400",
-    status: "Approved",
-  },
-];
-
-
+import { useExpenses } from "@/lib/api/hooks/usePurchases";
+import { useDebounce } from "use-debounce";
 
 export default function Expenses() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [categoryFilter, setCategoryFilter] = useState("All Categories");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+
+  const { data, isLoading } = useExpenses({
+    search: debouncedSearchTerm,
+    page: currentPage,
+    limit: rowsPerPage,
+    category: categoryFilter === "All Categories" ? undefined : categoryFilter,
+  });
+
+  const expenses = (data as any)?.expenses || [];
+  const totalExpenses = (data as any)?.totalCount || 0;
+
+  console.log(data, "Fetched expenses:"); // Debug log to check fetched data
+
   return (
     <div className="space-y-4">
-      <ExpensesHeader />
+      <ExpensesHeader loading={isLoading} data={data as any} />
       <CustomTable
         searchPlaceholder="Search expenses..."
         tableTitle="All Expenses"
-        columns={expensesColumns}
-        data={expenseData}
-        pageSize={10}
+        columns={expensesColumns as any}
+        data={expenses}
+        pageSize={rowsPerPage}
+        onSearchChange={setSearchTerm}
+        statusOptions={[
+          "All Categories",
+          "Office Supplies",
+          "IT & Software",
+          "Utilities",
+          "Travel",
+          "Meals & Entertainment",
+          "Equipment",
+          "Repairs & Maintenance",
+          "Professional Services",
+          "Other",
+        ]}
+        onStatusChange={setCategoryFilter}
         display={{
-          statusComponent: false,
+          statusComponent: true,
           filterComponent: true,
           searchComponent: true,
           methodsComponent: false,
         }}
+        loading={isLoading}
       />
     </div>
   );

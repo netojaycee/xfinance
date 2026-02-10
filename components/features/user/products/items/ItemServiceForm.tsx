@@ -26,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCreateItem, useUpdateItem } from "@/lib/api/hooks/useProducts";
+import { ItemTypeEnum } from "@/lib/api/hooks/types/productsTypes";
 
 const defaultService = {
   name: "",
@@ -46,6 +48,9 @@ export default function ItemServiceForm({
   onSuccess?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const createItem = useCreateItem();
+  const updateItem = useUpdateItem(item?.id || "");
+
   const form = useForm({
     resolver: zodResolver(serviceSchema),
     defaultValues:
@@ -59,13 +64,38 @@ export default function ItemServiceForm({
   }, [isEditMode, item]);
 
   const onSubmit = async (values: z.infer<typeof serviceSchema>) => {
-    setLoading(true);
-    console.log(values);
-    setTimeout(() => {
+    try {
+      setLoading(true);
+
+      const payload = {
+        name: values.name,
+        category: values.category,
+        unit: values.unit,
+        description: values.description || "",
+        rate: Math.round(Number(values.rate) * 100),
+        taxable: values.taxable,
+        currentStock: 0,
+        lowStock: 0,
+        sku: `SVC-${Date.now()}`,
+        type: ItemTypeEnum.Service,
+      };
+
+      if (isEditMode && item?.id) {
+        await updateItem.mutateAsync(payload as any);
+        toast.success("Service updated successfully!");
+      } else {
+        await createItem.mutateAsync(payload as any);
+        toast.success("Service created successfully!");
+      }
+
+      form.reset();
       setLoading(false);
-      toast.success(isEditMode ? "Service updated!" : "Service saved!");
-      if (onSuccess) onSuccess();
-    }, 1200);
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error submitting service:", error);
+      toast.error("Failed to save service");
+      setLoading(false);
+    }
   };
 
   return (

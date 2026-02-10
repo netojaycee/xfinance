@@ -19,40 +19,57 @@ type ExpenseColumn = {
 
 export const expensesColumns: ExpenseColumn[] = [
   {
-    key: "expenseNo",
+    key: "reference",
     title: "Expense #",
     className: "text-xs",
-    render: (value: unknown) => <span className="text-xs font-medium">{value as string}</span>,
+    render: (value: unknown) => (
+      <span className="text-xs font-medium">{value as string}</span>
+    ),
   },
   {
     key: "date",
     title: "Date",
     className: "text-xs",
-    render: (value: unknown) => <span className="text-xs">{value as string}</span>,
+    render: (value: unknown) => (
+      <span className="text-xs">{value as string}</span>
+    ),
   },
   {
     key: "vendor",
     title: "Vendor",
     className: "text-xs",
-    render: (value: unknown) => <span className="text-xs font-medium">{value as string}</span>,
+    render: (value: unknown) => (
+      <span className="text-xs font-medium">{value as string}</span>
+    ),
   },
   {
     key: "category",
     title: "Category",
     className: "text-xs",
-    render: (value: unknown) => <span className="text-xs">{value as string}</span>,
+    render: (value: unknown) => (
+      <span className="text-xs">{value as string}</span>
+    ),
   },
   {
     key: "submittedBy",
     title: "Submitted By",
     className: "text-xs",
-    render: (value: unknown) => <span className="text-xs">{value as string}</span>,
+    render: (value: unknown) => (
+      <span className="text-xs">{value as string}</span>
+    ),
   },
   {
     key: "amount",
     title: "Amount",
     className: "text-xs",
-    render: (value: unknown) => <span className="text-xs font-semibold">{value as string}</span>,
+    render: (value: unknown) => (
+      <span className="text-xs font-semibold">
+        {new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "NGN",
+        }).format(Number(value))}
+      </span>
+    ),
   },
   {
     key: "status",
@@ -63,10 +80,15 @@ export const expensesColumns: ExpenseColumn[] = [
       let badgeClass = "";
       let text = status;
       if (status === "Approved") badgeClass = "bg-green-100 text-green-700";
-      else if (status === "Pending") badgeClass = "bg-yellow-100 text-yellow-700";
+      else if (status === "Pending")
+        badgeClass = "bg-yellow-100 text-yellow-700";
       else badgeClass = "bg-gray-100 text-gray-700";
       return (
-        <Badge className={`${badgeClass} px-3 py-1 rounded-full text-xs font-medium`}>{text}</Badge>
+        <Badge
+          className={`${badgeClass} px-3 py-1 rounded-full text-xs font-medium`}
+        >
+          {text}
+        </Badge>
       );
     },
   },

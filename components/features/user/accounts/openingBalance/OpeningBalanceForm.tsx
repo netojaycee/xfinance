@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useSessionStore } from "@/lib/store/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,7 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Calendar } from "lucide-react";
+import { Plus, Trash2, Calendar, Loader2 } from "lucide-react";
+import { useSetOpeningBalances } from "@/lib/api/hooks/useAccounts";
+import { Account } from "@/lib/api/hooks/types/accountsTypes";
 
 // Zod schema for Opening Balance
 const openingBalanceAccountSchema = z.object({
@@ -34,12 +37,15 @@ const openingBalanceAccountSchema = z.object({
 
 const openingBalanceSchema = z.object({
   openingDate: z.string().min(1, "Opening balance date is required"),
-  accounts: z.array(openingBalanceAccountSchema).min(1, "At least one account is required"),
+  accounts: z
+    .array(openingBalanceAccountSchema)
+    .min(1, "At least one account is required"),
 });
 
 type OpeningBalanceFormData = z.infer<typeof openingBalanceSchema>;
 
 interface OpeningBalanceFormProps {
+  accounts?: Account[];
   onSuccess?: () => void;
 }
 
@@ -52,14 +58,18 @@ const mockAccounts = [
   { id: "5", name: "Cost of Goods Sold", type: "Expense" },
 ];
 
-export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProps) {
+export default function OpeningBalanceForm({
+  accounts = [],
+  onSuccess,
+}: OpeningBalanceFormProps) {
+  const { entity, user } = useSessionStore();
+  const setOpeningBalances = useSetOpeningBalances();
+
   const form = useForm<OpeningBalanceFormData>({
-    resolver: zodResolver(openingBalanceSchema),
+    resolver: zodResolver(openingBalanceSchema) as any,
     defaultValues: {
       openingDate: new Date().toISOString().split("T")[0],
-      accounts: [
-        { accountId: "", accountType: "", debit: 0, credit: 0 },
-      ],
+      accounts: [{ accountId: "", accountType: "", debit: 0, credit: 0 }],
     },
   });
 
@@ -70,19 +80,45 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
 
   // Watch for account changes to update account type
   const watchAccounts = form.watch("accounts");
-  const totalDebits = watchAccounts.reduce((sum, acc) => sum + (acc.debit || 0), 0);
-  const totalCredits = watchAccounts.reduce((sum, acc) => sum + (acc.credit || 0), 0);
+  const totalDebits = watchAccounts.reduce(
+    (sum, acc) => sum + (acc.debit || 0),
+    0,
+  );
+  const totalCredits = watchAccounts.reduce(
+    (sum, acc) => sum + (acc.credit || 0),
+    0,
+  );
   const difference = totalDebits - totalCredits;
 
   const onSubmit = async (values: OpeningBalanceFormData) => {
     try {
-      console.log("Opening Balance submitted:", values);
-      toast.success("Opening balances saved successfully");
-      if (onSuccess) onSuccess();
+      const payload = {
+        entityId: entity.entityId || "",
+        lines: values.accounts.map((account) => ({
+          accountId: account.accountId,
+          debit: Math.round((account.debit || 0) * 100),
+          credit: Math.round((account.credit || 0) * 100),
+        })),
+      };
+
+      await setOpeningBalances.mutateAsync(payload);
     } catch (error) {
-      toast.error("Failed to save opening balances");
+      // error handled below
     }
   };
+
+  useEffect(() => {
+    if (setOpeningBalances.isSuccess) {
+      toast.success("Opening balances saved successfully");
+      if (onSuccess) onSuccess();
+    }
+    if (setOpeningBalances.isError) {
+      toast.error(
+        setOpeningBalances.error?.message || "Failed to save opening balances",
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setOpeningBalances.isSuccess, setOpeningBalances.isError]);
 
   const handleAddAccount = () => {
     append({ accountId: "", accountType: "", debit: 0, credit: 0 });
@@ -102,8 +138,12 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
   return (
     <div className="w-full space-y-6 bg-white p-6 rounded-lg shadow-sm">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">Opening Balances</h2>
-        <p className="text-sm text-gray-600">Set initial account balances for system setup</p>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Opening Balances
+        </h2>
+        <p className="text-sm text-gray-600">
+          Set initial account balances for system setup
+        </p>
       </div>
 
       <Form {...form}>
@@ -134,7 +174,10 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
                       variant="outline"
                       className="rounded-lg"
                       onClick={() => {
-                        form.setValue("openingDate", new Date().toISOString().split("T")[0]);
+                        form.setValue(
+                          "openingDate",
+                          new Date().toISOString().split("T")[0],
+                        );
                       }}
                     >
                       Set Date
@@ -148,7 +191,9 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
 
           {/* Account Opening Balances */}
           <div className="space-y-4">
-            <h3 className="text-base font-semibold text-gray-900">Account Opening Balances</h3>
+            <h3 className="text-base font-semibold text-gray-900">
+              Account Opening Balances
+            </h3>
 
             {/* Table Header */}
             <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-100 rounded-lg font-semibold text-sm text-gray-700">
@@ -171,10 +216,14 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
                         name={`accounts.${index}.accountId`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">Account</FormLabel>
+                            <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
+                              Account
+                            </FormLabel>
                             <Select
                               value={field.value}
-                              onValueChange={(value) => handleAccountChange(index, value)}
+                              onValueChange={(value) =>
+                                handleAccountChange(index, value)
+                              }
                             >
                               <FormControl>
                                 <SelectTrigger className="w-full rounded-lg border-gray-300">
@@ -183,7 +232,10 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
                               </FormControl>
                               <SelectContent>
                                 {mockAccounts.map((account) => (
-                                  <SelectItem key={account.id} value={account.id}>
+                                  <SelectItem
+                                    key={account.id}
+                                    value={account.id}
+                                  >
                                     {account.name}
                                   </SelectItem>
                                 ))}
@@ -197,7 +249,9 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
 
                     {/* Account Type (Display Only) */}
                     <div className="md:col-span-3">
-                      <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">Account Type</FormLabel>
+                      <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
+                        Account Type
+                      </FormLabel>
                       <div className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700">
                         {watchAccounts[index]?.accountType || "—"}
                       </div>
@@ -210,7 +264,9 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
                         name={`accounts.${index}.debit`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">Debit</FormLabel>
+                            <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
+                              Debit
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
@@ -233,7 +289,9 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
                         name={`accounts.${index}.credit`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">Credit</FormLabel>
+                            <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
+                              Credit
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
@@ -295,7 +353,9 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
             </div>
             <div className="flex justify-between items-center border-t border-gray-200 pt-3">
               <span className="text-gray-700 font-semibold">Difference</span>
-              <span className={`font-semibold text-lg ${difference === 0 ? "text-green-600" : "text-orange-600"}`}>
+              <span
+                className={`font-semibold text-lg ${difference === 0 ? "text-green-600" : "text-orange-600"}`}
+              >
                 ₦{difference.toFixed(2)}
               </span>
             </div>
@@ -309,8 +369,16 @@ export default function OpeningBalanceForm({ onSuccess }: OpeningBalanceFormProp
             <Button
               type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              disabled={setOpeningBalances.isPending}
             >
-              Save Opening Balances
+              {setOpeningBalances.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <span>Save Opening Balances</span>
+              )}
             </Button>
           </div>
         </form>

@@ -45,7 +45,6 @@ export default function CustomerForm({
   isEditMode = false,
   onSuccess,
 }: CustomerFormProps) {
-
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
 
@@ -113,7 +112,12 @@ export default function CustomerForm({
       toast.error(updateCustomer.error?.message || "Failed to update customer");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createCustomer.isSuccess, createCustomer.isError, updateCustomer.isSuccess, updateCustomer.isError]);
+  }, [
+    createCustomer.isSuccess,
+    createCustomer.isError,
+    updateCustomer.isSuccess,
+    updateCustomer.isError,
+  ]);
 
   return (
     <div className="w-full">
@@ -187,7 +191,7 @@ export default function CustomerForm({
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>phoneNumber Number</FormLabel>
+                    <FormLabel>Number</FormLabel>
                     <FormControl>
                       <Input placeholder="+234 800 000 0000" {...field} />
                     </FormControl>
@@ -204,7 +208,9 @@ export default function CustomerForm({
                     <FormLabel>Company Name</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Company name (if applicable)"
+                        placeholder="Company name"
+                        // placeholder="Company name (if applicable)"
+
                         {...field}
                       />
                     </FormControl>
@@ -344,7 +350,7 @@ export default function CustomerForm({
                         type="number"
                         step="0.01"
                         value={field.value}
-                        onChange={e => {
+                        onChange={(e) => {
                           const val = e.target.value;
                           field.onChange(val);
                         }}
@@ -375,8 +381,12 @@ export default function CustomerForm({
 
           <div className="flex justify-end gap-2 border-t pt-1 pb-3">
             <Button variant={"outline"}>Cancel</Button>
-            <Button type="submit" className="" disabled={createCustomer.isPending || updateCustomer.isPending}>
-              {(createCustomer.isPending || updateCustomer.isPending) ? (
+            <Button
+              type="submit"
+              className=""
+              disabled={createCustomer.isPending || updateCustomer.isPending}
+            >
+              {createCustomer.isPending || updateCustomer.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />{" "}
                   <span>Please wait</span>

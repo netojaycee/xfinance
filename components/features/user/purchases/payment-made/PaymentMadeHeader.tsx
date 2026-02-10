@@ -5,18 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
-import BillsForm from "./PaymentMadeForm";
 import PaymentMadeForm from "./PaymentMadeForm";
+import { BillPaymentsResponse } from "../bills/types";
 
-export default function PaymentMadeHeader() {
+interface PaymentMadeHeaderProps {
+  loading?: boolean;
+  data?: BillPaymentsResponse;
+}
+
+export default function PaymentMadeHeader({ loading = false, data }: PaymentMadeHeaderProps) {
   const [open, setOpen] = React.useState(false);
+  const totalPayments = data?.total || 0;
+
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold text-indigo-900">Payment Made</h2>
           <p className="text-muted-foreground">
-            Track and manage vendor payments{" "}
+            Track and manage vendor payments ({totalPayments} payments)
           </p>
         </div>
         <div className="flex items-center gap-3">

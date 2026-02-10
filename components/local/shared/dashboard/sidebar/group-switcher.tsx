@@ -81,7 +81,7 @@ export function GroupSwitcher() {
   // later add paginationa dn search to this
   const { data: groupsData, isLoading, isFetching } = useGroups();
 
-  const groups = React.useMemo(() => groupsData || [], [groupsData]);
+  const groups = React.useMemo(() => (groupsData as any)?.groups || [], [groupsData]);
   const total = groups.length; // No pagination for now
   const hasMore = false; // No pagination for now
 
@@ -90,7 +90,7 @@ export function GroupSwitcher() {
   // Set active group based on group.groupId
   React.useEffect(() => {
     if (group?.groupId && groups.length > 0) {
-      const currentGroup = groups.find((g) => g.id === group.groupId);
+      const currentGroup = groups.find((g: any) => g.id === group.groupId);
       setActiveGroup(currentGroup || null);
     } else {
       setActiveGroup(null);
@@ -193,7 +193,7 @@ export function GroupSwitcher() {
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                   </div>
                 ) : groups.length > 0 ? (
-                  groups.map((group) => (
+                  groups.map((group: any) => (
                     <div
                       key={group.id}
                       onClick={() => switchToGroup(group)}

@@ -29,8 +29,8 @@ const generalConfigSchema = z.object({
   baseCurrency: z.string().min(1, "Base currency is required"),
   multiCurrency: z.boolean().default(false),
   taxCalculation: z.boolean().default(true),
-  dateFormat: z.string().min(1, "Date format is required"),
-  numberFormat: z.string().min(1, "Number format is required"),
+  dateFormat: z.string().min(1, "Date format is required").default("MM/DD/YYYY"),
+  numberFormat: z.string().min(1, "Number format is required").default("1,234.56"),
 });
 
 type GeneralConfigFormData = z.infer<typeof generalConfigSchema>;
@@ -64,7 +64,7 @@ export default function GeneralConfigForm({
   onSuccess,
 }: GeneralConfigFormProps) {
   const form = useForm<GeneralConfigFormData>({
-    resolver: zodResolver(generalConfigSchema),
+    resolver: zodResolver(generalConfigSchema) as any,
     defaultValues: {
       baseCurrency: "USD",
       multiCurrency: false,

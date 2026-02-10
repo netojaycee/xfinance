@@ -60,7 +60,7 @@ export function RevenueExpensesChart() {
           <CardDescription>Monthly breakdown (in thousands)</CardDescription>
         </div>
         <Select>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue placeholder="This Year" />
           </SelectTrigger>
           <SelectContent>

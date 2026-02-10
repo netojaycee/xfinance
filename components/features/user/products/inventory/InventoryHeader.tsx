@@ -70,7 +70,7 @@ export default function InventoryHeader({
         open={open}
         onOpenChange={setOpen}
       >
-        <InventoryForm />
+        <InventoryForm onConfirm={() => setOpen(false)} />
       </CustomModal>
     </div>
   );

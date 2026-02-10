@@ -7,7 +7,9 @@ import { customerColumns } from "./CustomersColumn";
 
 export default function Customers() {
   const { data, isLoading } = useCustomers();
-  const customers = data?.customers || [];
+  const customers = (data as any)?.customers || [];
+
+  console.log("Fetched customers:", data); // Debug log to check fetched data
   return (
     <div className="space-y-4">
       <CustomersHeader data={data} loading={isLoading} />

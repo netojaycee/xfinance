@@ -27,19 +27,19 @@ export const superAdminMenu = [
     title: "Dashboard",
     icon: LayoutDashboard,
     url: "/dashboard",
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Companies",
     icon: Building,
     url: "/companies",
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Subscription",
     icon: CreditCard,
     url: "/subscription",
-    isActive: false,
+    isActive: true,
   },
 ];
 
@@ -48,37 +48,37 @@ export const adminMenu = [
     title: "Overview",
     icon: BarChart3,
     url: "/dashboard",
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Consolidation",
     icon: BookCheck,
     url: "/consolidation",
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Group Reports",
     icon: FileText,
     url: "/group-reports",
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Budgeting & Forecasts",
     icon: FilePieChart,
     url: "/budgeting",
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Master Chart of Accounts",
     icon: BookUser,
     url: "/master-chart-of-accounts",
-    isActive: false,
+    isActive: true,
   },
   {
     title: "Admin",
     icon: UserCog,
     url: "/admin",
-    isActive: false,
+    isActive: true,
   },
 ];
 

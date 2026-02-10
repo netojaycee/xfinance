@@ -29,8 +29,8 @@ const generalPreferenceSchema = z.object({
   emailNotifications: z.boolean().default(true),
   twoFactorAuth: z.boolean().default(false),
   auditLog: z.boolean().default(true),
-  timeZone: z.string().min(1, "Time zone is required"),
-  language: z.string().min(1, "Language is required"),
+  timeZone: z.string().min(1, "Time zone is required").default("UTC"),
+  language: z.string().min(1, "Language is required").default("en"),
 });
 
 type GeneralPreferenceFormData = z.infer<typeof generalPreferenceSchema>;
@@ -67,7 +67,7 @@ export default function GeneralPreferenceForm({
   onSuccess,
 }: GeneralPreferenceFormProps) {
   const form = useForm<GeneralPreferenceFormData>({
-    resolver: zodResolver(generalPreferenceSchema),
+    resolver: zodResolver(generalPreferenceSchema) as any,
     defaultValues: {
       emailNotifications: true,
       twoFactorAuth: false,

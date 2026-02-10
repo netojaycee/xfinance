@@ -53,6 +53,8 @@ export type Group = {
   billingCycle?: string | null;
   // entities, groupRoles, users can be added as needed
   subscription?: any;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Entity = {

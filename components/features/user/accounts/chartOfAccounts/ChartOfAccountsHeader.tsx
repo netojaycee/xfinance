@@ -8,10 +8,8 @@ import { MODULES } from "@/lib/types/enums";
 import ChartOfAccountsForm from "./ChartOfAccountsForm";
 
 export default function ChartOfAccountsHeader({
-  data,
   loading,
 }: {
-  data?: any;
   loading: boolean;
 }) {
   const [open, setOpen] = React.useState(false);

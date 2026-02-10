@@ -3,13 +3,10 @@
 import React from "react";
 
 export default function ManualJournalHeader({
-  data,
   loading,
 }: {
-  data?: any;
   loading: boolean;
 }) {
-  const [open, setOpen] = React.useState(false);
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">

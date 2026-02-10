@@ -1,18 +1,25 @@
 "use client";
-import { CustomTable } from "@/components/local/custom/custom-table";
-
-import { useCustomers } from "@/lib/api/hooks/useSales";
-import ChartOfAccountsHeader from "./OpeningBalanceHeader";
+import React from "react";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
+import { useDebounce } from "use-debounce";
+import OpeningBalanceHeader from "./OpeningBalanceHeader";
 import OpeningBalanceForm from "./OpeningBalanceForm";
 
 export default function OpeningBalance() {
-  const { data, isLoading } = useCustomers();
-  const customers = data?.customers || [];
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+
+  const { data: accountsResponse, isLoading: loading } = useAccounts({
+    search: debouncedSearchTerm,
+  });
+
+  const accountsData = (accountsResponse as any)?.data || [];
+
   return (
     <div className="space-y-4">
-      <ChartOfAccountsHeader data={data} loading={isLoading} />
+      <OpeningBalanceHeader loading={loading} />
 
-      <OpeningBalanceForm />
+      <OpeningBalanceForm accounts={accountsData} />
     </div>
   );
 }

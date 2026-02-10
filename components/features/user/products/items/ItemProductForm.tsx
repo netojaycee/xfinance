@@ -14,6 +14,8 @@ import { productCategories, productUnits } from "./utils/data";
 import { productSchema } from "./utils/schema";
 import z from "zod";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useCreateItem, useUpdateItem } from "@/lib/api/hooks/useProducts";
+import { ItemTypeEnum } from "@/lib/api/hooks/types/productsTypes";
 
 const defaultProduct = {
   name: "",
@@ -32,6 +34,9 @@ const defaultProduct = {
 
 export default function ItemProductForm({ item, isEditMode = false, onSuccess }: { item?: any; isEditMode?: boolean; onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
+  const createItem = useCreateItem();
+  const updateItem = useUpdateItem(item?.id || "");
+
   const form = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: isEditMode && item ? { ...defaultProduct, ...item } : defaultProduct,
@@ -44,13 +49,39 @@ export default function ItemProductForm({ item, isEditMode = false, onSuccess }:
   }, [isEditMode, item]);
 
   const onSubmit = async (values: z.infer<typeof productSchema>) => {
-    setLoading(true);
-    console.log(values);
-    setTimeout(() => {
+    try {
+      setLoading(true);
+
+      const payload = {
+        name: values.name,
+        category: values.category,
+        sku: values.sku,
+        unit: values.unit,
+        description: values.description || "",
+        sellingPrice: Math.round(Number(values.sellingPrice) * 100),
+        costPrice: values.costPrice ? Math.round(Number(values.costPrice) * 100) : 0,
+        taxable: values.taxable,
+        currentStock: values.currentStock,
+        lowStock: values.lowStockAlert,
+        type: ItemTypeEnum.Product,
+      };
+
+      if (isEditMode && item?.id) {
+        await updateItem.mutateAsync(payload as any);
+        toast.success("Product updated successfully!");
+      } else {
+        await createItem.mutateAsync(payload as any);
+        toast.success("Product created successfully!");
+      }
+
+      form.reset();
       setLoading(false);
-      toast.success(isEditMode ? "Product updated!" : "Product saved!");
-      if (onSuccess) onSuccess();
-    }, 1200);
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error submitting product:", error);
+      toast.error("Failed to save product");
+      setLoading(false);
+    }
   };
 
   return (

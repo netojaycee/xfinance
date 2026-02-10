@@ -1,6 +1,5 @@
 "use client";
 
-import { useCustomers } from "@/lib/api/hooks/useSales";
 import BudgetHeader from "./BudgetHeader";
 import { CustomTabs } from "@/components/local/custom/tabs";
 import { CustomTable } from "@/components/local/custom/custom-table";
@@ -8,13 +7,10 @@ import { budgetColumns } from "./BudgetColumn";
 import SetBudgetForm from "./SetBudgetForm";
 
 export default function Budget() {
-  const { data, isLoading } = useCustomers();
-  const customers = data?.customers || [];
   return (
     <div className="space-y-4">
-      <BudgetHeader data={data} loading={isLoading} />
-     
- <CustomTabs
+      <BudgetHeader loading={false} />
+      <CustomTabs
         storageKey="budget-tab"
         tabs={[
           {
@@ -23,12 +19,12 @@ export default function Budget() {
             content: (
               <div className="space-y-4">
                 <CustomTable
-                  searchPlaceholder="Search employees..."
+                  searchPlaceholder="Search budgets..."
                   tableTitle="Budget vs Actual"
                   columns={budgetColumns}
-                  data={customers as any}
+                  data={[]}
                   pageSize={10}
-                  loading={isLoading}
+                  loading={false}
                   display={{ filterComponent: true }}
                 />
               </div>

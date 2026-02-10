@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useCreateCustomer, useUpdateCustomer } from "@/lib/api/hooks/useSales";
+import { useCreateAsset, useUpdateAsset } from "@/lib/api/hooks/useAssets";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,11 @@ import {
 } from "@/components/ui/select";
 import { ArrowRight, Loader2, Settings2 } from "lucide-react";
 import { assetsSchema } from "../assets/utils/schema";
+import {
+  AssetTypeEnum,
+  AssetDepartmentEnum,
+  DepreciationMethodEnum,
+} from "@/lib/api/hooks/types/assetsTypes";
 
 type assetsFormData = z.infer<typeof assetsSchema>;
 
@@ -41,8 +46,8 @@ export default function AssetsForm({
   isEditMode = false,
   onSuccess,
 }: assetsFormProps) {
-  const createCustomer = useCreateCustomer();
-  const updateCustomer = useUpdateCustomer();
+  const createAsset = useCreateAsset();
+  const updateAsset = useUpdateAsset(assets?.id || "");
 
   const form = useForm<assetsFormData>({
     resolver: zodResolver(assetsSchema),
@@ -57,11 +62,15 @@ export default function AssetsForm({
       purchaseCost: assets?.purchaseCost || "",
       currentValue: assets?.currentValue || "",
       warrantyExpiry: assets?.warrantyExpiry || "",
-      trackDepreciation: typeof assets?.trackDepreciation === "boolean" ? assets.trackDepreciation : false,
+      trackDepreciation:
+        typeof assets?.trackDepreciation === "boolean"
+          ? assets.trackDepreciation
+          : false,
       depreciationMethod: assets?.depreciationMethod || "",
       usefulLife: assets?.usefulLife || "",
       salvageValue: assets?.salvageValue || "",
-      activeAsset: typeof assets?.activeAsset === "boolean" ? assets.activeAsset : true,
+      activeAsset:
+        typeof assets?.activeAsset === "boolean" ? assets.activeAsset : true,
     },
   });
 
@@ -79,21 +88,46 @@ export default function AssetsForm({
         purchaseCost: assets?.purchaseCost || "",
         currentValue: assets?.currentValue || "",
         warrantyExpiry: assets?.warrantyExpiry || "",
-        trackDepreciation: typeof assets?.trackDepreciation === "boolean" ? assets.trackDepreciation : false,
+        trackDepreciation:
+          typeof assets?.trackDepreciation === "boolean"
+            ? assets.trackDepreciation
+            : false,
         depreciationMethod: assets?.depreciationMethod || "",
         usefulLife: assets?.usefulLife || "",
         salvageValue: assets?.salvageValue || "",
-        activeAsset: typeof assets?.activeAsset === "boolean" ? assets.activeAsset : true,
+        activeAsset:
+          typeof assets?.activeAsset === "boolean" ? assets.activeAsset : true,
       });
     }
   }, [assets]);
 
   const onSubmit = async (values: assetsFormData) => {
     try {
+      // Convert dates to ISO-8601 DateTime format
+      const convertToISO = (dateStr: string) => {
+        if (!dateStr) return "";
+        return new Date(dateStr).toISOString();
+      };
+
+      const payload = {
+        name: values.assetName,
+        type: values.assetType as AssetTypeEnum,
+        department: values.department as AssetDepartmentEnum,
+        assigned: values.assignedTo || "",
+        description: values.description,
+        purchaseDate: convertToISO(values.purchaseDate),
+        purchaseCost: Math.round(Number(values.purchaseCost) * 100),
+        currentValue: Math.round(Number(values.currentValue) * 100 || 0),
+        expiryDate: values.warrantyExpiry ? convertToISO(values.warrantyExpiry) : "",
+        depreciationMethod: values.depreciationMethod as DepreciationMethodEnum,
+        years: Number(values.usefulLife) || 0,
+        salvageValue: Math.round(Number(values.salvageValue) * 100 || 0),
+      };
+
       if (isEditMode && assets?.id) {
-        await updateCustomer.mutateAsync({ id: assets.id, data: values });
+        await updateAsset.mutateAsync(payload);
       } else {
-        await createCustomer.mutateAsync(values);
+        await createAsset.mutateAsync(payload);
       }
     } catch (error) {
       // error handled below
@@ -101,22 +135,22 @@ export default function AssetsForm({
   };
 
   useEffect(() => {
-    if (createCustomer.isSuccess || updateCustomer.isSuccess) {
-      toast.success("assets saved successfully");
+    if (createAsset.isSuccess || updateAsset.isSuccess) {
+      toast.success("Asset saved successfully");
       if (onSuccess) onSuccess();
     }
-    if (createCustomer.isError) {
-      toast.error(createCustomer.error?.message || "Failed to create assets");
+    if (createAsset.isError) {
+      toast.error(createAsset.error?.message || "Failed to create asset");
     }
-    if (updateCustomer.isError) {
-      toast.error(updateCustomer.error?.message || "Failed to update assets");
+    if (updateAsset.isError) {
+      toast.error(updateAsset.error?.message || "Failed to update asset");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    createCustomer.isSuccess,
-    createCustomer.isError,
-    updateCustomer.isSuccess,
-    updateCustomer.isError,
+    createAsset.isSuccess,
+    createAsset.isError,
+    updateAsset.isSuccess,
+    updateAsset.isError,
   ]);
 
   return (
@@ -647,16 +681,16 @@ export default function AssetsForm({
             <Button
               type="submit"
               className=""
-              disabled={createCustomer.isPending || updateCustomer.isPending}
+              disabled={createAsset.isPending || updateAsset.isPending}
             >
-              {createCustomer.isPending || updateCustomer.isPending ? (
+              {createAsset.isPending || updateAsset.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />{" "}
                   <span>Please wait</span>
                 </>
               ) : (
                 <>
-                  <span>{isEditMode ? "Update assets" : "Add assets"}</span>
+                  <span>{isEditMode ? "Update Asset" : "Add Asset"}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}

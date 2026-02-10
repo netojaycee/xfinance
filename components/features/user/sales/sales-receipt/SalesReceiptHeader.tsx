@@ -17,8 +17,15 @@ import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import SalesReceiptsForm from "./SalesReceiptsForm";
 import { MODULES } from "@/lib/types/enums";
+import { ReceiptStats } from "./utils/types";
 
-export default function SalesReceiptHeader() {
+export default function SalesReceiptHeader({
+  stats,
+  loading,
+}: {
+  stats?: ReceiptStats;
+  loading: boolean;
+}) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="mb-6">
@@ -43,31 +50,35 @@ export default function SalesReceiptHeader() {
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SalesReceiptStatCardSmall
           title="Total Sales"
-          value={<span className="text-2xl">₦269.7k</span>}
+          value={<span className="text-2xl">₦{(stats?.totalSales || 0).toLocaleString()}</span>}
           icon={
             <DollarSign className="h-6 w-6 text-emerald-600 bg-emerald-100 rounded-xl p-1" />
           }
+          loading={loading}
         />
         <SalesReceiptStatCardSmall
           title="Today's Sales"
-          value={<span className="text-2xl">₦73.5k</span>}
+          value={<span className="text-2xl">₦{(stats?.todaysSales || 0).toLocaleString()}</span>}
           icon={
-            <Calendar className="h-6 w-6 text-indigo-600 bg-indigo-100 rounded-xl p-1" />
+            <Calendar className="h-6 w-6 text-primary bg-indigo-100 rounded-xl p-1" />
           }
+          loading={loading}
         />
         <SalesReceiptStatCardSmall
           title="Total Receipts"
-          value={<span className="text-2xl">6</span>}
+          value={<span className="text-2xl">{stats?.totalReceipts || 0}</span>}
           icon={
             <FileText className="h-6 w-6 text-fuchsia-600 bg-fuchsia-100 rounded-xl p-1" />
           }
+          loading={loading}
         />
         <SalesReceiptStatCardSmall
           title="Avg Receipt Value"
-          value={<span className="text-2xl">₦45k</span>}
+          value={<span className="text-2xl">₦{(stats?.averageReceiptValue || 0).toLocaleString()}</span>}
           icon={
             <Edit3 className="h-6 w-6 text-amber-500 bg-amber-100 rounded-xl p-1" />
           }
+          loading={loading}
         />
       </div>
 
@@ -78,7 +89,7 @@ export default function SalesReceiptHeader() {
         onOpenChange={setOpen}
         module={MODULES.SALES}
       >
-        <SalesReceiptsForm />
+        <SalesReceiptsForm onSuccess={() => setOpen(false)} />
       </CustomModal>
     </div>
   );

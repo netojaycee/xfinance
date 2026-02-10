@@ -28,7 +28,7 @@ export const payrollRecordsColumns: Column<any>[] = [
     title: "Basic Salary",
     className: "text-xs",
     render: (value) => {
-      typeof value !== "number" ? (
+      return typeof value !== "number" ? (
         <span className="text-gray-700">--</span>
       ) : (
         <span className="text-green-600 font-medium">
@@ -42,7 +42,7 @@ export const payrollRecordsColumns: Column<any>[] = [
     title: "Allowances",
     className: "text-xs",
     render: (value) => {
-      typeof value !== "number" ? (
+      return typeof value !== "number" ? (
         <span className="text-gray-700">--</span>
       ) : (
         <span className="text-green-600 font-medium">
@@ -81,7 +81,7 @@ export const payrollRecordsColumns: Column<any>[] = [
     title: "Net Pay",
     className: "text-xs",
     render: (value) => {
-      typeof value !== "number" ? (
+      return typeof value !== "number" ? (
         <span className="text-gray-700">--</span>
       ) : (
         <span className="text-blue-900 font-medium">

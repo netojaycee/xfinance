@@ -1,8 +1,8 @@
 "use client";
-import AttendanceHeader from "./PayrollBadgesHeader";
+import React from "react";
 import { CustomTable } from "@/components/local/custom/custom-table";
 
-import { useCustomers } from "@/lib/api/hooks/useSales";
+import { useEmployees } from "@/lib/api/hooks/useHR";
 import { payrollBadgesColumns } from "./PayrollBadgesColumn";
 import { CustomTabs } from "@/components/local/custom/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,19 @@ import { Download } from "lucide-react";
 import PayrollBadges from "./PayrollBadges";
 import PayrollRecords from "./PayrollRecords";
 import ProcessPayrollForm from "./ProcessPayrollForm";
+import { useDebounce } from "use-debounce";
 
 export default function Payroll() {
-  const { data, isLoading } = useCustomers();
-  const customers = data?.customers || [];
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+
+  const { data: employeesResponse, isLoading } = useEmployees({
+    search: debouncedSearchTerm,
+  });
+
+  const employees = (employeesResponse as any)?.employees || [];
+  const stats = (employeesResponse as any)?.stats;
+
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between">

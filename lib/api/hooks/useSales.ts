@@ -3,7 +3,8 @@
 import { useQuery, useMutation, UseMutationOptions, useQueryClient } from '@tanstack/react-query';
 import * as salesService from '../services/salesService';
 import { CustomersResponse } from '@/components/features/user/sales/customers/utils/types';
-import { InvoicesResponse } from '@/components/features/user/sales/invoices/utils/types';
+import { InvoicesResponse, PaidInvoicesResponse } from '@/components/features/user/sales/invoices/utils/types';
+import { ReceiptsResponse } from '@/components/features/user/sales/sales-receipt/utils/types';
 
 // Customers
 
@@ -11,7 +12,7 @@ import { InvoicesResponse } from '@/components/features/user/sales/invoices/util
 
 export const useCustomers = () => useQuery<CustomersResponse>({
 	queryKey: ['customers'],
-	queryFn: salesService.getCustomers,
+	queryFn: () => salesService.getCustomers() as Promise<CustomersResponse>,
 	staleTime: 2 * 60 * 1000,
 	refetchOnWindowFocus: true,
 });
@@ -64,9 +65,14 @@ export const useDeleteCustomer = (options?: UseMutationOptions<any, Error, strin
 
 // Invoices
 
-export const useInvoices = () => useQuery<InvoicesResponse>({
-	queryKey: ['invoices'],
-	queryFn: salesService.getInvoices,
+export const useInvoices = (params?: {
+	page?: number;
+	limit?: number;
+	status?: string;
+	search?: string;
+}) => useQuery<InvoicesResponse>({
+	queryKey: ['invoices', params],
+	queryFn: () => salesService.getInvoices(params) as Promise<InvoicesResponse>,
 	staleTime: 2 * 60 * 1000,
 	refetchOnWindowFocus: true,
 });
@@ -117,11 +123,29 @@ export const useDeleteInvoice = (options?: UseMutationOptions<any, Error, string
 	});
 };
 
+// Paid Invoices
+export const usePaidInvoices = (params?: {
+	page?: number;
+	limit?: number;
+	search?: string;
+}) => useQuery<PaidInvoicesResponse>({
+	queryKey: ['paidInvoices', params],
+	queryFn: () => salesService.getPaidInvoices(params) as Promise<PaidInvoicesResponse>,
+	staleTime: 2 * 60 * 1000,
+	refetchOnWindowFocus: true,
+});
+
 // Receipts
 
-export const useReceipts = () => useQuery({
-	queryKey: ['receipts'],
-	queryFn: salesService.getReceipts,
+export const useReceipts = (params?: {
+	page?: number;
+	limit?: number;
+	status?: string;
+	search?: string;
+	paymentMethod?: string;
+}) => useQuery<ReceiptsResponse>({
+	queryKey: ['receipts', params],
+	queryFn: () => salesService.getReceipts(params) as Promise<ReceiptsResponse>,
 	staleTime: 2 * 60 * 1000,
 	refetchOnWindowFocus: true,
 });

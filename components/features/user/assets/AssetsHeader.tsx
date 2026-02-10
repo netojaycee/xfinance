@@ -10,10 +10,18 @@ import AssetAttentionAlert from "./AssetAttentionAlert";
 import AssetsForm from "./AssetsForm";
 
 export default function AssetsHeader({
-  data,
+  summary,
   loading,
 }: {
-  data?: any;
+  summary?: {
+    total: number;
+    inUse: number;
+    inStorage: number;
+    retired: number;
+    sold: number;
+    damaged: number;
+    totalValue: number;
+  };
   loading: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -41,27 +49,53 @@ export default function AssetsHeader({
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AssetsStatCardSmall
           title="Total Assets"
-          value={<span className="text-3xl font-bold text-blue-800">84</span>}
-          subtitle={<span>Worth ₦425K</span>}
-          loading={false}
+          value={
+            <span className="text-3xl font-bold text-blue-800">
+              {summary?.total || 0}
+            </span>
+          }
+          subtitle={
+            <span>
+              Worth ₦
+              {((summary?.totalValue || 0) / 100).toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          }
+          loading={loading}
         />
         <AssetsStatCardSmall
           title="In Use"
-          value={<span className="text-3xl font-bold text-blue-800">68</span>}
+          value={
+            <span className="text-3xl font-bold text-blue-800">
+              {summary?.inUse || 0}
+            </span>
+          }
           subtitle={<span>Active assets</span>}
-          loading={false}
+          loading={loading}
         />
         <AssetsStatCardSmall
           title="In Storage"
-          value={<span className="text-3xl font-bold text-blue-800">12</span>}
+          value={
+            <span className="text-3xl font-bold text-blue-800">
+              {summary?.inStorage || 0}
+            </span>
+          }
           subtitle={<span>Available</span>}
-          loading={false}
+          loading={loading}
         />
         <AssetsStatCardSmall
-          title="Depreciation (YTD)"
-          value={<span className="text-3xl font-bold text-blue-800">₦45K</span>}
-          subtitle={<span>Current year</span>}
-          loading={false}
+          title="Total Value"
+          value={
+            <span className="text-3xl font-bold text-blue-800">
+              ₦
+              {((summary?.totalValue || 0) / 100).toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          }
+          subtitle={<span>Current value</span>}
+          loading={loading}
         />
       </div>
 

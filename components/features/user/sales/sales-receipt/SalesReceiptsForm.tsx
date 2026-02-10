@@ -25,12 +25,12 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { useCreateReceipt, useUpdateReceipt } from "@/lib/api/hooks/useSales";
+import { useCreateReceipt, useUpdateReceipt, useCustomers } from "@/lib/api/hooks/useSales";
 
 export const receiptSchema = z.object({
-  customer: z.string().min(1, "Customer name is required"),
-  invoiceDate: z.date(),
-  paymentMethod: z.string().min(1, "Payment method is required"),
+  customerId: z.string().min(1, "Customer is required"),
+  date: z.date(),
+  paymentMethod: z.enum(["Cash", "Card", "Bank_Transfer", "Mobile_Money", "Check", "Debit_Card", "Credit_Card", "ACH", "Wire_Transfer"]),
   lineItems: z.array(
     z.object({
       description: z.string().min(1, "Description is required"),
@@ -53,14 +53,17 @@ export default function SalesReceiptsForm({
   isEditMode = false,
   onSuccess,
 }: SalesReceiptsFormProps) {
+  const { data, isLoading: customersLoading } = useCustomers();
   const createReceipt = useCreateReceipt();
   const updateReceipt = useUpdateReceipt();
+
+  const customers = data?.customers || [];
 
   const form = useForm<ReceiptFormData>({
     resolver: zodResolver(receiptSchema),
     defaultValues: {
-      customer: receipt?.customer || "",
-      invoiceDate: receipt?.invoiceDate ? new Date(receipt.invoiceDate as any) : new Date(),
+      customerId: receipt?.customerId || "",
+      date: receipt?.date ? new Date(receipt.date as any) : new Date(),
       paymentMethod: receipt?.paymentMethod || "Cash",
       lineItems: receipt?.lineItems || [],
     },
@@ -69,8 +72,8 @@ export default function SalesReceiptsForm({
   useEffect(() => {
     if (receipt) {
       form.reset({
-        customer: receipt?.customer || "",
-        invoiceDate: receipt?.invoiceDate ? new Date(receipt.invoiceDate as any) : new Date(),
+        customerId: receipt?.customerId || "",
+        date: receipt?.date ? new Date(receipt.date as any) : new Date(),
         paymentMethod: receipt?.paymentMethod || "Cash",
         lineItems: receipt?.lineItems || [],
       });
@@ -87,10 +90,24 @@ export default function SalesReceiptsForm({
 
   const onSubmit = async (values: ReceiptFormData) => {
     try {
+      // Transform lineItems to items array of strings
+      const items = values.lineItems.map(item => JSON.stringify(item));
+      // Calculate total as integer
+      const subtotal = values.lineItems.reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
+      const totalAmount = Math.round(subtotal);
+      
+      const payload = {
+        customerId: values.customerId,
+        date: values.date,
+        paymentMethod: values.paymentMethod,
+        items,
+        total: totalAmount,
+      };
+      
       if (isEditMode && receipt?.id) {
-        await updateReceipt.mutateAsync({ id: receipt.id, data: values });
+        await updateReceipt.mutateAsync({ id: receipt.id, data: payload });
       } else {
-        await createReceipt.mutateAsync(values);
+        await createReceipt.mutateAsync(payload);
       }
     } catch (error) {
       // error handled below
@@ -120,12 +137,39 @@ export default function SalesReceiptsForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:items-center">
               <FormField
                 control={form.control}
-                name="customer"
+                name="customerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer Name</FormLabel>
+                    <FormLabel>Customer</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter customer name" {...field} />
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={customersLoading}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={
+                              customersLoading
+                                ? "Loading customers..."
+                                : "Select customer"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.isArray(customers) && customers.length > 0 ? (
+                            customers.map((c: any) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-customers" disabled>
+                              No customers found
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -133,7 +177,7 @@ export default function SalesReceiptsForm({
               />
               <FormField
                 control={form.control}
-                name="invoiceDate"
+                name="date"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Date</FormLabel>
@@ -167,8 +211,13 @@ export default function SalesReceiptsForm({
                         <SelectContent>
                           <SelectItem value="Cash">Cash</SelectItem>
                           <SelectItem value="Card">Card</SelectItem>
-                          <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                          <SelectItem value="Mobile Money">Mobile Money</SelectItem>
+                          <SelectItem value="Bank_Transfer">Bank Transfer</SelectItem>
+                          <SelectItem value="Mobile_Money">Mobile Money</SelectItem>
+                          <SelectItem value="Check">Check</SelectItem>
+                          <SelectItem value="Debit_Card">Debit Card</SelectItem>
+                          <SelectItem value="Credit_Card">Credit Card</SelectItem>
+                          <SelectItem value="ACH">ACH</SelectItem>
+                          <SelectItem value="Wire_Transfer">Wire Transfer</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>

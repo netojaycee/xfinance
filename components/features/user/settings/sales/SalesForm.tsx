@@ -32,7 +32,7 @@ const salesFormSchema = z.object({
   defaultPaymentTerms: z.string().min(1, "Payment terms is required"),
   latePaymentFees: z.boolean().default(false),
   sendPaymentReminders: z.boolean().default(true),
-  defaultSalesTaxRate: z.string().regex(/^\d+(\.\d{1,2})?$/, "Valid percentage required"),
+  defaultSalesTaxRate: z.string().regex(/^\d+(\.\d{1,2})?$/, "Valid percentage required").default("8.25"),
 });
 
 type SalesFormData = z.infer<typeof salesFormSchema>;
@@ -53,7 +53,7 @@ const paymentTermsOptions = [
 
 export default function SalesForm({ onSuccess }: SalesFormProps) {
   const form = useForm<SalesFormData>({
-    resolver: zodResolver(salesFormSchema),
+    resolver: zodResolver(salesFormSchema) as any,
     defaultValues: {
       invoiceNumberPrefix: "INV-",
       defaultPaymentTerms: "net-30",
