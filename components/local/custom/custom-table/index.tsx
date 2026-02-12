@@ -121,7 +121,6 @@ export function CustomTable<T extends { [key: string]: any }>({
             </div>
           )}
           {statusComponent && (
-            // select component for status filter
             <Select
               onValueChange={(value) => {
                 onStatusChange?.(value);
@@ -142,7 +141,6 @@ export function CustomTable<T extends { [key: string]: any }>({
           )}
 
           {methodsComponent && (
-            // select component for methods filter
             <Select
               onValueChange={(value) => {
                 onMethodsChange?.(value);
@@ -172,18 +170,6 @@ export function CustomTable<T extends { [key: string]: any }>({
               <Download /> Export
             </Button>
           )}
-          {/* Pagination Controls */}
-          {/* <div className="flex gap-2 items-center">
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-            Prev
-          </Button>
-          <span className="text-sm">
-            Page {page} of {totalPages || 1}
-          </span>
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}>
-            Next
-          </Button>
-        </div> */}
         </div>
       </div>
       <div className="overflow-x-auto rounded-md border">
@@ -203,10 +189,10 @@ export function CustomTable<T extends { [key: string]: any }>({
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="">
             {loading ? (
               [...Array(pageSize)].map((_, i) => (
-                <tr key={i} className="border-t animate-pulse">
+                <tr key={i} className="border-t animate-pulse ">
                   {columns.map((col) => (
                     <td
                       key={col.key}
@@ -228,7 +214,7 @@ export function CustomTable<T extends { [key: string]: any }>({
               </tr>
             ) : (
               pagedData.map((row, rowIndex) => (
-                <tr key={rowIndex} className="border-t hover:bg-gray-50">
+                <tr key={rowIndex} className="border-t hover:bg-gray-50 ">
                   {columns.map((col) => (
                     <td
                       key={col.key}

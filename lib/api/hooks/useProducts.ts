@@ -75,7 +75,7 @@ export const useItems = (params?: {
 }) => {
   return useQuery<ItemsResponse>({
     queryKey: ["items", params],
-    queryFn: () => productsService.getItems(params),
+    queryFn: () => productsService.getItems(params) as Promise<ItemsResponse>,
     staleTime: 2 * 60 * 1000,
   });
 };
