@@ -24,7 +24,7 @@ export default function Invoices() {
   });
   const invoices = data?.invoices || [];
 
-  // console.log("Fetched invoices:", data); // Debug log to check fetched data
+  console.log("Fetched invoices:", data); // Debug log to check fetched data
 
   return (
     <div className="space-y-4">

@@ -1,16 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { InvoiceDetailsPage } from "@/components/features/user/sales/invoices/details";
 
-export default function InvoiceDetailsPage() {
-    const params = useParams();
-    const router = useRouter();
-    const { id } = params;
-  return (
-    <div>
-        <Button variant={"ghost"} className="cursor-pointer" onClick={() => router.back()}><ArrowLeft /> Back</Button>
-        InvoiceDetailsPage {id}</div>
-  )
+export default function Page() {
+  return <InvoiceDetailsPage />;
 }

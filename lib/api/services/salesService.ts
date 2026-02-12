@@ -6,6 +6,7 @@ import {
 import { apiClient } from "../client";
 import { InvoicesResponse, PaidInvoicesResponse } from "@/components/features/user/sales/invoices/utils/types";
 import { ReceiptsResponse } from "@/components/features/user/sales/sales-receipt/utils/types";
+import { PaymentReceivedResponse } from "@/components/features/user/sales/payment-received/utils/types";
 
 // Customers
 export const getCustomers: () => Promise<CustomersResponse> = () =>
@@ -109,3 +110,61 @@ export const updateReceipt = (id: string | number, data: any) =>
   });
 export const deleteReceipt = (id: string | number) =>
   apiClient(`sales/receipts/${id}`, { method: "DELETE" });
+
+// Payment Received
+export const getPaymentsReceived: (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+}) => Promise<PaymentReceivedResponse> = (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.append("page", String(params.page));
+  if (params.limit) queryParams.append("limit", String(params.limit));
+  if (params.search) queryParams.append("search", params.search);
+  if (params.status && params.status !== "All Statuses") queryParams.append("status", params.status);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `sales/payments-received?${queryString}` : "sales/payments-received";
+
+  return apiClient(url, { method: "GET" });
+};
+
+export const getPaymentReceivedById = (id: string | number) =>
+  apiClient(`sales/payments-received/${id}`, {
+    method: "GET",
+  });
+
+export const createPaymentReceived = (data: any) =>
+  apiClient("sales/payments-received", { method: "POST", body: JSON.stringify(data) });
+
+export const updatePaymentReceived = (id: string | number, data: any) =>
+  apiClient(`sales/payments-received/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const deletePaymentReceived = (id: string | number) =>
+  apiClient(`sales/payments-received/${id}`, { method: "DELETE" });
+
+export const getPaymentReceivedReportsSummary: (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  from?: string;
+  to?: string;
+}) => Promise<PaymentReceivedResponse> = (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.append("page", String(params.page));
+  if (params.limit) queryParams.append("limit", String(params.limit));
+  if (params.search) queryParams.append("search", params.search);
+  if (params.status && params.status !== "All Statuses") queryParams.append("status", params.status);
+  if (params.from) queryParams.append("from", params.from);
+  if (params.to) queryParams.append("to", params.to);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `sales/payments-received/reports/summary?${queryString}` : "sales/payments-received/reports/summary";
+
+  return apiClient(url, { method: "GET" });
+};

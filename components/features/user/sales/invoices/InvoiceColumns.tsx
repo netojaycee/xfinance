@@ -29,7 +29,14 @@ const statusColors: Record<string, string> = {
 
 export const InvoiceColumns: Column<Invoice>[] = [
   { key: "invoiceNumber", title: "Invoice #", className: "text-xs" },
-  { key: "customerName", title: "Customer", className: "text-xs" },
+  {
+    key: "customer",
+    title: "Customer",
+    className: "text-xs",
+    render: (row) => {
+      return <p className="">{row?.name || "--"}</p>;
+    },
+  },
   {
     key: "invoiceDate",
     title: "Date",

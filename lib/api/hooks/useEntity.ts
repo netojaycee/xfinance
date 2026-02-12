@@ -1,15 +1,16 @@
 // lib/api/hooks/useEntity.ts
 
 import { useMutation, useQuery, UseMutationOptions, useQueryClient } from '@tanstack/react-query';
-import { createEntity, updateEntity, deleteEntity, getEntities, getEntity } from '../services/entityService';
+import { createEntity, updateEntity, deleteEntity, getEntities, getEntity, EntityFormData } from '../services/entityService';
 import { Entity } from '@/lib/types';
 
-type CreateEntityPayload = Omit<Entity, 'id' | 'createdAt' | 'updatedAt'>;
-type UpdateEntityPayload = Partial<CreateEntityPayload> & { id: string };
+type CreateEntityPayload = EntityFormData;
+type UpdateEntityPayload = EntityFormData & { id: string };
 
 
 /**
  * Hook for creating an entity (business unit) within the user's group.
+ * Handles logo file upload via multipart/form-data.
  * Triggers background job 'create-entity-user' on success.
  * Entity is automatically assigned to authenticated user's group.
  */
@@ -17,8 +18,8 @@ export const useCreateEntity = (options?: UseMutationOptions<Entity, Error, Crea
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createEntity,
-    onSuccess: (data, variables, context, mutation) => {
-      queryClient.invalidateQueries({ queryKey: ['entities', 'list'] });
+    onSuccess: async (data, variables, context, mutation) => {
+      await queryClient.refetchQueries({ queryKey: ['entities', 'list'] });
       // Background job queued: create-entity-user
       // - Creates entity admin user
       // - Entity ready for financial data entry
@@ -31,17 +32,18 @@ export const useCreateEntity = (options?: UseMutationOptions<Entity, Error, Crea
 
 /**
  * Hook for updating an existing entity.
+ * Handles logo file upload via multipart/form-data.
  * Email and taxId cannot be changed after creation (immutable).
  */
 export const useUpdateEntity = (options?: UseMutationOptions<Entity, Error, UpdateEntityPayload>) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateEntity,
-    onSuccess: (data, variables, context, mutation) => {
+    onSuccess: async (data, variables, context, mutation) => {
       if (variables && 'id' in variables && variables.id) {
         queryClient.invalidateQueries({ queryKey: ['entities', 'detail', variables.id] });
       }
-      queryClient.invalidateQueries({ queryKey: ['entities', 'list'] });
+      await queryClient.refetchQueries({ queryKey: ['entities', 'list'] });
       options?.onSuccess?.(data, variables, context, mutation);
     },
     ...options,
@@ -58,11 +60,11 @@ export const useDeleteEntity = (options?: UseMutationOptions<void, Error, string
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteEntity,
-    onSuccess: (data, id, context, mutation) => {
+    onSuccess: async (data, id, context, mutation) => {
       if (id) {
         queryClient.invalidateQueries({ queryKey: ['entities', 'detail', id] });
       }
-      queryClient.invalidateQueries({ queryKey: ['entities', 'list'] });
+      await queryClient.refetchQueries({ queryKey: ['entities', 'list'] });
       options?.onSuccess?.(data, id, context, mutation);
     },
     ...options,
@@ -73,11 +75,16 @@ export const useDeleteEntity = (options?: UseMutationOptions<void, Error, string
 /**
  * Hook to fetch all entities within the authenticated user's group.
  * Each entity can have different currency (ISO 4217) and fiscal year-end.
+ * Supports search, filtering, and pagination.
  */
-export const useEntities = () => {
+export const useEntities = (params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}) => {
   return useQuery({
-    queryKey: ['entities', 'list'],
-    queryFn: getEntities,
+    queryKey: ['entities', 'list', params?.search, params?.page, params?.limit],
+    queryFn: () => getEntities(params),
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchOnWindowFocus: true,
   });

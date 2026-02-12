@@ -30,7 +30,7 @@ export default function Header({
   group,
   entity,
   loading,
-  role
+  role,
 }: {
   user?: any;
   group?: any;
@@ -39,11 +39,12 @@ export default function Header({
   role: ENUM_ROLE;
 }) {
   return (
-    <header
-    className="h-16 flex items-center justify-between bg-white border-b gap-2 shadow-none sticky px-2 top-0 z-10"
-    >
+    <header className="h-16 flex items-center justify-between bg-white border-b gap-2 shadow-none sticky px-2 top-0 z-10">
       {/* Left Section */}
-      <div className="flex items-center gap-2" style={{ flexBasis: "40%", maxWidth: "40%" }}>
+      <div
+        className="flex items-center gap-2"
+        style={{ flexBasis: "40%", maxWidth: "40%" }}
+      >
         <SidebarTrigger />
         <CustomBreadcrumb
           role={role}
@@ -67,12 +68,15 @@ export default function Header({
           Quick Sale
         </Button>
 
-        <div className="relative w-full max-w-xs">
+        <div className="relative w-full max-w-xs  hidden md:block">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             className="rounded-full bg-gray-100 pl-10"
           />
+        </div>
+        <div className=" md:hidden">
+          <SearchIcon className="size-4 text-muted-foreground" />
         </div>
 
         <div className="relative">
@@ -90,7 +94,7 @@ export default function Header({
                       user?.image?.url
                         ? user.image.url
                         : `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(
-                            `${user?.firstName} ${user?.lastName}` || "user"
+                            `${user?.firstName} ${user?.lastName}` || "user",
                           )}`
                     }
                     alt={`${user?.firstName} ${user?.lastName}`}

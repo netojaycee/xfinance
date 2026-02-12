@@ -64,10 +64,11 @@ export const apiClient = async <T>(
   if (!response.ok) {
     // Handle the standardized error response from the backend
     const errorResponse = responseData as ApiErrorResponse;
+    // console.log(errorResponse)
     // Extract the message from the nested error object
     const errorMessage = Array.isArray(errorResponse.error.message)
       ? errorResponse.error.message.join(', ')
-      : errorResponse.error.message;
+      : errorResponse.error.message || (errorResponse.error as unknown as string);
     throw new Error(errorMessage || 'An unknown API error occurred.');
   }
 

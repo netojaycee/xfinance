@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,55 +23,90 @@ import {
 } from "@/components/ui/select";
 import { Calendar, CreditCard, FileText } from "lucide-react";
 import { format } from "date-fns";
+import {
+  useCreatePaymentReceived,
+  useUpdatePaymentReceived,
+  useInvoices,
+} from "@/lib/api/hooks/useSales";
+import { toast } from "sonner";
+import { paymentReceivedSchema, PaymentReceivedFormData } from "./utils/schema";
 
-// Dummy data for select fields
-const invoiceOptions = [
-  { label: "INV-2025-1248", value: "INV-2025-1248" },
-  { label: "INV-2025-1247", value: "INV-2025-1247" },
-];
 const paymentMethodOptions = [
-  { label: "Bank Transfer", value: "bank_transfer" },
-  { label: "Cash", value: "cash" },
-  { label: "Card", value: "card" },
-];
-const depositToOptions = [
-  { label: "Main Account", value: "main_account" },
-  { label: "Savings Account", value: "savings_account" },
+  { label: "Bank Transfer", value: "Bank_Transfer" },
+  { label: "Cash", value: "Cash" },
+  { label: "Card", value: "Card" },
+  { label: "Mobile Money", value: "Mobile_Money" },
+  { label: "Check", value: "Check" },
 ];
 
-const paymentSchema = z.object({
-  invoice: z.string().min(1, "Invoice is required"),
-  paymentDate: z.date(),
-  amount: z.number().min(0.01, "Amount is required"),
-  paymentMethod: z.string().min(1, "Payment method is required"),
-  depositTo: z.string().min(1, "Deposit account is required"),
-  reference: z.string().optional(),
-  notes: z.string().optional(),
-});
+const paymentStatusOptions = [
+  { label: "Paid", value: "Paid" },
+  { label: "Partial", value: "Partial" },
+  { label: "Pending", value: "Pending" },
+];
 
-type PaymentFormData = z.infer<typeof paymentSchema>;
+interface PaymentReceivedFormProps {
+  payment?: Partial<PaymentReceivedFormData> & { id?: string };
+  isEditMode?: boolean;
+  onSuccess?: () => void;
+  invoiceId?: string;
+}
 
-export default function PaymentReceivedForm() {
+export default function PaymentReceivedForm({
+  payment,
+  isEditMode = false,
+  onSuccess,
+  invoiceId,
+}: PaymentReceivedFormProps) {
   const [submitting, setSubmitting] = useState(false);
-  const form = useForm<PaymentFormData>({
-    resolver: zodResolver(paymentSchema),
+  const { data: invoicesData, isLoading: invoicesLoading } = useInvoices({
+    status: "Sent",
+  });
+  const createPayment = useCreatePaymentReceived();
+  const updatePayment = useUpdatePaymentReceived();
+  const invoices = invoicesData?.invoices || [];
+
+  const form = useForm<PaymentReceivedFormData>({
+    resolver: zodResolver(paymentReceivedSchema),
     defaultValues: {
-      invoice: "",
-      paymentDate: new Date(),
-      amount: 0,
-      paymentMethod: "",
-      depositTo: "",
-      reference: "",
-      notes: "",
+      invoiceId: invoiceId || payment?.invoiceId || "",
+      amount: payment?.amount || 0,
+      paidAt: payment?.paidAt ? new Date(payment.paidAt) : new Date(),
+      paymentMethod: payment?.paymentMethod || "",
+      depositTo: payment?.depositTo || "",
+      reference: payment?.reference || "",
+      note: payment?.note || "",
+      status: payment?.status || "Paid",
     },
   });
 
   const paymentAmount = form.watch("amount") || 0;
 
-  const onSubmit = async (values: PaymentFormData) => {
+  const onSubmit = async (values: PaymentReceivedFormData) => {
     setSubmitting(true);
-    // ...API logic here...
-    setTimeout(() => setSubmitting(false), 800);
+    try {
+      const payload = {
+        ...values,
+        paidAt: values.paidAt.toISOString(),
+      };
+
+      if (isEditMode && payment?.id) {
+        await updatePayment.mutateAsync({
+          id: payment.id,
+          data: payload,
+        });
+        toast.success("Payment updated successfully");
+      } else {
+        await createPayment.mutateAsync(payload);
+        toast.success("Payment recorded successfully");
+      }
+
+      onSuccess?.();
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to record payment");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -86,7 +120,7 @@ export default function PaymentReceivedForm() {
             </h4>
             <FormField
               control={form.control}
-              name="invoice"
+              name="invoiceId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -94,15 +128,29 @@ export default function PaymentReceivedForm() {
                   </FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger
+                        className="w-full"
+                        disabled={invoiceId ? true : invoicesLoading}
+                      >
                         <SelectValue placeholder="Select invoice to record payment" />
                       </SelectTrigger>
                       <SelectContent>
-                        {invoiceOptions.map((inv) => (
-                          <SelectItem key={inv.value} value={inv.value}>
-                            {inv.label}
+                        {invoices.length > 0 ? (
+                          invoices.map((inv) => (
+                            <SelectItem
+                              key={inv.id}
+                              value={inv.id}
+                              disabled={!!(invoiceId && invoiceId !== inv.id)}
+                            >
+                              {inv.invoiceNumber} - {inv?.customer?.name} (₦
+                              {inv.total.toLocaleString()})
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-invoices">
+                            No invoices found
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -120,7 +168,7 @@ export default function PaymentReceivedForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="paymentDate"
+                name="paidAt"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -154,7 +202,7 @@ export default function PaymentReceivedForm() {
                         step="0.01"
                         value={field.value}
                         onChange={(e) => field.onChange(Number(e.target.value))}
-                        placeholder="$ 0.00"
+                        placeholder="₦ 0.00"
                       />
                     </FormControl>
                     <FormMessage />
@@ -199,17 +247,35 @@ export default function PaymentReceivedForm() {
                       Deposit To <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
+                      <Input
+                        placeholder="e.g., Bank Account - Main, Cash Drawer, etc."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Payment Status <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select account to deposit payment" />
+                          <SelectValue placeholder="Select payment status" />
                         </SelectTrigger>
                         <SelectContent>
-                          {depositToOptions.map((d) => (
-                            <SelectItem key={d.value} value={d.value}>
-                              {d.label}
+                          {paymentStatusOptions.map((ps) => (
+                            <SelectItem key={ps.value} value={ps.value}>
+                              {ps.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -219,23 +285,23 @@ export default function PaymentReceivedForm() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="reference"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormLabel>Reference / Transaction Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., TRF-2026-001, Check #1234, Transaction ID, etc."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <FormField
-              control={form.control}
-              name="reference"
-              render={({ field }) => (
-                <FormItem className="mt-3">
-                  <FormLabel>Reference / Transaction Number</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., Check #1234, Transaction ID, etc."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
 
           {/* --- Additional Notes --- */}
@@ -245,7 +311,7 @@ export default function PaymentReceivedForm() {
             </h4>
             <FormField
               control={form.control}
-              name="notes"
+              name="note"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
@@ -262,7 +328,7 @@ export default function PaymentReceivedForm() {
             <div className="mt-3 flex items-center justify-between bg-white rounded-lg px-3 py-2 border text-base">
               <span>Payment Amount:</span>
               <span className="font-bold">
-                $
+                ₦
                 {paymentAmount.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                 })}
@@ -281,7 +347,11 @@ export default function PaymentReceivedForm() {
               disabled={submitting}
             >
               <CreditCard className="w-4 h-4" />
-              {submitting ? "Please wait..." : "Record Payment"}
+              {submitting
+                ? "Please wait..."
+                : isEditMode
+                  ? "Update Payment"
+                  : "Record Payment"}
             </Button>
           </div>
         </form>

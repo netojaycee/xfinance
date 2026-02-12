@@ -2,7 +2,9 @@ import z from "zod";
 
 
 export const lineItemSchema = z.object({
-  description: z.string().min(1, "Required"),
+  // preserve server invoice-line id when editing; not used for new items
+  invoiceItemId: z.string().optional(),
+  itemId: z.string().min(1, "Required"),
   quantity: z.number().min(1),
   rate: z.number().min(0),
 });

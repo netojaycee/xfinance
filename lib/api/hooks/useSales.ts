@@ -5,6 +5,7 @@ import * as salesService from '../services/salesService';
 import { CustomersResponse } from '@/components/features/user/sales/customers/utils/types';
 import { InvoicesResponse, PaidInvoicesResponse } from '@/components/features/user/sales/invoices/utils/types';
 import { ReceiptsResponse } from '@/components/features/user/sales/sales-receipt/utils/types';
+import { PaymentReceivedResponse } from '@/components/features/user/sales/payment-received/utils/types';
 
 // Customers
 
@@ -195,3 +196,90 @@ export const useDeleteReceipt = (options?: UseMutationOptions<any, Error, string
 		...options,
 	});
 };
+
+// Payment Received
+
+export const usePaymentsReceived = (params?: {
+	page?: number;
+	limit?: number;
+	search?: string;
+	status?: string;
+}) => useQuery<PaymentReceivedResponse>({
+	queryKey: ['payment-received', params],
+	queryFn: () => salesService.getPaymentsReceived(params) as Promise<PaymentReceivedResponse>,
+	staleTime: 2 * 60 * 1000,
+	refetchOnWindowFocus: true,
+});
+
+export const usePaymentReceived = (id: string | number) => useQuery({
+	queryKey: ['payment-received', id],
+	queryFn: () => salesService.getPaymentReceivedById(id),
+	enabled: !!id,
+	staleTime: 2 * 60 * 1000,
+	refetchOnWindowFocus: true,
+});
+
+export const useCreatePaymentReceived = (options?: UseMutationOptions<any, Error, any>) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: salesService.createPaymentReceived,
+		onSuccess: async (data, variables, context, mutation) => {
+			await Promise.all([
+				queryClient.refetchQueries({ queryKey: ['payment-received'] }),
+				queryClient.refetchQueries({ queryKey: ['invoices'] }),
+			]);
+			options?.onSuccess?.(data, variables, context, mutation);
+		},
+		...options,
+	});
+};
+
+export const useUpdatePaymentReceived = (options?: UseMutationOptions<any, Error, { id: string | number; data: any }>) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, data }) => salesService.updatePaymentReceived(id, data),
+		onSuccess: async (data, variables, context, mutation) => {
+			if (variables && variables.id) {
+				await queryClient.refetchQueries({ queryKey: ['payment-received', variables.id] });
+			}
+			await Promise.all([
+				queryClient.refetchQueries({ queryKey: ['payment-received'] }),
+				queryClient.refetchQueries({ queryKey: ['invoices'] }),
+			]);
+			options?.onSuccess?.(data, variables, context, mutation);
+		},
+		...options,
+	});
+};
+
+export const useDeletePaymentReceived = (options?: UseMutationOptions<any, Error, string | number>) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: salesService.deletePaymentReceived,
+		onSuccess: async (data, id, context, mutation) => {
+			if (id) {
+				await queryClient.refetchQueries({ queryKey: ['payment-received', id] });
+			}
+			await Promise.all([
+				queryClient.refetchQueries({ queryKey: ['payment-received'] }),
+				queryClient.refetchQueries({ queryKey: ['invoices'] }),
+			]);
+			options?.onSuccess?.(data, id, context, mutation);
+		},
+		...options,
+	});
+};
+
+export const usePaymentReceivedReportsSummary = (params?: {
+	page?: number;
+	limit?: number;
+	search?: string;
+	status?: string;
+	from?: string;
+	to?: string;
+}) => useQuery<PaymentReceivedResponse>({
+	queryKey: ['payment-received-reports', params],
+	queryFn: () => salesService.getPaymentReceivedReportsSummary(params) as Promise<PaymentReceivedResponse>,
+	staleTime: 5 * 60 * 1000,
+	refetchOnWindowFocus: true,
+});

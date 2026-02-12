@@ -1,7 +1,3 @@
-import React from 'react'
+import AdminPage from '@/components/features/admin/admin';
 
-export default function AdminPage() {
-  return (
-    <div className="space-y-4 p-4">AdminPage</div>
-  )
-}
+export default AdminPage;

@@ -25,10 +25,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar, Plus, Trash2 } from "lucide-react";
+import { CustomModal } from "@/components/local/custom/modal";
+import { MODULES } from "@/lib/types/enums";
 import { format } from "date-fns";
 import { paymentTermsOptions } from "../customers/utils/data";
 import { useCustomers } from "@/lib/api/hooks/useSales";
+import { useItems } from "@/lib/api/hooks/useProducts";
 import { invoiceSchema } from "./utils/schema";
+import { ItemSelector } from "./ItemSelector";
+import type { ItemsResponse } from "@/lib/api/hooks/types/productsTypes";
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
@@ -43,14 +48,19 @@ export default function InvoiceForm({
   isEditMode = false,
   onSuccess,
 }: InvoiceFormProps) {
-  const [invoiceStatus, setInvoiceStatus] = useState<"Draft" | "Paid">("Draft");
+  const [invoiceStatus, setInvoiceStatus] = useState<"Draft" | "Sent">(
+    (invoice as any)?.status || "Draft",
+  );
   const { data, isLoading: customersLoading } = useCustomers();
+  const itemsQuery = useItems() as { data?: ItemsResponse; isLoading: boolean };
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
 
   const customers = data?.customers || [];
+  const items = itemsQuery.data?.items || [];
+  const itemsLoading = itemsQuery.isLoading;
 
-  // console.log("Fetched customers for invoice form:", invoice); // Debug log to check fetched customers
+  console.log("Fetched customers for invoice form:", invoice); // Debug log to check fetched customers
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -62,17 +72,44 @@ export default function InvoiceForm({
       dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(),
       paymentTerms: invoice?.paymentTerms || "",
       currency: invoice?.currency || "USD",
-      lineItems: invoice?.lineItems || [
-        { description: "", quantity: 1, rate: 0 },
-      ],
+      // initialize empty; we'll replace with server items on mount to avoid duplicates
+      lineItems: invoice?.lineItems || [],
       notes: invoice?.notes || "",
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: "lineItems",
   });
+
+  const [removedItemIds, setRemovedItemIds] = useState<string[]>([]);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmIndex, setConfirmIndex] = useState<number | null>(null);
+
+  const handleRemove = (index: number) => {
+    const item = form.getValues(`lineItems.${index}` as any);
+    // Prefer server invoice-line id stored on the value as `invoiceItemId`.
+    const invoiceLineId =
+      (item && ((item as any).invoiceItemId || (item as any).id)) || null;
+    if (invoiceLineId) {
+      setRemovedItemIds((prev) => [...prev, invoiceLineId]);
+    }
+    remove(index);
+  };
+
+  const openConfirm = (index: number) => {
+    const item = form.getValues(`lineItems.${index}` as any);
+    // If item exists on server (has id) show confirmation modal
+    if (item && ((item as any).invoiceItemId || (item as any).id)) {
+      setConfirmIndex(index);
+      setConfirmOpen(true);
+    } else {
+      // new item, remove immediately
+      handleRemove(index);
+    }
+  };
 
   // Calculate subtotal, tax, total
   const subtotal = form
@@ -83,6 +120,7 @@ export default function InvoiceForm({
 
   useEffect(() => {
     if (invoice) {
+      // Reset non-array fields
       form.reset({
         customerId: invoice?.customerId || "",
         invoiceDate: invoice?.invoiceDate
@@ -91,38 +129,98 @@ export default function InvoiceForm({
         dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(),
         paymentTerms: invoice?.paymentTerms || "",
         currency: invoice?.currency || "USD",
-        lineItems: invoice?.lineItems || [
-          { description: "", quantity: 1, rate: 0 },
-        ],
+        lineItems: [],
         notes: invoice?.notes || "",
       });
+
+      // Replace field array with server items to avoid double entries
+      // NOTE: useFieldArray reserves `id` for internal keys, so store server
+      // invoice-line id under `invoiceItemId` to preserve it in form values.
+      const mapped = (invoice as any)?.invoiceItem
+        ? (invoice as any).invoiceItem.map((ii: any) => ({
+            invoiceItemId: ii.id,
+            itemId: ii.itemId,
+            rate: ii.rate,
+            quantity: ii.quantity,
+          }))
+        : invoice?.lineItems || [{ itemId: "", quantity: 1, rate: 0 }];
+      replace(mapped as any[]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoice]);
 
-  const onSubmit = async (values: InvoiceFormData) => {
+  const onSubmit = async (
+    values: InvoiceFormData,
+    statusOverride?: "Draft" | "Sent",
+  ) => {
     try {
-      // Transform lineItems to array of strings (e.g., description or JSON string)
-      const items = values.lineItems.map((item) =>
-        typeof item === "string" ? item : JSON.stringify(item),
-      );
-      // Calculate total as integer
+      // Determine status (prefer explicit override to avoid setState race)
+      const status = statusOverride ?? invoiceStatus;
+
+      // Prevent submitting invoice with no items
+      const itemsCount = Array.isArray(values.lineItems)
+        ? values.lineItems.length
+        : 0;
+      if (itemsCount === 0) {
+        toast.error("Invoice must have at least one line item");
+        return;
+      }
+      // Calculate subtotal, tax, total
       const subtotal = values.lineItems.reduce(
-        (sum, item) => sum + (item.quantity || 0) * (item.rate || 0),
+        (sum, item) =>
+          sum + (Number(item.quantity) || 0) * (Number(item.rate) || 0),
         0,
       );
       const tax = subtotal * 0.1;
       const total = Math.round(subtotal + tax);
-      const payload: any = {
-        ...values,
-        items,
-        total,
-        status: invoiceStatus,
-      };
-      delete payload.lineItems;
+
       if (isEditMode && invoice?.id) {
+        // Build items array for update: include `id` for existing items so backend can update, omit id for new
+        const items = values.lineItems.map((li: any) => {
+          const out: any = {
+            itemId: li.itemId,
+            rate: Number(li.rate) || 0,
+            quantity: Number(li.quantity) || 0,
+          };
+          // server-side invoice-line id is stored as `invoiceItemId` in the form
+          if (li.invoiceItemId) out.id = li.invoiceItemId;
+          // console.log
+          return out;
+        });
+
+        const payload: any = {
+          total,
+          status,
+          items,
+        };
+        if (removedItemIds.length > 0) payload.removeItemIds = removedItemIds;
         await updateInvoice.mutateAsync({ id: invoice.id, data: payload });
       } else {
+        // Create payload: all required fields
+        const items = values.lineItems.map((li) => ({
+          itemId: li.itemId,
+          rate: Number(li.rate) || 0,
+          quantity: Number(li.quantity) || 0,
+        }));
+
+        const payload: any = {
+          customerId: values.customerId,
+          invoiceDate:
+            values.invoiceDate instanceof Date
+              ? values.invoiceDate.toISOString()
+              : String(values.invoiceDate),
+          dueDate:
+            values.dueDate instanceof Date
+              ? values.dueDate.toISOString()
+              : String(values.dueDate),
+          paymentTerms: values.paymentTerms,
+          currency: values.currency,
+          total,
+          notes: values.notes,
+          status,
+          items,
+        };
+
         await createInvoice.mutateAsync(payload);
       }
     } catch (error) {
@@ -152,7 +250,10 @@ export default function InvoiceForm({
   return (
     <div className="w-full max-w-lg mx-auto">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit((v) => onSubmit(v))}
+          className="space-y-4"
+        >
           {/* --- Invoice Details --- */}
           <div className="p-4 bg-blue-50 rounded-xl">
             <h4 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
@@ -183,7 +284,11 @@ export default function InvoiceForm({
                         <SelectContent>
                           {Array.isArray(customers) && customers.length > 0 ? (
                             customers.map((c: any) => (
-                              <SelectItem key={c.id} value={c.id}>
+                              <SelectItem
+                                key={c.id}
+                                value={c.id}
+                                disabled={!!isEditMode}
+                              >
                                 {c.name}
                               </SelectItem>
                             ))
@@ -316,27 +421,32 @@ export default function InvoiceForm({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  append({ description: "", quantity: 1, rate: 0 })
-                }
+                onClick={() => append({ itemId: "", quantity: 1, rate: 0 })}
               >
                 <Plus className="w-4 h-4" /> Add Item
               </Button>
             </div>
             <div className="space-y-3">
+              {/* Header Row */}
+              <div className="grid grid-cols-[4fr_1fr_1fr_2fr] gap-2 w-full px-2 py-2 text-sm font-semibold text-gray-700 border-b">
+                <span>Item</span>
+                <span className="text-center">Qty</span>
+                <span className="text-center">Rate</span>
+                <span className="text-right">Total</span>
+              </div>
               {fields.map((item, idx) => (
                 <div
                   key={item.id}
                   className="flex flex-col gap-2 bg-white rounded-xl p-2 shadow-sm"
                 >
                   <div className="flex justify-between w-full items-center">
-                    <p className="">Item {idx}</p>
+                    <p className="">Item {idx + 1}</p>
                     {fields.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => remove(idx)}
+                        onClick={() => openConfirm(idx)}
                       >
                         <Trash2 className="w-4 h-4 text-red-400" />
                       </Button>
@@ -345,12 +455,14 @@ export default function InvoiceForm({
                   <div className="grid grid-cols-[4fr_1fr_1fr_2fr] gap-2 w-full items-center">
                     <Controller
                       control={form.control}
-                      name={`lineItems.${idx}.description`}
+                      name={`lineItems.${idx}.itemId`}
                       render={({ field }) => (
-                        <Input
-                          placeholder="Description"
-                          {...field}
-                          // className="flex-1"
+                        <ItemSelector
+                          items={items}
+                          isLoading={itemsLoading}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select item..."
                         />
                       )}
                     />
@@ -399,6 +511,41 @@ export default function InvoiceForm({
                   </div>
                 </div>
               ))}
+              {/* Confirmation modal for removing existing items */}
+              <CustomModal
+                open={confirmOpen}
+                onOpenChange={(open) => setConfirmOpen(open)}
+                title="Remove item"
+                description="Are you sure you want to remove this item from the invoice?"
+                module={MODULES.SALES}
+              >
+                <div className="p-4">
+                  <p className="mb-4">
+                    This will remove the item from the invoice. This action can
+                    be undone by adding the item again.
+                  </p>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setConfirmOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (confirmIndex !== null) {
+                          handleRemove(confirmIndex);
+                        }
+                        setConfirmIndex(null);
+                        setConfirmOpen(false);
+                      }}
+                      variant="destructive"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              </CustomModal>
             </div>
             {/* Subtotal, Tax, Total */}
             <div className="mt-2 flex flex-col gap-1 text-sm bg-white rounded-xl p-3">
@@ -463,40 +610,44 @@ export default function InvoiceForm({
           {/* --- Actions --- */}
           <div className="flex justify-end gap-2 border-t pt-1 pb-3">
             <Button variant="outline" type="button">
-              Cancel
-            </Button>
+              Cancel{" "}
+            </Button>{" "}
+            {(isEditMode && (invoice as any).status === "Draft") ||
+              (!isEditMode && (
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={createInvoice.isPending || updateInvoice.isPending}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setInvoiceStatus("Draft");
+                    form.handleSubmit((v) => onSubmit(v, "Draft"))();
+                  }}
+                >
+                  {createInvoice.isPending || updateInvoice.isPending
+                    ? "Please wait..."
+                    : "Save as Draft"}
+                </Button>
+              ))}
             <Button
               type="submit"
-              variant="outline"
               disabled={createInvoice.isPending || updateInvoice.isPending}
               onClick={(e) => {
                 e.preventDefault();
-                setInvoiceStatus("Draft");
-                form.handleSubmit(onSubmit)();
+                setInvoiceStatus("Sent");
+                form.handleSubmit((v) => onSubmit(v, "Sent"))();
               }}
             >
-              {createInvoice.isPending || updateInvoice.isPending
-                ? "Please wait..."
-                : "Save as Draft"}
-            </Button>
-            <Button
-              type="submit"
-              disabled={createInvoice.isPending || updateInvoice.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                setInvoiceStatus("Paid");
-                form.handleSubmit(onSubmit)();
-              }}
-            >
+              {" "}
               {createInvoice.isPending || updateInvoice.isPending
                 ? "Please wait..."
                 : isEditMode
                   ? "Update Invoice"
-                  : "Create Invoice"}
-            </Button>
-          </div>
-        </form>
-      </Form>
+                  : "Create Invoice"}{" "}
+            </Button>{" "}
+          </div>{" "}
+        </form>{" "}
+      </Form>{" "}
     </div>
   );
 }

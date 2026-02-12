@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -64,6 +65,11 @@ CustomModalProps) {
             >
               {title}
             </DialogTitle>
+            <DialogDescription
+              className="sr-only"
+            >
+              {description}
+            </DialogDescription>
             <p
               className={`${description ? "text-white/80 text-xs" : "sr-only"}`}
             >

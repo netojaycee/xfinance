@@ -2,15 +2,24 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import PaymentReceivedStatCardSmall from "./PaymentReceivedStatCardSmall";
 import { FileText, Send, Clock, CheckCircle, Download } from "lucide-react";
 import { Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
-import Invoice from "./PaymentReceivedForm";
 import PaymentReceivedForm from "./PaymentReceivedForm";
 import { MODULES } from "@/lib/types/enums";
+import { PaymentReceivedStats } from "./utils/types";
 
-export default function PaymentReceivedHeader() {
+interface PaymentReceivedHeaderProps {
+  stats?: PaymentReceivedStats;
+  loading?: boolean;
+}
+
+export default function PaymentReceivedHeader({
+  stats,
+  loading = false,
+}: PaymentReceivedHeaderProps) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="mb-6">
@@ -34,25 +43,47 @@ export default function PaymentReceivedHeader() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3  gap-4">
-        <PaymentReceivedStatCardSmall
-          title="Total Paid"
-          value={<span className="text-xl">₦1.4M</span>}
-          subtitle="6 paid invoices"
-          color="blue"
-        />
-        <PaymentReceivedStatCardSmall
-          title="This Month Paid"
-          value={<span className="text-xl">₦0</span>}
-          subtitle="Payments received this month"
-          color="green"
-        />
-        <PaymentReceivedStatCardSmall
-          title="Partial Payments"
-          value={<span className="text-xxl">0</span>}
-          subtitle="Invoices partially paid"
-          color="orange"
-        />
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {loading ? (
+          <>
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
+          </>
+        ) : (
+          <>
+            <PaymentReceivedStatCardSmall
+              title="Total Paid"
+              value={
+                <span className="text-xl">
+                  ₦{(stats?.totalAmount || 0).toLocaleString()}
+                </span>
+              }
+              subtitle={`${stats?.totalRecords || 0} payment${stats?.totalRecords !== 1 ? "s" : ""}`}
+              color="blue"
+            />
+            <PaymentReceivedStatCardSmall
+              title="This Month Paid"
+              value={
+                <span className="text-xl">
+                  ₦{(stats?.currentMonthPaidTotal || 0).toLocaleString()}
+                </span>
+              }
+              subtitle="Payments received this month"
+              color="green"
+            />
+            <PaymentReceivedStatCardSmall
+              title="Partial Payments"
+              value={
+                <span className="text-xl">
+                  ₦{(stats?.totalPartiallyPaidInvoices || 0).toLocaleString()}
+                </span>
+              }
+              subtitle="Invoices partially paid"
+              color="orange"
+            />
+          </>
+        )}
       </div>
 
       <CustomModal
@@ -62,7 +93,7 @@ export default function PaymentReceivedHeader() {
         onOpenChange={setOpen}
         module={MODULES.SALES}
       >
-        <PaymentReceivedForm  />
+        <PaymentReceivedForm onSuccess={() => setOpen(false)} />
       </CustomModal>
     </div>
   );

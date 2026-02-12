@@ -73,7 +73,7 @@ export const useItems = (params?: {
   category?: string;
   search?: string;
 }) => {
-  return useQuery({
+  return useQuery<ItemsResponse>({
     queryKey: ["items", params],
     queryFn: () => productsService.getItems(params),
     staleTime: 2 * 60 * 1000,

@@ -1,58 +1,61 @@
 export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  customer: {
     id: string;
-    invoiceNumber: string;
-    customerName: string;
-    status: string;
-    total: number;
-    invoiceDate: string;
-    dueDate: string;
+    name: string;
+  };
+  status: string;
+  total: number;
+  invoiceDate: string;
+  dueDate: string;
 }
 
 export interface InvoiceStatsItem {
-    count: number;
-    total: number;
+  count: number;
+  total: number;
 }
 
 export interface InvoiceStats {
-    pending: InvoiceStatsItem;
-    sent: InvoiceStatsItem;
-    paid: InvoiceStatsItem;
-    draft: InvoiceStatsItem;
-    overdue: InvoiceStatsItem;
+  pending: InvoiceStatsItem;
+  sent: InvoiceStatsItem;
+  paid: InvoiceStatsItem;
+  draft: InvoiceStatsItem;
+  overdue: InvoiceStatsItem;
 }
 
 export type InvoicesResponse = {
-    invoices: Invoice[];
-    stats: InvoiceStats;
-    totalCount: number;
-    totalPages: number;
-    currentPage: number;
-    limit: number;
+  invoices: Invoice[];
+  stats: InvoiceStats;
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
 };
 
 export interface PaidInvoice {
-    id: string;
-    invoiceNumber: string;
-    customerName: string;
-    total: number;
-    invoiceDate: string;
-    dueDate: string;
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  total: number;
+  invoiceDate: string;
+  dueDate: string;
 }
 
 export interface CurrentMonthStats {
-    month: string;
-    total: number;
-    count: number;
+  month: string;
+  total: number;
+  count: number;
 }
 
 export type PaidInvoicesResponse = {
-    paidInvoices: PaidInvoice[];
-    totalPaidAmount: number;
-    totalPaidCount: number;
-    currentMonthStats: CurrentMonthStats;
-    currentMonth: string;
-    totalCountFiltered: number;
-    totalPages: number;
-    currentPage: number;
-    limit: number;
+  paidInvoices: PaidInvoice[];
+  totalPaidAmount: number;
+  totalPaidCount: number;
+  currentMonthStats: CurrentMonthStats;
+  currentMonth: string;
+  totalCountFiltered: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
 };

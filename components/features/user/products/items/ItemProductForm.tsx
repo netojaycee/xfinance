@@ -64,6 +64,8 @@ export default function ItemProductForm({ item, isEditMode = false, onSuccess }:
         currentStock: values.currentStock,
         lowStock: values.lowStockAlert,
         type: ItemTypeEnum.Product,
+        sellOnline: values.sellOnline,
+        trackInventory: values.trackInventory,
       };
 
       if (isEditMode && item?.id) {

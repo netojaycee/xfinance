@@ -35,6 +35,7 @@ export default function CustomBreadcrumb({
 }: CustomBreadcrumbProps) {
   const pathname = usePathname();
   const pathSegments = pathname.split("/").filter((segment) => segment);
+  const visibleSegments = pathSegments.filter((s) => s.toLowerCase() !== "dashboard");
 
   const getRootItem = () => {
     if (loading) {
@@ -56,37 +57,51 @@ export default function CustomBreadcrumb({
 
   return (
     <div className="w-full">
-      <Breadcrumb className="">
-        <BreadcrumbList className="flex items-center flex-wrap">
+      <Breadcrumb>
+        <BreadcrumbList className="flex items-center overflow-hidden whitespace-nowrap">
           <BreadcrumbItem>
             {loading ? (
               rootItem
             ) : (
               <BreadcrumbLink asChild>
-                <Link href="/dashboard">{rootItem}</Link>
+                <Link href="/dashboard">
+                  <span className="inline-block max-w-30 sm:max-w-60 truncate">{rootItem}</span>
+                </Link>
               </BreadcrumbLink>
             )}
           </BreadcrumbItem>
-          {pathSegments.map((segment, index) => {
-            // Ignore 'dashboard' segment if it's part of the URL
-            if (segment.toLowerCase() === "dashboard") return null;
 
+          {visibleSegments.length > 1 && (
+            <>
+              <BreadcrumbSeparator className="sm:hidden">
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              </BreadcrumbSeparator>
+              <BreadcrumbItem className="sm:hidden">
+                <BreadcrumbPage className="font-semibold text-gray-800">...</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+
+          {visibleSegments.map((segment, idx) => {
+            const index = pathSegments.findIndex((s) => s === segment);
             const href = `/${pathSegments.slice(0, index + 1).join("/")}`;
-            const isLast = index === pathSegments.length - 1;
+            const isLast = idx === visibleSegments.length - 1;
+
+            const itemClass = !isLast ? "hidden sm:block" : "";
 
             return (
               <React.Fragment key={href}>
                 <BreadcrumbSeparator>
                   <ChevronRight className="h-4 w-4 text-gray-500" />
                 </BreadcrumbSeparator>
-                <BreadcrumbItem>
+                <BreadcrumbItem className={itemClass}>
                   {isLast ? (
-                    <BreadcrumbPage className="font-semibold text-gray-800">
-                      {capitalize(segment)}
-                    </BreadcrumbPage>
+                    <BreadcrumbPage className="font-semibold text-gray-800 truncate max-w-35">{capitalize(segment)}</BreadcrumbPage>
                   ) : (
                     <BreadcrumbLink asChild>
-                      <Link href={href}>{capitalize(segment)}</Link>
+                      <Link href={href}>
+                        <span className="inline-block max-w-30 truncate">{capitalize(segment)}</span>
+                      </Link>
                     </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>

@@ -12,32 +12,35 @@ import {
   MoreVertical,
   Eye,
   Edit3,
-  Trash2,
-  Send,
-  DollarSign,
   Download,
+  Trash2,
+  FileText,
 } from "lucide-react";
 import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
+import { useDeletePaymentReceived } from "@/lib/api/hooks/useSales";
 import { toast } from "sonner";
+import PaymentReceivedForm from "./PaymentReceivedForm";
 import { useRouter } from "next/navigation";
-import InvoiceForm from "./InvoiceForm";
-import { useDeleteInvoice } from "@/lib/api/hooks/useSales";
-import PaymentReceivedForm from "../payment-received/PaymentReceivedForm";
+import { PaymentReceived } from "./utils/types";
 
-export default function InvoicessActions({ row }: { row: any }) {
+export default function PaymentReceivedActions({
+  row,
+}: {
+  row: PaymentReceived;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [recordOpen, setRecordOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const deleteInvoice = useDeleteInvoice({
+
+  const deletePayment = useDeletePaymentReceived({
     onSuccess: () => {
-      toast.success("Invoice deleted successfully");
+      toast.success("Payment deleted successfully");
     },
     onError: (err) => {
-      toast.error(err?.message || "Failed to delete invoice");
+      toast.error(err?.message || "Failed to delete payment");
     },
   });
 
@@ -51,24 +54,24 @@ export default function InvoicessActions({ row }: { row: any }) {
     setTimeout(() => setEditOpen(true), 100);
   };
 
-  const handleRecordPaymentClick = () => {
-    setDropdownOpen(false);
-    setTimeout(() => setRecordOpen(true), 100);
-  };
-
   const handleConfirm = (confirmed: boolean) => {
     if (confirmed) {
-      deleteInvoice.mutate(row.id);
+      deletePayment.mutate(row.id);
     } else {
       setOpen(false);
     }
   };
 
+  const handlePrint = () => {
+    setDropdownOpen(false);
+    toast.info("Print functionality coming soon");
+  };
+
   React.useEffect(() => {
-    if (deleteInvoice.isSuccess || deleteInvoice.isError) {
+    if (deletePayment.isSuccess || deletePayment.isError) {
       setOpen(false);
     }
-  }, [deleteInvoice.isSuccess, deleteInvoice.isError]);
+  }, [deletePayment.isSuccess, deletePayment.isError]);
 
   return (
     <>
@@ -78,24 +81,14 @@ export default function InvoicessActions({ row }: { row: any }) {
             <MoreVertical className="w-5 h-5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              const invoiceNumber = row?.invoiceNumber.toString().toLowerCase();
-              // View logic
-              router.push(`/sales/invoices/${invoiceNumber}`);
+              toast.info("View details coming soon");
             }}
           >
-            <Eye className="size-4 mr-2" /> View
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleRecordPaymentClick();
-            }}
-          >
-            <DollarSign className="size-4 mr-2" /> Record payment
+            <Eye className="size-4 mr-2" /> View Details
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={(e) => {
@@ -103,26 +96,27 @@ export default function InvoicessActions({ row }: { row: any }) {
               handleEditClick();
             }}
           >
-            <Edit3 className="size-4 mr-2" /> Edit
+            <Edit3 className="size-4 mr-2" /> Edit Payment
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              // Send to customer logic
-              console.log("send", row.id);
+              handlePrint();
             }}
           >
-            <Send className="size-4 mr-2" /> Send to customer
+            <Download className="size-4 mr-2" /> Print Receipt
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              // Download PDF logic
-              console.log("download", row.id);
-            }}
-          >
-            <Download className="size-4 mr-2" /> Download PDF
-          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {row.invoice && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                router.push(`/sales/invoices/${row.invoiceId}`);
+              }}
+            >
+              <FileText className="size-4 mr-2" /> View Invoice
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             data-variant="destructive"
@@ -131,43 +125,38 @@ export default function InvoicessActions({ row }: { row: any }) {
               handleDeleteClick();
             }}
           >
-            <Trash2 className="size-4 mr-2" /> Delete
+            <Trash2 className="size-4 mr-2" /> Delete Payment
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
       <CustomModal
-        title={"Confirm Deletion"}
+        title="Confirm Deletion"
         open={open}
         onOpenChange={setOpen}
         module={MODULES.SALES}
       >
         <ConfirmationForm
-          title={`Are you sure you want to delete invoice ${row.invoiceNumber}?`}
+          title={`Are you sure you want to delete this payment (${row.reference})?`}
           onResult={handleConfirm}
-          loading={deleteInvoice.isPending}
-        />
-      </CustomModal>
-      <CustomModal
-        title={`Edit Invoice: ${row.name || row.invoiceNumber || row.id}`}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        module={MODULES.SALES}
-      >
-        <InvoiceForm
-          invoice={row}
-          isEditMode
-          onSuccess={() => setEditOpen(false)}
+          loading={deletePayment.isPending}
         />
       </CustomModal>
 
       <CustomModal
-        title={`Record a Payment`}
-        description={`Record a payment received for invoice ${row?.invoiceNumber}`}
-        open={recordOpen}
-        onOpenChange={setRecordOpen}
+        title={`Edit Payment: ${row.reference}`}
+        open={editOpen}
+        onOpenChange={setEditOpen}
         module={MODULES.SALES}
       >
-        <PaymentReceivedForm onSuccess={() => setRecordOpen(false)} />
+        <PaymentReceivedForm
+          payment={{
+            ...row,
+            paidAt: typeof row.paidAt === 'string' ? new Date(row.paidAt) : row.paidAt,
+          }}
+          isEditMode
+          onSuccess={() => setEditOpen(false)}
+        />
       </CustomModal>
     </>
   );

@@ -30,13 +30,13 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
   const [selectedTab, setSelectedTab] = React.useState<string | null>(null);
   const menuData = React.useMemo(
     () => getSidebarMenu(user, role),
-    [user, role]
+    [user, role],
   );
 
   // console.log(menuData)
 
-  const { data: entities, isLoading: isLoadingEntities } = useEntities();
-
+  const { data: entitiesData, isLoading: isLoadingEntities } = useEntities();
+  const entities = entitiesData?.entities || [];
   const { mutate: stopEntityImpersonation } = useStopEntityImpersonation({
     onSuccess: () => {
       // toast.info("Switched back to group view.");
