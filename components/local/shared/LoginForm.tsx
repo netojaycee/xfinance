@@ -21,11 +21,15 @@ import Image from "next/image";
 import { loginSchema, LoginCredentials } from "@/lib/schema";
 import Logo from "./Logo";
 import { useLogin } from "@/lib/api/hooks/useAuth";
+import { TenantConfig } from "@/lib/tenant";
+import { useTenant } from "@/components/providers/TenantProvider";
 
-export default function LoginForm() {
+export default function LoginForm({ tenantConfig }: { tenantConfig?: TenantConfig } = {}) {
+  const { tenant } = useTenant();
+  const cfg = tenantConfig ?? tenant?.data ?? undefined;
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/dashboard";
-
+console.log(cfg, "config")
   // Use the custom login hook
   const {
     mutate: login,
@@ -59,17 +63,27 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="flex h-screen p-4 gap-10 bg-[#f2f5fc]">
+    <div className="flex h-screen p-4 gap-10 bg-[var(--tenant-bg)]">
       {/* Left section (Illustration) */}
-      <div className="hidden md:flex flex-col bg-primary rounded-2xl h-full w-1/2 text-white relative">
+      <div className="hidden md:flex flex-col rounded-2xl h-full w-1/2 text-white relative bg-[var(--primary)]">
         <div className="flex justify-center h-full items-center">
-          <Image
-            src="/Onboarding.png"
-            alt="XPortal illustration"
-            width={500}
-            height={300}
-            priority
-          />
+          {cfg?.logo ? (
+            <Image
+              src={cfg.logo}
+              alt={cfg.name || "Tenant logo"}
+              width={400}
+              height={200}
+              priority
+            />
+          ) : (
+            <Image
+              src="/Onboarding.png"
+              alt="XPortal illustration"
+              width={500}
+              height={300}
+              priority
+            />
+          )}
         </div>
         <p className="absolute bottom-4 text-base mt-10 w-[70%] transform left-3">
           © 2025 Hunslow Accounting. All rights reserved.
@@ -78,7 +92,13 @@ export default function LoginForm() {
 
       {/* Right section (Form) */}
       <div className="h-full  w-full md:w-1/2 max-w-md mx-auto p-4">
-        <Logo />
+        <div className="mb-2">
+          {cfg?.logo ? (
+            <Image src={cfg.logo} alt={cfg.name || "logo"} width={120} height={40} />
+          ) : (
+            <Logo />
+          )}
+        </div>
         <h2 className="text-lg md:text-xl font-bold text-[#4A4A4A] mt-2 mb-2">
           Sign in to your account
         </h2>

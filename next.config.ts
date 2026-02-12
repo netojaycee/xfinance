@@ -19,21 +19,36 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year for versioned images
   },
   async rewrites() {
-    return process.env.NODE_ENV === "development"
-      ? [
+    const isDev = process.env.NODE_ENV === "development";
+
+    return [
+      // API proxy (keep your existing)
+      {
+        source: "/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/:path*`,
+      },
+
+      // Tenant subdomain handling (local + prod)
+      {
+        source: "/:path*",
+        has: [
           {
-            source: "/api/:path*",
-            // destination: "https://api-x-finance.fevico.com.ng/api/v1/:path*", // proxy to remote backend
-            destination: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/:path*`, // proxy to remote/local backend dynamically based on env var
-            // destination: 'http://localhost:3810/api/:path*', // proxy to local backend
+            type: "host",
+            value:
+              "(?<tenant>[^.]+)\\.(localhost|fevico\\.com\\.ng|yourdomain\\.com)",
           },
-        ]
-      : [
-        {
-            source: "/api/:path*",
-            destination: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/:path*`, // proxy to remote/local backend dynamically based on env var
-          },
-      ];
+        ],
+        destination: "/:path*", // keep same path, just use host to extract tenant
+      },
+
+      // Optional: redirect non-tenant subdomains or invalid to main
+      // {
+      //   source: '/:path*',
+      //   has: [{ type: 'host', value: '^(?!www|api|localhost).*$' }],
+      //   destination: 'https://fevico.com.ng/:path*',
+      //   permanent: false,
+      // },
+    ];
   },
 };
 

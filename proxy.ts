@@ -22,6 +22,20 @@ const protectedPaths = [
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Extract subdomain and attach to request headers so downstream pages and
+  // API routes can detect tenant context.
+  const host = request.nextUrl.host || request.headers.get("host") || "";
+  const subdomain = host.split(".")[0] || "";
+  const requestHeaders = new Headers(request.headers);
+  if (subdomain && !['www', 'api'].includes(subdomain)) requestHeaders.set("x-tenant", subdomain);
+
+//   const match = host.match(/^([^.]+)\.(localhost|fevico\.com\.ng)$/);
+// const subdomain = match ? match[1] : null;
+
+// if (subdomain && !['www', 'api'].includes(subdomain)) {
+//   request.headers.set('x-tenant-subdomain', subdomain);
+// }
+
   // Prevent authenticated users from accessing /auth routes
   if (pathname.startsWith("/auth")) {
     const { user } = await getAppSession();
@@ -78,7 +92,7 @@ export async function proxy(request: NextRequest) {
           return NextResponse.redirect(redirectUrl);
         }
       }
-      return NextResponse.next();
+      return NextResponse.next({ request: { headers: requestHeaders } });
     }
 
     // 3. For regular users, check their permissions for the entire section
@@ -141,7 +155,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // If the path is not protected or the user has access, continue
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 // See "Matching Paths" below to learn more
