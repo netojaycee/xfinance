@@ -16,7 +16,7 @@ export default function Item() {
   const { data, isLoading } = useItems({
     page: currentPage,
     limit: rowsPerPage,
-    category: categoryFilter,
+    category: categoryFilter === 'All Categories' ? '' : categoryFilter , 
     search: debouncedSearchTerm,
   });
 

@@ -86,7 +86,7 @@ export const itemColumns: Column<any>[] = [
     title: "Unit Price",
     className: "text-xs",
     render: (value) => (
-      <span className="text-gray-700">₦{value.toLocaleString()}</span>
+      <span className="text-gray-700">{value ? `₦${value.toLocaleString()}` : "-"}</span>
     ),
   },
   {
