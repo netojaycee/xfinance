@@ -39,16 +39,16 @@ export const chartOfAccountsColumns: Column<any>[] = [
     ),
   },
   {
-    key: "type",
+    key: "typeName",
     title: "Type",
     className: "text-xs",
     render: (value) => {
       const typeStyles: { [key: string]: string } = {
-        Asset: "bg-blue-100 text-blue-700",
-        Liability: "bg-red-100 text-red-700",
+        Assets: "bg-blue-100 text-blue-700",
+        Liabilities: "bg-red-100 text-red-700",
         Equity: "bg-purple-100 text-purple-700",
         Revenue: "bg-green-100 text-green-700",
-        Expense: "bg-yellow-100 text-yellow-700",
+        Expenses: "bg-yellow-100 text-yellow-700",
       };
       const style = typeStyles[value] || "bg-gray-100 text-gray-700";
       return (
@@ -59,7 +59,7 @@ export const chartOfAccountsColumns: Column<any>[] = [
     },
   },
   {
-    key: "category",
+    key: "categoryName",
     title: "Category",
     className: "text-xs",
     render: (value) => <span className="text-gray-700">{value}</span>,

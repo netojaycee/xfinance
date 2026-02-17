@@ -34,6 +34,7 @@ import {
   Landmark,
 } from "lucide-react";
 import { useCreateVendor, useUpdateVendor } from "@/lib/api/hooks/usePurchases";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
 import { toast } from "sonner";
 // --- Zod Schemas ---
 const basicInfoSchema = z.object({
@@ -117,6 +118,10 @@ const defaultValues: VendorFormType = {
 export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+    subCategory: "Prepaid Expenses",
+  });
+  const expenseAccounts = accountsData?.data || [];
   const form = useForm<VendorFormType>({
     resolver: zodResolver(vendorSchema),
     defaultValues,
@@ -625,17 +630,21 @@ export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
                             onValueChange={field.onChange}
                             value={field.value}
                           >
-                            <SelectTrigger className="w-full bg-white">
-                              <SelectValue placeholder="Select account" />
+                            <SelectTrigger className="w-full bg-white" disabled={accountsLoading}>
+                              <SelectValue placeholder="Select expense account" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Office Supplies">
-                                Office Supplies
-                              </SelectItem>
-                              <SelectItem value="Consulting">
-                                Consulting
-                              </SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
+                              {expenseAccounts.length > 0 ? (
+                                expenseAccounts.map((account) => (
+                                  <SelectItem key={account.id} value={account.id}>
+                                    {account.name} ({account.code})
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no-accounts" disabled>
+                                  No expense accounts found
+                                </SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </FormControl>

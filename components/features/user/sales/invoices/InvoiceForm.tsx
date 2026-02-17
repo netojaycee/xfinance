@@ -54,7 +54,7 @@ export default function InvoiceForm({
     (invoice as any)?.status || "Draft",
   );
   const { data, isLoading: customersLoading } = useCustomers();
-  const itemsQuery = useItems({ type: "product" }) as {
+  const itemsQuery = useItems() as {
     data?: ItemsResponse;
     isLoading: boolean;
   };

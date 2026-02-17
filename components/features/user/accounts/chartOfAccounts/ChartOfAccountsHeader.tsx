@@ -6,13 +6,15 @@ import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import ChartOfAccountsForm from "./ChartOfAccountsForm";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 export default function ChartOfAccountsHeader({
   loading,
 }: {
   loading: boolean;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const { isOpen, openModal, closeModal } = useModal();
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
@@ -27,7 +29,10 @@ export default function ChartOfAccountsHeader({
             <Download />
             Export
           </Button> */}
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button
+            onClick={() => openModal(MODAL.ACCOUNT_CREATE)}
+            className="rounded-xl"
+          >
             <Plus /> Add Account
           </Button>
         </div>
@@ -37,10 +42,14 @@ export default function ChartOfAccountsHeader({
         title="Add New Account"
         description="Add a new account to the Master Chart of Accounts"
         module={MODULES.ACCOUNTS}
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.ACCOUNT_CREATE)}
+        onOpenChange={(open) =>
+          open
+            ? openModal(MODAL.ACCOUNT_CREATE)
+            : closeModal(MODAL.ACCOUNT_CREATE)
+        }
       >
-        <ChartOfAccountsForm onSuccess={() => setOpen(false)} />
+        <ChartOfAccountsForm />
       </CustomModal>
     </div>
   );

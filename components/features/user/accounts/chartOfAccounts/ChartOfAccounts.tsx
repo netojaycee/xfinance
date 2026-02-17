@@ -14,7 +14,9 @@ export default function ChartOfAccounts() {
     search: debouncedSearchTerm,
   });
 
-  const accountsData = (accountsResponse as any)?.data || [];
+  console.log("Fetched accounts:", accountsResponse); // Debug log to check fetched data
+
+  const accountsData = (accountsResponse as any) || [];
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);

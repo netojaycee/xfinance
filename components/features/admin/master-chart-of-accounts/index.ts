@@ -1,3 +1,3 @@
 export { MasterChartOfAccountsHeader } from './MasterChartOfAccountsHeader';
 export { MasterChartOfAccountsContent } from './MasterChartOfAccountsContent';
-export { AccountFormDummy } from './AccountFormDummy';
+export { AccountForm } from './AccountForm';

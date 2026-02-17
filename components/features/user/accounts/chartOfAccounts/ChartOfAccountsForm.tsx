@@ -26,36 +26,21 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { ChartOfAccountsFormData, chartOfAccountsSchema } from "./utils/schema";
 import { useCreateAccount, useUpdateAccount } from "@/lib/api/hooks/useAccounts";
-import { AccountCategoryEnum, AccountSubCategoryEnum } from "@/lib/api/hooks/types/accountsTypes";
+import { useAccountCategories } from "@/lib/api/hooks/useAccountCategories";
+import { useSubCategoriesByCategory } from "@/lib/api/hooks/useAccountSubCategories";
 
 // Zod schema for Chart of Accounts
 
 interface ChartOfAccountsFormProps {
   account?: Partial<ChartOfAccountsFormData> & { id?: string };
   isEditMode?: boolean;
-  onSuccess?: () => void;
 }
 
-const accountTypeOptions = [
-  "Asset",
-  "Liability",
-  "Equity",
-  "Revenue",
-  "Expense",
-];
 
-const primaryCategoryOptions: { [key: string]: string[] } = {
-  Asset: ["Current Assets", "Fixed Assets", "Intangible Assets"],
-  Liability: ["Current Liabilities", "Long-term Liabilities"],
-  Equity: ["Owner's Equity", "Retained Earnings"],
-  Revenue: ["Operating Revenue", "Non-operating Revenue"],
-  Expense: ["Operating Expenses", "Non-operating Expenses"],
-};
 
 export default function ChartOfAccountsForm({
   account,
   isEditMode = false,
-  onSuccess,
 }: ChartOfAccountsFormProps) {
   const createAccount = useCreateAccount();
   const updateAccount = useUpdateAccount();
@@ -63,15 +48,19 @@ export default function ChartOfAccountsForm({
   const form = useForm<ChartOfAccountsFormData>({
     resolver: zodResolver(chartOfAccountsSchema) as any,
     defaultValues: {
-      accountType: account?.accountType || "",
       accountCode: account?.accountCode || "",
       accountName: account?.accountName || "",
-      primaryCategory: account?.primaryCategory || "",
-      subcategory: account?.subcategory || "",
+      categoryId: account?.categoryId || "",
+      subCategoryId: account?.subCategoryId || "",
       description: account?.description || "",
       status: account?.status || "Active",
     },
   });
+
+  // Load categories and subcategories
+  const { data: categories, isLoading: loadingCategories } = useAccountCategories();
+  const selectedCategoryId = form.watch("categoryId");
+  const { data: subcategories, isLoading: loadingSubcategories } = useSubCategoriesByCategory(selectedCategoryId);
 
   useEffect(() => {
     if (account) {
@@ -79,8 +68,8 @@ export default function ChartOfAccountsForm({
         accountType: account?.accountType || "",
         accountCode: account?.accountCode || "",
         accountName: account?.accountName || "",
-        primaryCategory: account?.primaryCategory || "",
-        subcategory: account?.subcategory || "",
+        categoryId: account?.categoryId || "",
+        subCategoryId: account?.subCategoryId || "",
         description: account?.description || "",
         status: account?.status || "Active",
       });
@@ -92,12 +81,10 @@ export default function ChartOfAccountsForm({
       const payload = {
         name: values.accountName,
         code: values.accountCode,
-        category: values.accountType as AccountCategoryEnum,
-        subCategory: values.primaryCategory as AccountSubCategoryEnum,
+        subCategoryId: values.subCategoryId,
+        categoryId: values.categoryId,
         description: values.description,
-        type: values.accountType,
       };
-
       if (isEditMode && account?.id) {
         await updateAccount.mutateAsync({ id: account.id, data: payload });
       } else {
@@ -108,70 +95,44 @@ export default function ChartOfAccountsForm({
     }
   };
 
-  useEffect(() => {
-    if (createAccount.isSuccess || updateAccount.isSuccess) {
-      toast.success(
-        `Account ${isEditMode ? "updated" : "created"} successfully`,
-      );
-      if (onSuccess) onSuccess();
-    }
-    if (createAccount.isError) {
-      toast.error(createAccount.error?.message || "Failed to create account");
-    }
-    if (updateAccount.isError) {
-      toast.error(updateAccount.error?.message || "Failed to update account");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    createAccount.isSuccess,
-    createAccount.isError,
-    updateAccount.isSuccess,
-    updateAccount.isError,
-  ]);
 
-  const selectedAccountType = form.watch("accountType");
-  const subcategoryOptions = selectedAccountType
-    ? primaryCategoryOptions[selectedAccountType] || []
-    : [];
+
+
 
   return (
     <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* Account Type Section */}
+
+          {/* Category Section */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <FormField
               control={form.control}
-              name="accountType"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">☰</span>
-                    <FormLabel className="text-base font-semibold text-gray-900">
-                      Account Type <span className="text-red-500">*</span>
-                    </FormLabel>
-                  </div>
+                  <FormLabel className="text-base font-semibold text-gray-900">
+                    Category <span className="text-red-500">*</span>
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={loadingCategories}
                   >
                     <FormControl>
                       <SelectTrigger className="w-full rounded-lg border-gray-300">
-                        <SelectValue placeholder="Select account type" />
+                        <SelectValue placeholder={loadingCategories ? "Loading..." : "Select category"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {accountTypeOptions.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
+                      {categories?.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.code} - {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                  <p className="text-xs text-gray-600 mt-1">
-                    Individual account for transactions
-                  </p>
                 </FormItem>
               )}
             />
@@ -234,71 +195,38 @@ export default function ChartOfAccountsForm({
             </div>
           </div>
 
-          {/* Category Section */}
+          {/* Subcategory Section */}
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="primaryCategory"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold text-gray-900">
-                      Primary Category <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full rounded-lg border-gray-300">
-                          <SelectValue placeholder="Select category..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {selectedAccountType &&
-                          subcategoryOptions.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="subcategory"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-semibold text-gray-900">
-                      Subcategory
-                    </FormLabel>
+            <FormField
+              control={form.control}
+              name="subCategoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-semibold text-gray-900">
+                    Subcategory <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={loadingSubcategories || !selectedCategoryId}
+                  >
                     <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value || ""}
-                      >
-                        <SelectTrigger className="w-full rounded-lg border-gray-300">
-                          <SelectValue placeholder="Select subcategory..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {subcategoryOptions.map((sub) => (
-                            <SelectItem key={sub} value={sub}>
-                              {sub}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SelectTrigger className="w-full rounded-lg border-gray-300">
+                        <SelectValue placeholder={loadingSubcategories ? "Loading..." : "Select subcategory"} />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      {subcategories?.map((sub) => (
+                        <SelectItem key={sub.id} value={sub.id}>
+                          {sub.code} - {sub.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           {/* Description Section */}

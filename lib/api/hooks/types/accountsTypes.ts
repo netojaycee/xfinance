@@ -52,6 +52,41 @@ export interface Account {
   updatedAt?: string;
 }
 
+// Account Type (system-wide)
+export interface AccountType {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Account Category (group-scoped)
+export interface AccountCategory {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  groupId: string;
+  typeId: string;
+  createdAt: string;
+  updatedAt: string;
+  subCategories?: AccountSubCategory[];
+}
+
+// Account SubCategory (group-scoped)
+export interface AccountSubCategory {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  categoryId: string;
+  createdAt: string;
+  updatedAt: string;
+  accounts?: Account[];
+}
+
 // Budget Interface
 export interface Budget {
   id?: string;
@@ -112,13 +147,13 @@ export interface JournalResponse {
 export const createAccountSchema = z.object({
   name: z.string().min(1, "Account name is required"),
   code: z.string().min(1, "Account code is required"),
-  category: z.nativeEnum(AccountCategoryEnum),
-  subCategory: z.string().min(1, "Sub-category is required"),
+  categoryId:  z.string().min(1, "Category is required"),
+  subCategoryId: z.string().min(1, "Sub-category is required"),
   description: z.string().min(1, "Description is required"),
-  type: z.string().min(1, "Account type is required"),
-  credit: z.number().optional(),
-  debit: z.number().optional(),
-  date: z.string().optional(),
+  // type: z.string().min(1, "Account type is required"),
+  // credit: z.number().optional(),
+  // debit: z.number().optional(),
+  // date: z.string().optional(),
 });
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;

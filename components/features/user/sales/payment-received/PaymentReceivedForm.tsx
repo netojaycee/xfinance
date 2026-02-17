@@ -28,6 +28,7 @@ import {
   useUpdatePaymentReceived,
   useInvoices,
 } from "@/lib/api/hooks/useSales";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
 import { toast } from "sonner";
 import { paymentReceivedSchema, PaymentReceivedFormData } from "./utils/schema";
 
@@ -60,9 +61,14 @@ export default function PaymentReceivedForm({
   const { data: invoicesData, isLoading: invoicesLoading } = useInvoices({
     status: "Sent",
   });
+  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+    subCategory: "Cash and Cash Equivalents",
+  });
   const createPayment = useCreatePaymentReceived();
   const updatePayment = useUpdatePaymentReceived();
   const invoices = invoicesData?.invoices || [];
+
+  const cashAccounts = accountsData?.data || [];
 
   const form = useForm<PaymentReceivedFormData>({
     resolver: zodResolver(paymentReceivedSchema),
@@ -249,13 +255,21 @@ export default function PaymentReceivedForm({
                         onValueChange={field.onChange}
                         value={field.value}
                       >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select account" />
+                        <SelectTrigger className="w-full" disabled={accountsLoading}>
+                          <SelectValue placeholder="Select cash account" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Main_Account">Main Account</SelectItem>
-                          <SelectItem value="Petty_Cash">Petty Cash</SelectItem>
-                          <SelectItem value="Savings">Savings</SelectItem>
+                          {cashAccounts.length > 0 ? (
+                            cashAccounts.map((account) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name} ({account.code})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-accounts" disabled>
+                              No cash accounts found
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>

@@ -71,4 +71,16 @@ export const MODAL = {
   INVENTORY_CREATE: "inventory-create",
   INVENTORY_EDIT: "inventory-edit",
   INVENTORY_DELETE: "inventory-delete",
+
+
+  ACCOUNT_TYPE_CREATE: "account-type-create",
+  ACCOUNT_TYPE_EDIT: "account-type-edit",
+  ACCOUNT_TYPE_DELETE: "account-type-delete",
+
+  ACCOUNT_CATEGORY_CREATE: "account-category-create",
+  ACCOUNT_CATEGORY_EDIT: "account-category-edit",
+  ACCOUNT_CATEGORY_DELETE: "account-category-delete",
+
+
+
 };

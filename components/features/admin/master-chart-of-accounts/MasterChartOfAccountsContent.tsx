@@ -1,8 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import React from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useAccountCategories } from "@/lib/api/hooks/useAccountCategories";
+import { useAccountTypes } from "@/lib/api/hooks/useAccountTypes";
 
 // Data Types
 export interface EntityMapping {
@@ -15,7 +17,7 @@ export interface ChartAccount {
   id: string;
   code: string;
   name: string;
-  type: 'category' | 'subcategory' | 'account';
+  type: "category" | "subcategory" | "account";
   entityMappings?: EntityMapping[];
   children?: ChartAccount[];
 }
@@ -28,33 +30,39 @@ interface AccountRowProps {
   onToggle: (id: string) => void;
 }
 
-function AccountRow({ account, level, expanded, expandedIds, onToggle }: AccountRowProps) {
+function AccountRow({
+  account,
+  level,
+  expanded,
+  expandedIds,
+  onToggle,
+}: AccountRowProps) {
   const hasChildren = account.children && account.children.length > 0;
-  const isExpandable = account.type !== 'account' && hasChildren;
+  const isExpandable = account.type !== "account" && hasChildren;
 
   const typeVariant = (type: string) => {
     switch (type) {
-      case 'category':
-        return 'bg-black text-white';
-      case 'subcategory':
-        return 'bg-gray-200 text-gray-800';
-      case 'account':
-        return 'bg-gray-100 text-gray-700';
+      case "category":
+        return "bg-black text-white";
+      case "subcategory":
+        return "bg-gray-200 text-gray-800";
+      case "account":
+        return "bg-gray-100 text-gray-700";
       default:
-        return 'bg-gray-100 text-gray-700';
+        return "bg-gray-100 text-gray-700";
     }
   };
 
   const typeLabel = (type: string) => {
     switch (type) {
-      case 'category':
-        return 'Category';
-      case 'subcategory':
-        return 'Subcategory';
-      case 'account':
-        return 'Account';
+      case "category":
+        return "Category";
+      case "subcategory":
+        return "Subcategory";
+      case "account":
+        return "Account";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -62,7 +70,7 @@ function AccountRow({ account, level, expanded, expandedIds, onToggle }: Account
     <div>
       <div
         className={`flex items-start gap-4 px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-          level > 0 ? 'bg-gray-50' : 'bg-white'
+          level > 0 ? "bg-gray-50" : "bg-white"
         }`}
         style={{ paddingLeft: `${24 + level * 20}px` }}
       >
@@ -87,12 +95,8 @@ function AccountRow({ account, level, expanded, expandedIds, onToggle }: Account
         {/* Account Code & Name */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900">
-              {account.code}
-            </span>
-            <span className="text-gray-700">
-              {account.name}
-            </span>
+            <span className="font-medium text-gray-900">{account.code}</span>
+            <span className="text-gray-700">{account.name}</span>
           </div>
         </div>
 
@@ -145,9 +149,21 @@ function AccountRow({ account, level, expanded, expandedIds, onToggle }: Account
 }
 
 export function MasterChartOfAccountsContent() {
-  const [expandedIds, setExpandedIds] = React.useState<Set<string>>(
-    new Set(['cat1', 'subcat1']) // Only first category and first subcategory expanded
-  );
+  const { data: accountTypes, isLoading: loadingTypes } = useAccountTypes();
+  const { data: categories, isLoading: loadingCategories } =
+    useAccountCategories();
+
+  // Dynamically open the first category and its first subcategory
+  const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
+  React.useEffect(() => {
+    if (accountTypes && categories) {
+      const firstCat = accountTypes[0]?.id;
+      const firstSub = categories.find((cat) => cat.typeId === firstCat)?.id;
+      if (firstCat) {
+        setExpandedIds(new Set(firstSub ? [firstCat, firstSub] : [firstCat]));
+      }
+    }
+  }, [accountTypes, categories]);
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
@@ -161,216 +177,33 @@ export function MasterChartOfAccountsContent() {
     });
   };
 
-  // Mock hierarchical data matching the images
-  const chartData: ChartAccount[] = [
-    {
-      id: 'cat1',
-      code: '1000',
-      name: 'Assets',
-      type: 'category',
-      children: [
-        {
-          id: 'subcat1',
-          code: '1100',
-          name: 'Current Assets',
-          type: 'subcategory',
-          children: [
-            {
-              id: 'acc1',
-              code: '1110',
-              name: 'Cash and Cash Equivalents',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '1001', accountName: 'Cash - Operating' },
-                { code: 'UK', accountCode: '1010', accountName: 'Bank Current Account' },
-                { code: 'DE', accountCode: '1000', accountName: 'Kasse' },
-                { code: 'SG', accountCode: '1100', accountName: 'Cash at Bank' },
-              ],
-            },
-            {
-              id: 'acc2',
-              code: '1120',
-              name: 'Accounts Receivable',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '1200', accountName: 'Trade Receivables' },
-                { code: 'UK', accountCode: '1100', accountName: 'Debtors' },
-                { code: 'DE', accountCode: '1400', accountName: 'Forderungen' },
-                { code: 'SG', accountCode: '1200', accountName: 'Trade Debtors' },
-              ],
-            },
-            {
-              id: 'acc3',
-              code: '1130',
-              name: 'Inventory',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '1300', accountName: 'Inventory - Raw Materials' },
-                { code: 'UK', accountCode: '1200', accountName: 'Stock' },
-                { code: 'DE', accountCode: '1500', accountName: 'Vorräte' },
-              ],
-            },
-          ],
-        },
-        {
-          id: 'subcat2',
-          code: '1200',
-          name: 'Non-Current Assets',
-          type: 'subcategory',
-          children: [
-            {
-              id: 'acc4',
-              code: '1210',
-              name: 'Property, Plant & Equipment',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '1500', accountName: 'Fixed Assets' },
-                { code: 'UK', accountCode: '1400', accountName: 'Tangible Assets' },
-                { code: 'DE', accountCode: '0200', accountName: 'Anlagevermögen' },
-                { code: 'SG', accountCode: '1500', accountName: 'Fixed Assets' },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'cat2',
-      code: '2000',
-      name: 'Liabilities',
-      type: 'category',
-      children: [
-        {
-          id: 'subcat3',
-          code: '2100',
-          name: 'Current Liabilities',
-          type: 'subcategory',
-          children: [
-            {
-              id: 'acc5',
-              code: '2110',
-              name: 'Accounts Payable',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '2000', accountName: 'Trade Payables' },
-                { code: 'UK', accountCode: '2100', accountName: 'Creditors' },
-                { code: 'DE', accountCode: '1600', accountName: 'Verbindlichkeiten' },
-                { code: 'SG', accountCode: '2100', accountName: 'Trade Creditors' },
-              ],
-            },
-            {
-              id: 'acc6',
-              code: '2120',
-              name: 'Short-term Debt',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '2100', accountName: 'Current Portion of Debt' },
-                { code: 'UK', accountCode: '2200', accountName: 'Bank Loans - Current' },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'cat3',
-      code: '3000',
-      name: 'Equity',
-      type: 'category',
-      children: [
-        {
-          id: 'acc7',
-          code: '3100',
-          name: 'Share Capital',
-          type: 'account',
-          entityMappings: [
-            { code: 'US', accountCode: '3000', accountName: 'Common Stock' },
-            { code: 'UK', accountCode: '3000', accountName: 'Share Capital' },
-            { code: 'DE', accountCode: '2900', accountName: 'Stammkapital' },
-            { code: 'SG', accountCode: '3000', accountName: 'Issued Capital' },
-          ],
-        },
-        {
-          id: 'acc8',
-          code: '3200',
-          name: 'Retained Earnings',
-          type: 'account',
-          entityMappings: [
-            { code: 'US', accountCode: '3100', accountName: 'Retained Earnings' },
-            { code: 'UK', accountCode: '3100', accountName: 'Profit & Loss Account' },
-            { code: 'DE', accountCode: '2980', accountName: 'Gewinnvortrag' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'cat4',
-      code: '4000',
-      name: 'Revenue',
-      type: 'category',
-      children: [
-        {
-          id: 'acc9',
-          code: '4100',
-          name: 'Operating Revenue',
-          type: 'account',
-          entityMappings: [
-            { code: 'US', accountCode: '4000', accountName: 'Product Sales' },
-            { code: 'UK', accountCode: '4000', accountName: 'Sales Revenue' },
-            { code: 'DE', accountCode: '8000', accountName: 'Umsatzerlöse' },
-            { code: 'SG', accountCode: '4000', accountName: 'Revenue from Services' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'cat5',
-      code: '5000',
-      name: 'Expenses',
-      type: 'category',
-      children: [
-        {
-          id: 'subcat5',
-          code: '5100',
-          name: 'Cost of Sales',
-          type: 'subcategory',
-          children: [
-            {
-              id: 'acc10',
-              code: '5100',
-              name: 'Cost of Sales',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '5000', accountName: 'COGS' },
-                { code: 'UK', accountCode: '5000', accountName: 'Cost of Sales' },
-                { code: 'DE', accountCode: '5000', accountName: 'Wareneinsatz' },
-              ],
-            },
-          ],
-        },
-        {
-          id: 'subcat6',
-          code: '5200',
-          name: 'Operating Expenses',
-          type: 'subcategory',
-          children: [
-            {
-              id: 'acc11',
-              code: '5210',
-              name: 'Salaries and Wages',
-              type: 'account',
-              entityMappings: [
-                { code: 'US', accountCode: '5100', accountName: 'Payroll Expense' },
-                { code: 'UK', accountCode: '5100', accountName: 'Wages and Salaries' },
-                { code: 'DE', accountCode: '6000', accountName: 'Löhne und Gehälter' },
-                { code: 'SG', accountCode: '5100', accountName: 'Staff Costs' },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
+  // Build dynamic chart data from API
+  const chartData: ChartAccount[] =
+    accountTypes && categories
+      ? accountTypes.map((type) => ({
+          id: type.id,
+          code: type.code,
+          name: type.name,
+          type: "category",
+          children: categories
+            .filter((cat) => cat.typeId === type.id)
+            .map((cat) => ({
+              id: cat.id,
+              code: cat.code,
+              name: cat.name,
+              type: "subcategory",
+              // For now, subcategories as children, accounts not yet mapped
+              children:
+                cat.subCategories?.map((sub) => ({
+                  id: sub.id,
+                  code: sub.code,
+                  name: sub.name,
+                  type: "account",
+                  entityMappings: [], // Placeholder, as entity mapping is not yet dynamic
+                })) || [],
+            })),
+        }))
+      : [];
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">

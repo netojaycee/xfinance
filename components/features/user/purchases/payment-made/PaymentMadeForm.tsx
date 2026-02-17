@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { DollarSign } from "lucide-react";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
 
 const paymentSchema = z.object({
   vendor: z.string().min(1, "Vendor is required"),
@@ -36,6 +37,11 @@ const defaultValues: PaymentFormType = {
 };
 
 export default function PaymentMadeForm() {
+  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+    subCategory: "Cash and Cash Equivalents",
+  });
+  const cashAccounts = accountsData?.data || [];
+
   const form = useForm<z.infer<typeof paymentSchema>>({
     resolver: zodResolver(paymentSchema) as any,
     defaultValues,
@@ -152,12 +158,21 @@ export default function PaymentMadeForm() {
                     <FormLabel>From Account *</FormLabel>
                     <FormControl>
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className="w-full bg-white">
-                          <SelectValue placeholder="Select account" />
+                        <SelectTrigger className="w-full bg-white" disabled={accountsLoading}>
+                          <SelectValue placeholder="Select cash account" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Main Account">Main Account</SelectItem>
-                          <SelectItem value="Petty Cash">Petty Cash</SelectItem>
+                          {cashAccounts.length > 0 ? (
+                            cashAccounts.map((account) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name} ({account.code})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-accounts" disabled>
+                              No cash accounts found
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>

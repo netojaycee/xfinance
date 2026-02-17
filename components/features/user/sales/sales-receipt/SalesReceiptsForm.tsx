@@ -69,7 +69,7 @@ export default function SalesReceiptsForm({
   isEditMode = false,
 }: SalesReceiptsFormProps) {
   const { data, isLoading: customersLoading } = useCustomers();
-  const itemsQuery = useItems({ type: "product" });
+  const itemsQuery = useItems();
   const items = itemsQuery.data?.items || [];
   const itemsLoading = itemsQuery.isLoading;
 

@@ -46,7 +46,7 @@ export default function CollectionsForm({
   const createCollection = useCreateCollection();
   const updateCollection = useUpdateCollection();
 
-  const itemsQuery = useItems({ type: "product" }) as {
+  const itemsQuery = useItems() as {
     data?: ItemsResponse;
     isLoading: boolean;
   };

@@ -80,7 +80,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
   const createBill = useCreateBill();
   const updateBill = useUpdateBill();
   const { data: vendorsData, isLoading: vendorsLoading } = useVendors();
-  const itemsQuery = useItems({ type: "product" }) as { data?: ItemsResponse; isLoading: boolean };
+  const itemsQuery = useItems() as { data?: ItemsResponse; isLoading: boolean };
 
   const vendors = (vendorsData as any)?.vendors || [];
   const items = itemsQuery.data?.items || [];

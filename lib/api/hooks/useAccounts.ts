@@ -24,9 +24,9 @@ import { toast } from "sonner";
 // Accounts
 // ────────────────────────────────────────────────
 
-export const useAccounts = (params?: { search?: string; page?: number; limit?: number }) => {
+export const useAccounts = (params?: { search?: string; page?: number; limit?: number; subCategory?: string }) => {
   return useQuery<AccountsResponse>({
-    queryKey: ["accounts", params?.search, params?.page, params?.limit],
+    queryKey: ["accounts", params?.search, params?.page, params?.limit, params?.subCategory],
     queryFn: () => accountsService.getAccounts(params) as Promise<AccountsResponse>,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,

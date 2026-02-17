@@ -39,7 +39,7 @@ export const useCreateGroup = (
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups", "list"] });
       toast.success("Group created successfully");
-      closeModal(MODAL.GROUP_EDIT);
+      closeModal(MODAL.GROUP_CREATE);
     },
     onError: (error: any) => {
       toast.error(error?.message || "Failed to create group");
