@@ -22,6 +22,8 @@ export default function PaymentReceived() {
 
   const payments = data?.payments || [];
 
+  console.log("Fetched payments received:", data); // Debug log to check fetched data
+
   return (
     <div className="space-y-6">
       <PaymentReceivedHeader stats={data?.stats} loading={isLoading} />
@@ -37,7 +39,7 @@ export default function PaymentReceived() {
         onStatusChange={setStatusFilter}
         display={{
           statusComponent: true,
-          filterComponent: true,
+          filterComponent: false,
           searchComponent: true,
         }}
         loading={isLoading}

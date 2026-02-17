@@ -24,6 +24,8 @@ import { useDeleteGroup } from "@/lib/api/hooks/useGroup";
 import { toast } from "sonner";
 import { GroupForm } from "./GroupForm";
 import { useRouter } from "next/navigation";
+import { MODAL } from "@/lib/data/modal-data";
+import { useModal } from "@/components/providers/ModalProvider";
 
 interface GroupRow {
   id: string;
@@ -41,59 +43,42 @@ interface GroupRow {
 export default function GroupsActions({ row }: { row: GroupRow }) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [suspendOpen, setSuspendOpen] = useState(false);
+  const { isOpen, openModal, closeModal } = useModal();
 
-  const deleteGroup = useDeleteGroup({
-    onSuccess: () => {
-      toast.success("Group deleted successfully");
-    },
-    onError: (err) => {
-      toast.error(err?.message || "Failed to delete group");
-    },
-  });
+  const deleteGroup = useDeleteGroup();
 
   const handleViewDetails = () => {
     setDropdownOpen(false);
-    router.push(`/groups/${row.id}`);
+    // router.push(`/groups/${row.id}`);
   };
 
   const handleEditClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setEditOpen(true), 100);
+    setTimeout(() => openModal(MODAL.GROUP_EDIT + "-" + row.id), 100);
   };
 
   const handleViewBilling = () => {
     setDropdownOpen(false);
-    router.push(`/groups/${row.id}/billing`);
+    // router.push(`/groups/${row.id}/billing`);
   };
-
- 
 
   const handleSuspendClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setSuspendOpen(true), 100);
+
+    // setTimeout(() => openModal(MODAL.GROUP_SUSPEND), 100);
   };
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setDeleteOpen(true), 100);
+    setTimeout(() => openModal(MODAL.GROUP_DELETE), 100);
   };
 
   const handleConfirmDelete = (confirmed: boolean) => {
     if (confirmed) {
       deleteGroup.mutate(row.id);
-    } else {
-      setDeleteOpen(false);
     }
+    closeModal(MODAL.GROUP_DELETE);
   };
-
-  React.useEffect(() => {
-    if (deleteGroup.isSuccess || deleteGroup.isError) {
-      setDeleteOpen(false);
-    }
-  }, [deleteGroup.isSuccess, deleteGroup.isError]);
 
   return (
     <>
@@ -129,7 +114,7 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
           >
             <CreditCard className="size-4 mr-2" /> View billing
           </DropdownMenuItem>
-     
+
           <DropdownMenuSeparator />
           <DropdownMenuItem
             data-variant="destructive"
@@ -155,22 +140,24 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
       {/* Edit Modal */}
       <CustomModal
         title={`Edit Group: ${row.groupName}`}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        open={isOpen(MODAL.GROUP_EDIT + "-" + row.id)}
+        onOpenChange={(open) =>
+          open ? openModal(MODAL.GROUP_EDIT + "-" + row.id) : closeModal(MODAL.GROUP_EDIT + "-" + row.id)
+        }
         module={MODULES.GROUP}
       >
-        <GroupForm
-          group={row}
-          isEditMode
-          onSuccess={() => setEditOpen(false)}
-        />
+        <GroupForm group={row} isEditMode />
       </CustomModal>
 
       {/* Suspend Confirmation Modal */}
       <CustomModal
         title="Confirm Suspension"
-        open={suspendOpen}
-        onOpenChange={setSuspendOpen}
+        open={isOpen(MODAL.GROUP_SUSPEND)}
+        onOpenChange={(open) =>
+          open
+            ? openModal(MODAL.GROUP_SUSPEND)
+            : closeModal(MODAL.GROUP_SUSPEND)
+        }
         module={MODULES.GROUP}
       >
         <ConfirmationForm
@@ -178,11 +165,8 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
           onResult={(confirmed) => {
             if (confirmed) {
               // TODO: Implement suspend API call
-              toast.success("Group suspended successfully");
-              setSuspendOpen(false);
-            } else {
-              setSuspendOpen(false);
             }
+            closeModal(MODAL.GROUP_SUSPEND);
           }}
           loading={false}
         />
@@ -191,8 +175,10 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
       {/* Delete Confirmation Modal */}
       <CustomModal
         title="Confirm Deletion"
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
+        open={isOpen(MODAL.GROUP_DELETE)}
+        onOpenChange={(open) =>
+          open ? openModal(MODAL.GROUP_DELETE) : closeModal(MODAL.GROUP_DELETE)
+        }
         module={MODULES.GROUP}
       >
         <ConfirmationForm

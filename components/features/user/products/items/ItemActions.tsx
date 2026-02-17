@@ -24,44 +24,31 @@ import { toast } from "sonner";
 import CustomerForm from "./ItemForm";
 import { useRouter } from "next/navigation";
 import ItemForm from "./ItemForm";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 export default function ItemsAction({ row }: { row: any }) {
-    const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const router = useRouter();
+  const { isOpen, openModal, closeModal } = useModal();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const deleteCustomer = useDeleteCustomer({
-    onSuccess: () => {
-      toast.success("Customer deleted successfully");
-    },
-    onError: (err) => {
-      toast.error(err?.message || "Failed to delete customer");
-    },
-  });
+  const deleteCustomer = useDeleteCustomer();
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setOpen(true), 100);
+    setTimeout(() => openModal(MODAL.ITEM_DELETE), 100);
   };
 
   const handleEditClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setEditOpen(true), 100);
+    setTimeout(() => openModal(MODAL.ITEM_EDIT + "-" + row.id), 100);
   };
 
   const handleConfirm = (confirmed: boolean) => {
     if (confirmed) {
       deleteCustomer.mutate(row.id);
-    } else {
-      setOpen(false);
     }
+    closeModal(MODAL.ITEM_DELETE);
   };
-
-  React.useEffect(() => {
-    if (deleteCustomer.isSuccess || deleteCustomer.isError) {
-      setOpen(false);
-    }
-  }, [deleteCustomer.isSuccess, deleteCustomer.isError]);
 
   return (
     <>
@@ -89,8 +76,7 @@ export default function ItemsAction({ row }: { row: any }) {
             <Edit3 className="size-4 mr-2" /> Edit
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-        
-          
+
           <DropdownMenuSeparator />
           <DropdownMenuItem
             data-variant="destructive"
@@ -105,8 +91,10 @@ export default function ItemsAction({ row }: { row: any }) {
       </DropdownMenu>
       <CustomModal
         title={"Confirm Deletion"}
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.ITEM_DELETE)}
+        onOpenChange={(open) =>
+          open ? openModal(MODAL.ITEM_DELETE) : closeModal(MODAL.ITEM_DELETE)
+        }
         module={MODULES.PRODUCTS}
       >
         <ConfirmationForm
@@ -117,11 +105,13 @@ export default function ItemsAction({ row }: { row: any }) {
       </CustomModal>
       <CustomModal
         title={`Edit Item: ${row.name}`}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        open={isOpen(MODAL.ITEM_EDIT + "-" + row.id)}
+        onOpenChange={(open) =>
+          open ? openModal(MODAL.ITEM_EDIT + "-" + row.id) : closeModal(MODAL.ITEM_EDIT + "-" + row.id)
+        }
         module={MODULES.PRODUCTS}
       >
-        <ItemForm item={row} isEditMode onSuccess={() => setEditOpen(false)} />
+        <ItemForm item={row} isEditMode />
       </CustomModal>
     </>
   );

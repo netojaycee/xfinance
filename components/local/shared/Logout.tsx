@@ -1,23 +1,18 @@
 "use client";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useLogout } from "@/lib/api/hooks/useAuth";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function Logout() {
   const router = useRouter();
+  const logout = useLogout();
 
   const handleLogout = async () => {
     try {
-
-      console.log("logout")
-
-
-      // 1) Call the logout API
-      // await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // 4) Then navigate
-      // router.replace("/");
+      await logout.mutateAsync();
+      router.push("/auth/login");
     } catch (err) {
       console.error("Logout error:", err);
       let msg = "Unable to log out. Please try again.";
@@ -36,7 +31,7 @@ export default function Logout() {
   };
 
   return (
-    <DropdownMenuItem className='cursor-pointer' onClick={handleLogout}>
+    <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
       <LogOut />
       Log out
     </DropdownMenuItem>

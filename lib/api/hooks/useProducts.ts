@@ -1,171 +1,282 @@
-"use client";
+// lib/api/hooks/useProducts.ts
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  UseMutationOptions,
+  useQueryClient,
+} from "@tanstack/react-query";
 import * as productsService from "../services/productsService";
 import { Collection, Item, ItemsResponse, CollectionsResponse } from "./types/productsTypes";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
+import { toast } from "sonner";
 
-/**
- * Collections Hooks
- */
+// ────────────────────────────────────────────────
+// Collections
+// ────────────────────────────────────────────────
+
 export const useCollections = (params?: {
+  search?: string;
   page?: number;
   limit?: number;
-  search?: string;
 }) => {
-  return useQuery({
-    queryKey: ["collections", params],
-    queryFn: () => productsService.getCollections(params),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+  return useQuery<CollectionsResponse>({
+    queryKey: ["collections", params?.search, params?.page, params?.limit],
+    queryFn: () => productsService.getCollections(params) as Promise<CollectionsResponse>,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
-export const useCollectionById = (id: string) => {
+export const useCollection = (id: string) => {
   return useQuery({
-    queryKey: ["collection", id],
+    queryKey: ["collections", "detail", id],
     queryFn: () => productsService.getCollectionById(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
-export const useCreateCollection = () => {
+export const useCreateCollection = (
+  options?: UseMutationOptions<any, Error, FormData>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: (formData: FormData) =>
-      productsService.createCollection(formData),
+    mutationFn: productsService.createCollection,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
+      toast.success("Collection created successfully");
+      closeModal(MODAL.COLLECTION_CREATE);
     },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create collection",
+      );
+    },
+    ...options,
   });
 };
 
-export const useUpdateCollection = (id: string) => {
+export const useUpdateCollection = (
+  options?: UseMutationOptions<any, Error, { id: string; formData: FormData }>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: (formData: FormData) =>
-      productsService.updateCollection(id, formData),
-    onSuccess: () => {
+    mutationFn: ({ id, formData }) => productsService.updateCollection(id, formData),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
-      queryClient.invalidateQueries({ queryKey: ["collection", id] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["collections", "detail", variables.id],
+        });
+      }
+      toast.success("Collection updated successfully");
+      closeModal(MODAL.COLLECTION_EDIT + "-" + variables.id);
     },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update collection",
+      );
+    },
+    ...options,
   });
 };
 
-export const useDeleteCollection = () => {
+export const useDeleteCollection = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: (id: string) => productsService.deleteCollection(id),
-    onSuccess: () => {
+    mutationFn: productsService.deleteCollection,
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["collections", "detail", id],
+        });
+      }
+      toast.success("Collection deleted successfully");
+      closeModal(MODAL.COLLECTION_DELETE);
     },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete collection",
+      );
+    },
+    ...options,
   });
 };
 
-/**
- * Items Hooks
- */
+// ────────────────────────────────────────────────
+// Items
+// ────────────────────────────────────────────────
+
 export const useItems = (params?: {
+  search?: string;
   page?: number;
   limit?: number;
   category?: string;
-  search?: string;
+  type?: "product" | "service";
 }) => {
   return useQuery<ItemsResponse>({
-    queryKey: ["items", params],
+    queryKey: ["items", params?.search, params?.page, params?.limit, params?.category, params?.type],
     queryFn: () => productsService.getItems(params) as Promise<ItemsResponse>,
     staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
-export const useItemById = (id: string) => {
+export const useItem = (id: string) => {
   return useQuery({
-    queryKey: ["item", id],
+    queryKey: ["items", "detail", id],
     queryFn: () => productsService.getItemById(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
-export const useCreateItem = () => {
+export const useCreateItem = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: (data: any) => productsService.createItem(data),
+    mutationFn: productsService.createItem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["items"] });
+      toast.success("Item created successfully");
+      closeModal(MODAL.ITEM_CREATE);
     },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create item",
+      );
+    },
+    ...options,
   });
 };
 
-export const useUpdateItem = (id: string) => {
+export const useUpdateItem = (
+  options?: UseMutationOptions<any, Error, { id: string; data: any }>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: (data: any) => productsService.updateItem(id, data),
-    onSuccess: () => {
+    mutationFn: ({ id, data }) => productsService.updateItem(id, data),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["items"] });
-      queryClient.invalidateQueries({ queryKey: ["item", id] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["items", "detail", variables.id],
+        });
+      }
+      toast.success("Item updated successfully");
+      closeModal(MODAL.ITEM_EDIT);
     },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update item",
+      );
+    },
+    ...options,
   });
 };
 
-export const useDeleteItem = () => {
+export const useDeleteItem = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: (id: string) => productsService.deleteItem(id),
-    onSuccess: () => {
+    mutationFn: productsService.deleteItem,
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["items"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["items", "detail", id],
+        });
+      }
+      toast.success("Item deleted successfully");
+      closeModal(MODAL.ITEM_DELETE);
     },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete item",
+      );
+    },
+    ...options,
   });
 };
 
-/**
- * Inventory Hooks
- */
+// ────────────────────────────────────────────────
+// Inventory
+// ────────────────────────────────────────────────
+
 export const useInventory = (params?: {
+  search?: string;
   page?: number;
   limit?: number;
-  search?: string;
 }) => {
   return useQuery({
-    queryKey: ["inventory", params],
+    queryKey: ["inventory", params?.search, params?.page, params?.limit],
     queryFn: () => productsService.getInventory(params),
     staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
-export const useAdjustInventory = () => {
+export const useAdjustInventory = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => productsService.adjustInventory(data),
+    mutationFn: productsService.adjustInventory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       queryClient.invalidateQueries({ queryKey: ["items"] });
+      toast.success("Inventory adjusted successfully");
     },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to adjust inventory",
+      );
+    },
+    ...options,
   });
 };
 
 export const useInventoryMovements = (params?: {
+  search?: string;
   page?: number;
   limit?: number;
   itemId?: string;
 }) => {
   return useQuery({
-    queryKey: ["inventoryMovements", params],
+    queryKey: ["inventory-movements", params?.search, params?.page, params?.limit, params?.itemId],
     queryFn: () => productsService.getInventoryMovements(params),
     staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
 export const useLowStockItems = () => {
   return useQuery({
-    queryKey: ["lowStockItems"],
+    queryKey: ["low-stock-items"],
     queryFn: () => productsService.getLowStockItems(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };

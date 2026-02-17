@@ -20,10 +20,12 @@ import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import { useDeletePaymentReceived } from "@/lib/api/hooks/useSales";
-import { toast } from "sonner";
 import PaymentReceivedForm from "./PaymentReceivedForm";
 import { useRouter } from "next/navigation";
 import { PaymentReceived } from "./utils/types";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
+import { toast } from "sonner";
 
 export default function PaymentReceivedActions({
   row,
@@ -31,47 +33,34 @@ export default function PaymentReceivedActions({
   row: PaymentReceived;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { isOpen, openModal, closeModal } = useModal();
+  const deletePayment = useDeletePaymentReceived();
 
-  const deletePayment = useDeletePaymentReceived({
-    onSuccess: () => {
-      toast.success("Payment deleted successfully");
-    },
-    onError: (err) => {
-      toast.error(err?.message || "Failed to delete payment");
-    },
-  });
+  const deleteKey = MODAL.PAYMENT_RECEIVED_DELETE + '-' + row.id;
+  const editKey = MODAL.PAYMENT_RECEIVED_EDIT + '-' + row.id;
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setOpen(true), 100);
+    setTimeout(() => openModal(deleteKey), 100);
   };
 
   const handleEditClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setEditOpen(true), 100);
+    setTimeout(() => openModal(editKey), 100);
   };
 
   const handleConfirm = (confirmed: boolean) => {
     if (confirmed) {
       deletePayment.mutate(row.id);
-    } else {
-      setOpen(false);
     }
+    closeModal(deleteKey);
   };
 
   const handlePrint = () => {
     setDropdownOpen(false);
     toast.info("Print functionality coming soon");
   };
-
-  React.useEffect(() => {
-    if (deletePayment.isSuccess || deletePayment.isError) {
-      setOpen(false);
-    }
-  }, [deletePayment.isSuccess, deletePayment.isError]);
 
   return (
     <>
@@ -82,14 +71,14 @@ export default function PaymentReceivedActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem
+          {/* <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
               toast.info("View details coming soon");
             }}
           >
             <Eye className="size-4 mr-2" /> View Details
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -129,11 +118,10 @@ export default function PaymentReceivedActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
       <CustomModal
         title="Confirm Deletion"
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(deleteKey)}
+        onOpenChange={(open) => open ? openModal(deleteKey) : closeModal(deleteKey)}
         module={MODULES.SALES}
       >
         <ConfirmationForm
@@ -142,11 +130,10 @@ export default function PaymentReceivedActions({
           loading={deletePayment.isPending}
         />
       </CustomModal>
-
       <CustomModal
         title={`Edit Payment: ${row.reference}`}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        open={isOpen(editKey)}
+        onOpenChange={(open) => open ? openModal(editKey) : closeModal(editKey)}
         module={MODULES.SALES}
       >
         <PaymentReceivedForm
@@ -155,7 +142,6 @@ export default function PaymentReceivedActions({
             paidAt: typeof row.paidAt === 'string' ? new Date(row.paidAt) : row.paidAt,
           }}
           isEditMode
-          onSuccess={() => setEditOpen(false)}
         />
       </CustomModal>
     </>

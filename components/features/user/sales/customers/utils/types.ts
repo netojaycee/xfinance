@@ -7,6 +7,7 @@ export interface Customer {
   companyName: string;
   country: string;
   address: string;
+  invoiceCount: number;
   city: string;
   state: string;
   postalCode: string;
@@ -19,8 +20,15 @@ export interface Customer {
 
 export type CustomersResponse = {
   customers: Customer[];
+  averageBalance: number;
+  outstandingReceivables: number;
+  active: number;
+  total: number;
 
-  isLoading: boolean;
-  isError: boolean;
-  // add other properties if needed
+
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
+
 };

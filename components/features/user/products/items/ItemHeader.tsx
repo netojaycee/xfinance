@@ -17,6 +17,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 export default function ItemHeader({
   data,
@@ -33,7 +35,7 @@ export default function ItemHeader({
   // onCategoryChange?: (category: string) => void;
   // categoryValue?: string;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const { isOpen, openModal, closeModal} = useModal()
   const totalCount = data?.total || 0;
   const totalInStock = data?.totalInStock || 0;
   const totalOutOfStock = data?.totalOutOfStock || 0;
@@ -53,7 +55,7 @@ export default function ItemHeader({
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button onClick={() => openModal(MODAL.ITEM_CREATE)} className="rounded-xl">
             <Plus /> Add Item
           </Button>
         </div>
@@ -116,10 +118,10 @@ export default function ItemHeader({
       <CustomModal
         title="Add New Item"
         module={MODULES.PRODUCTS}
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.ITEM_CREATE)}
+        onOpenChange={(open) => (open ? openModal(MODAL.ITEM_CREATE) : closeModal(MODAL.ITEM_CREATE))}
       >
-        <ItemForm onSuccess={() => setOpen(false)} />
+        <ItemForm />
       </CustomModal>
     </div>
   );

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import ExpenseActions from "./ExpenseActions";
 
 type ExpenseRow = {
   expenseNo: string;
@@ -30,16 +31,21 @@ export const expensesColumns: ExpenseColumn[] = [
     key: "date",
     title: "Date",
     className: "text-xs",
-    render: (value: unknown) => (
-      <span className="text-xs">{value as string}</span>
-    ),
+    render: (value: any) =>
+      value
+        ? new Date(value).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+        })
+        : "",
   },
   {
     key: "vendor",
     title: "Vendor",
     className: "text-xs",
-    render: (value: unknown) => (
-      <span className="text-xs font-medium">{value as string}</span>
+    render: (value: unknown, row) => (
+      <span className="text-xs font-medium">{(row?.vendor as any)?.name}</span>
     ),
   },
   {
@@ -55,7 +61,7 @@ export const expensesColumns: ExpenseColumn[] = [
     title: "Submitted By",
     className: "text-xs",
     render: (value: unknown) => (
-      <span className="text-xs">{value as string}</span>
+      <span className="text-xs">{(value as string) || "--"}</span>
     ),
   },
   {
@@ -91,5 +97,13 @@ export const expensesColumns: ExpenseColumn[] = [
         </Badge>
       );
     },
+  },
+  {
+    key: "actions",
+    title: "Actions",
+    className: "text-xs",
+    render: (value: unknown, row?: ExpenseRow) => (
+      <ExpenseActions expense={row} />
+    ),
   },
 ];

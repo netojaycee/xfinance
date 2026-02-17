@@ -10,13 +10,14 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Edit3, Trash2 } from "lucide-react";
-import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
-import { CustomModal } from "@/components/local/custom/modal";
-import { MODULES } from "@/lib/types/enums";
-import { useDeleteEntity } from "@/lib/api/hooks/useEntity";
-import { toast } from "sonner";
-import { EntityForm } from "./EntityForm";
 import { Entity } from "./EntitiesColumn";
+import { useDeleteEntity } from "@/lib/api/hooks/useEntity";
+import { MODAL } from "@/lib/data/modal-data";
+import { useModal } from "@/components/providers/ModalProvider";
+import { CustomModal } from "@/components/local/custom/modal";
+import { EntityForm } from "./EntityForm";
+import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
+import { MODULES } from "@/lib/types/enums";
 
 interface EntitiesActionsProps {
   row: Entity;
@@ -24,42 +25,29 @@ interface EntitiesActionsProps {
 
 export default function EntitiesActions({ row }: EntitiesActionsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const { isOpen, openModal, closeModal } = useModal();
 
-  const deleteEntity = useDeleteEntity({
-    onSuccess: () => {
-      toast.success("Entity deleted successfully");
-    },
-    onError: (err) => {
-      toast.error(err?.message || "Failed to delete entity");
-    },
-  });
+  const deleteEntity = useDeleteEntity();
 
-  const handleEditClick = () => {
-    setDropdownOpen(false);
-    setTimeout(() => setEditOpen(true), 100);
-  };
+  const deleteKey = MODAL.ENTITY_DELETE + "-" + row.id;
+  const editKey = MODAL.ENTITY_EDIT + "-" + row.id;
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setDeleteOpen(true), 100);
+    setTimeout(() => openModal(deleteKey), 100);
   };
 
-  const handleConfirmDelete = (confirmed: boolean) => {
+  const handleEditClick = () => {
+    setDropdownOpen(false);
+    setTimeout(() => openModal(editKey), 100);
+  };
+
+  const handleConfirm = (confirmed: boolean) => {
     if (confirmed) {
       deleteEntity.mutate(row.id);
-    } else {
-      setDeleteOpen(false);
     }
+    closeModal(deleteKey);
   };
-
-  React.useEffect(() => {
-    if (deleteEntity.isSuccess || deleteEntity.isError) {
-      setDeleteOpen(false);
-    }
-  }, [deleteEntity.isSuccess, deleteEntity.isError]);
-
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
@@ -69,13 +57,21 @@ export default function EntitiesActions({ row }: EntitiesActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleEditClick}>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              handleEditClick();
+            }}
+          >
             <Edit3 className="h-4 w-4 mr-2" />
             Edit
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={handleDeleteClick}
+            onSelect={(e) => {
+              e.preventDefault();
+              handleDeleteClick();
+            }}
             className="text-red-600 focus:text-red-600"
           >
             <Trash2 className="h-4 w-4 mr-2" />
@@ -85,33 +81,29 @@ export default function EntitiesActions({ row }: EntitiesActionsProps) {
       </DropdownMenu>
 
       <CustomModal
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        title="Edit Entity"
-        description="Update entity details"
+        title={"Confirm Deletion"}
+        open={isOpen(deleteKey)}
+        onOpenChange={(open) =>
+          open ? openModal(deleteKey) : closeModal(deleteKey)
+        }
         module={MODULES.ENTITY}
       >
-        <EntityForm
-          entity={row as any}
-          isEditMode={true}
-          onSuccess={() => setEditOpen(false)}
-        />
-      </CustomModal>
-
-      {/* {deleteOpen && ( */}
-      <CustomModal
-        title="Confirm Deletion"
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        module={MODULES.GROUP}
-      >
         <ConfirmationForm
-          title={`Are you sure you want to delete "${row.name}"? This action cannot be undone.`}
-          onResult={handleConfirmDelete}
+          title={`Are you sure you want to delete ${row?.name || row.name}?`}
+          onResult={handleConfirm}
           loading={deleteEntity.isPending}
         />
       </CustomModal>
-      {/* )} */}
+      <CustomModal
+        title={`Edit Customer: ${row.name}`}
+        open={isOpen(editKey)}
+        onOpenChange={(open) =>
+          open ? openModal(editKey) : closeModal(editKey)
+        }
+        module={MODULES.ENTITY}
+      >
+        <EntityForm entity={row as any} isEditMode />
+      </CustomModal>
     </>
   );
 }

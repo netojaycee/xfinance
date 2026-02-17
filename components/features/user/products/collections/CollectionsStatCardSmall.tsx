@@ -15,7 +15,7 @@ export default function CollectionsStatCardSmall({
   subtitle?: React.ReactNode;
 }) {
   return (
-    <Card className="bg-white rounded-2xl shadow-sm border p-6 min-w-55 flex flex-col justify-between gap-0" style={{ minHeight: 140 }}>
+    <Card className="bg-white rounded-2xl shadow-sm border p-3 min-w-55 flex flex-col justify-between gap-0" style={{ minHeight: 100 }}>
       <CardHeader className="p-0 mb-2 border-0">
       <CardTitle className="text-gray-500 text-sm font-medium">{title}</CardTitle>
       </CardHeader>

@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { toast } from 'sonner';
-import { useCreateGroup, useUpdateGroup } from '@/lib/api/hooks/useGroup';
-import { transformGroupFormToApiPayload, GroupFormData } from '@/lib/api/services/groupService';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+import { useCreateGroup, useUpdateGroup } from "@/lib/api/hooks/useGroup";
+import {
+  transformGroupFormToApiPayload,
+  GroupFormData,
+} from "@/lib/api/services/groupService";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -16,97 +19,84 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Image as ImageIcon, X } from 'lucide-react';
+} from "@/components/ui/select";
+import { Image as ImageIcon, X } from "lucide-react";
 
 const groupSchema = z.object({
   // Logo - can be File (when uploading) or object (when editing) or null
-  logo: z.union([
-    z.instanceof(File),
-    z.object({
-      publicId: z.string(),
-      secureUrl: z.string(),
-    }),
-    z.null(),
-  ]).optional(),
+  logo: z
+    .union([
+      z.instanceof(File),
+      z.object({
+        publicId: z.string(),
+        secureUrl: z.string(),
+      }),
+      z.null(),
+    ])
+    .optional(),
   // Basic Information
-  groupName: z.string().min(1, 'Group name is required'),
-  legalName: z.string().min(1, 'Legal name is required'),
-  taxId: z.string().min(1, 'Tax ID/EIN is required'),
-  industry: z.string().min(1, 'Industry is required'),
+  groupName: z.string().min(1, "Group name is required"),
+  legalName: z.string().min(1, "Legal name is required"),
+  taxId: z.string().min(1, "Tax ID/EIN is required"),
+  industry: z.string().min(1, "Industry is required"),
   // Address
-  address: z.string().min(1, 'Street address is required'),
-  city: z.string().min(1, 'City is required'),
-  province: z.string().min(1, 'State/Province is required'),
-  postalCode: z.string().min(1, 'ZIP/Postal code is required'),
-  country: z.string().min(1, 'Country is required'),
+  address: z.string().min(1, "Street address is required"),
+  city: z.string().min(1, "City is required"),
+  province: z.string().min(1, "State/Province is required"),
+  postalCode: z.string().min(1, "ZIP/Postal code is required"),
+  country: z.string().min(1, "Country is required"),
   // Contact Information
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(1, 'Phone number is required'),
-  website: z.string().url('Invalid URL').optional().or(z.literal('')),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(1, "Phone number is required"),
+  website: z.string().url("Invalid URL").optional().or(z.literal("")),
   // Subscription Settings
   subscriptionPlan: z.string().optional(),
   billingCycle: z.string().optional(),
 });
 
 interface GroupFormProps {
-  group?: Partial<GroupFormData> & { id?: string; logo?: { secureUrl?: string } };
+  group?: Partial<GroupFormData> & {
+    id?: string;
+    logo?: { secureUrl?: string };
+  };
   isEditMode?: boolean;
-  onSuccess?: () => void;
 }
 
 export function GroupForm({
   group,
   isEditMode = false,
-  onSuccess,
 }: GroupFormProps) {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  const createGroupMutation = useCreateGroup({
-    onSuccess: () => {
-      toast.success('Group created successfully');
-      onSuccess?.();
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to create group');
-    },
-  });
+  const createGroupMutation = useCreateGroup();
 
-  const updateGroupMutation = useUpdateGroup({
-    onSuccess: () => {
-      toast.success('Group updated successfully');
-      onSuccess?.();
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to update group');
-    },
-  });
-console.log(group)
+  const updateGroupMutation = useUpdateGroup();
+  console.log(group);
   const form = useForm<GroupFormData>({
     resolver: zodResolver(groupSchema),
     defaultValues: {
       logo: undefined,
-      groupName: group?.groupName || '',
-      legalName: group?.legalName || '',
-      taxId: group?.taxId || '',
-      industry: group?.industry || '',
-      address: group?.address || '',
-      city: group?.city || '',
-      province: group?.province || '',
-      postalCode: group?.postalCode || '',
-      country: group?.country || 'United States',
-      email: group?.email || '',
-      phone: group?.phone || '',
-      website: (group?.website && group.website !== null) ? group.website : '',
-      subscriptionPlan: group?.subscriptionPlan || '',
-      billingCycle: group?.billingCycle || '',
+      groupName: group?.groupName || "",
+      legalName: group?.legalName || "",
+      taxId: group?.taxId || "",
+      industry: group?.industry || "",
+      address: group?.address || "",
+      city: group?.city || "",
+      province: group?.province || "",
+      postalCode: group?.postalCode || "",
+      country: group?.country || "United States",
+      email: group?.email || "",
+      phone: group?.phone || "",
+      website: group?.website && group.website !== null ? group.website : "",
+      subscriptionPlan: group?.subscriptionPlan || "",
+      billingCycle: group?.billingCycle || "",
     },
   });
 
@@ -114,20 +104,20 @@ console.log(group)
     if (group) {
       form.reset({
         logo: undefined,
-        groupName: group?.groupName || '',
-        legalName: group?.legalName || '',
-        taxId: group?.taxId || '',
-        industry: group?.industry || '',
-        address: group?.address || '',
-        city: group?.city || '',
-        province: group?.province || '',
-        postalCode: group?.postalCode || '',
-        country: group?.country || 'United States',
-        email: group?.email || '',
-        phone: group?.phone || '',
-        website: group?.website || '',
-        subscriptionPlan: group?.subscriptionPlan || '',
-        billingCycle: group?.billingCycle || '',
+        groupName: group?.groupName || "",
+        legalName: group?.legalName || "",
+        taxId: group?.taxId || "",
+        industry: group?.industry || "",
+        address: group?.address || "",
+        city: group?.city || "",
+        province: group?.province || "",
+        postalCode: group?.postalCode || "",
+        country: group?.country || "United States",
+        email: group?.email || "",
+        phone: group?.phone || "",
+        website: group?.website || "",
+        subscriptionPlan: group?.subscriptionPlan || "",
+        billingCycle: group?.billingCycle || "",
       });
       // Set preview from existing logo
       if (group?.logo?.secureUrl) {
@@ -140,14 +130,14 @@ console.log(group)
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      const validTypes = ["image/png", "image/jpeg", "image/webp"];
       if (!validTypes.includes(file.type)) {
-        toast.error('Only PNG, JPG, and WebP files are allowed');
+        toast.error("Only PNG, JPG, and WebP files are allowed");
         return;
       }
       // Validate file size (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
+        toast.error("File size must be less than 5MB");
         return;
       }
       // Set preview
@@ -157,13 +147,13 @@ console.log(group)
       };
       reader.readAsDataURL(file);
       // Update form
-      form.setValue('logo', file);
+      form.setValue("logo", file);
     }
   };
 
   const removeLogo = () => {
     setLogoPreview(null);
-    form.setValue('logo', undefined);
+    form.setValue("logo", undefined);
   };
 
   const onSubmit = async (values: GroupFormData) => {
@@ -180,7 +170,8 @@ console.log(group)
     }
   };
 
-  const isLoading = createGroupMutation.isPending || updateGroupMutation.isPending;
+  const isLoading =
+    createGroupMutation.isPending || updateGroupMutation.isPending;
 
   return (
     <div className="w-full">
@@ -260,10 +251,7 @@ console.log(group)
                     <FormItem>
                       <FormLabel className="text-xs">Legal Name</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Full legal name"
-                          {...field}
-                        />
+                        <Input placeholder="Full legal name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -433,10 +421,7 @@ console.log(group)
                     <FormItem>
                       <FormLabel className="text-xs">Phone Number</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="+1 (555) 123-4567"
-                          {...field}
-                        />
+                        <Input placeholder="+1 (555) 123-4567" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -450,10 +435,7 @@ console.log(group)
                   <FormItem>
                     <FormLabel className="text-xs">Website</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="https://www.company.com"
-                        {...field}
-                      />
+                      <Input placeholder="https://www.company.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -538,7 +520,11 @@ console.log(group)
               disabled={isLoading}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isLoading ? 'Please wait...' : isEditMode ? 'Update Group' : 'Create Group'}
+              {isLoading
+                ? "Please wait..."
+                : isEditMode
+                  ? "Update Group"
+                  : "Create Group"}
             </Button>
           </div>
         </form>

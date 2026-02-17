@@ -2,13 +2,14 @@
 
 import React, { useEffect } from "react";
 import { useCreateCustomer, useUpdateCustomer } from "@/lib/api/hooks/useSales";
-import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useModal } from '@/components/providers/ModalProvider';
+import { MODAL } from '@/lib/data/modal-data';
 import {
   Form,
   FormControl,
@@ -37,16 +38,14 @@ type CustomerFormData = z.infer<typeof customerSchema>;
 interface CustomerFormProps {
   customer?: Partial<CustomerFormData> & { id?: string };
   isEditMode?: boolean;
-  onSuccess?: () => void;
 }
-
 export default function CustomerForm({
   customer,
   isEditMode = false,
-  onSuccess,
 }: CustomerFormProps) {
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
+
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
@@ -89,35 +88,12 @@ export default function CustomerForm({
   }, [customer]);
 
   const onSubmit = async (values: CustomerFormData) => {
-    try {
-      if (isEditMode && customer?.id) {
-        await updateCustomer.mutateAsync({ id: customer.id, data: values });
-      } else {
-        await createCustomer.mutateAsync(values);
-      }
-    } catch (error) {
-      // error handled below
+    if (isEditMode && customer?.id) {
+      await updateCustomer.mutateAsync({ id: customer.id, data: values });
+    } else {
+      await createCustomer.mutateAsync(values);
     }
   };
-
-  useEffect(() => {
-    if (createCustomer.isSuccess || updateCustomer.isSuccess) {
-      toast.success("Customer saved successfully");
-      if (onSuccess) onSuccess();
-    }
-    if (createCustomer.isError) {
-      toast.error(createCustomer.error?.message || "Failed to create customer");
-    }
-    if (updateCustomer.isError) {
-      toast.error(updateCustomer.error?.message || "Failed to update customer");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    createCustomer.isSuccess,
-    createCustomer.isError,
-    updateCustomer.isSuccess,
-    updateCustomer.isError,
-  ]);
 
   return (
     <div className="w-full">

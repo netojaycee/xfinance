@@ -25,7 +25,7 @@ export default function Budget() {
                   data={[]}
                   pageSize={10}
                   loading={false}
-                  display={{ filterComponent: true }}
+                  display={{ filterComponent: false }}
                 />
               </div>
             ),

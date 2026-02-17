@@ -1,10 +1,16 @@
 "use client";
 import { CustomTable } from "@/components/local/custom/custom-table";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useReceipts } from "@/lib/api/hooks/useSales";
 import { useDebounce } from "use-debounce";
-import { SalesReceiptColumns } from "./SalesReceiptColumns";
+import { getSalesReceiptColumns } from "./SalesReceiptColumns";
 import SalesReceiptHeader from "./SalesReceiptHeader";
+import { CustomModal } from "@/components/local/custom/modal";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
+import { MODULES } from "@/lib/types/enums";
+import SalesReceiptDetails from "./details/SalesReceiptDetails";
+import SalesReceiptsForm from "./SalesReceiptsForm";
 
 export default function SalesReceipts() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -13,6 +19,9 @@ export default function SalesReceipts() {
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [methodFilter, setMethodFilter] = useState("All Methods");
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+
+  const { openModal, closeModal, isOpen } = useModal();
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
 
   const { data, isLoading } = useReceipts({
     search: debouncedSearchTerm,
@@ -23,16 +32,21 @@ export default function SalesReceipts() {
   });
   const receipts = data?.receipts || [];
 
-  // console.log("Fetched receipts:", data); // Debug log to check fetched data
+  const handleAction = (action: string, row: any) => {
+    setSelectedReceipt(row);
+    openModal(action); // actions use keys from MODAL
+  };
 
+  const columns = useMemo(() => getSalesReceiptColumns(handleAction), []);
+
+  // console.log("Fetched receipts:", data); // Debug log to check fetched data
   return (
     <div className="space-y-4">
       <SalesReceiptHeader loading={isLoading} stats={(data as any)?.stats} />
-      {/* Placeholder for customers table/list - import and implement later */}
       <CustomTable
         searchPlaceholder="Search receipts or customers..."
         tableTitle="Receipts List"
-        columns={SalesReceiptColumns}
+        columns={columns}
         data={receipts}
         pageSize={10}
         statusOptions={["All Statuses", "Completed", "Void"]}
@@ -57,7 +71,53 @@ export default function SalesReceipts() {
         onStatusChange={setStatusFilter}
         onSearchChange={setSearchTerm}
         onMethodsChange={setMethodFilter}
+        loading={isLoading}
       />
+
+      {/* View Modal */}
+      <CustomModal
+        title="Receipt Details"
+        description="View complete details of sales receipt"
+        open={isOpen(MODAL.SALES_RECEIPT_VIEW)}
+        onOpenChange={(open) =>
+          open
+            ? openModal(MODAL.SALES_RECEIPT_VIEW)
+            : closeModal(MODAL.SALES_RECEIPT_VIEW)
+        }
+        module={MODULES.SALES}
+      >
+        <SalesReceiptDetails receipt={selectedReceipt} />
+      </CustomModal>
+
+      {/* Edit Modal (Re-using wrapper logic if needed, or if SalesReceiptHeader handles Create, we handle Edit here) */}
+      <CustomModal
+        title={`Edit Receipt: ${selectedReceipt?.receiptNumber || ""}`}
+        description="Modify receipt details"
+        open={isOpen(MODAL.SALES_RECEIPT_EDIT)}
+        onOpenChange={(open) =>
+          open
+            ? openModal(MODAL.SALES_RECEIPT_EDIT)
+            : closeModal(MODAL.SALES_RECEIPT_EDIT)
+        }
+        module={MODULES.SALES}
+      >
+        <SalesReceiptsForm
+          receipt={
+            selectedReceipt
+              ? {
+                  ...selectedReceipt,
+                  lineItems:
+                    typeof selectedReceipt.items?.[0] === "string"
+                      ? selectedReceipt.items.map((i: string) => JSON.parse(i))
+                      : selectedReceipt.items,
+                }
+              : undefined
+          }
+          isEditMode
+        />
+      </CustomModal>
+
+      {/* Delete Modal - TODO: Implement if needed, currently just opens modal but no content in this snippet */}
     </div>
   );
 }

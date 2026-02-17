@@ -215,7 +215,7 @@ export function GroupsContent() {
         onStatusChange={setStatusFilter}
         display={{
           statusComponent: true,
-          filterComponent: true,
+          filterComponent: false,
           searchComponent: true,
         }}
         loading={isLoading}

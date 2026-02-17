@@ -88,6 +88,15 @@ export const createBillPayment = async (
     body: JSON.stringify(data),
   });
 
+export const deleteBill = async (id: string | number) =>
+  apiClient(`bills/${id}`, { method: "DELETE" });
+
+export const updateBill = async (id: string | number, data: FormData) =>
+  apiClient(`bills/${id}`, {
+    method: "PATCH",
+    body: data,
+  });
+
 export const getBillPayments = async (params?: {
   page?: number;
   limit?: number;
@@ -151,3 +160,9 @@ export const updateExpense = async (id: string | number, data: any) =>
 
 export const deleteExpense = async (id: string | number) =>
   apiClient(`purchases/expenses/${id}`, { method: "DELETE" });
+
+export const approveExpense = async (id: string | number) =>
+  apiClient(`purchases/expenses/${id}/approve`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "approved" }),
+  });

@@ -59,7 +59,7 @@ export default function Attendance() {
                   pageSize={10}
                   loading={isLoading}
                   onSearchChange={handleSearchChange}
-                  display={{ filterComponent: true, searchComponent: true }}
+                  display={{ filterComponent: false, searchComponent: true }}
                 />
               </div>
             ),

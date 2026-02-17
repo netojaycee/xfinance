@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { useDebounce } from "use-debounce";
 import { useItems } from "@/lib/api/hooks/useProducts";
 import { CustomTable } from "@/components/local/custom/custom-table";
-import { itemColumns, itemsData } from "./ItemColumn";
+import { itemColumns } from "./ItemColumn";
 import ItemHeader from "./ItemHeader";
 
 export default function Item() {

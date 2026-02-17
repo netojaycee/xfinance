@@ -20,7 +20,7 @@ export default function Orders() {
         data={ordersData}
         pageSize={10}
         loading={isLoading}
-        display={{ filterComponent: true }}
+        display={{ filterComponent: false }}
       />
     </div>
   );

@@ -47,7 +47,7 @@ export default function AssetsForm({
   onSuccess,
 }: assetsFormProps) {
   const createAsset = useCreateAsset();
-  const updateAsset = useUpdateAsset(assets?.id || "");
+  const updateAsset = useUpdateAsset();
 
   const form = useForm<assetsFormData>({
     resolver: zodResolver(assetsSchema),
@@ -125,7 +125,7 @@ export default function AssetsForm({
       };
 
       if (isEditMode && assets?.id) {
-        await updateAsset.mutateAsync(payload);
+        await updateAsset.mutateAsync({ id: assets.id, data: payload });
       } else {
         await createAsset.mutateAsync(payload);
       }

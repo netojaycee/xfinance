@@ -45,6 +45,8 @@ CustomModalProps) {
     if (module === MODULES.GROUP) return "from-blue-500 to-indigo-500";
     return "from-cyan-500 to-blue-500";
   };
+
+  console.log("Modal open state:", open);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}

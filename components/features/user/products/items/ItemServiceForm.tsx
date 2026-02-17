@@ -41,15 +41,13 @@ const defaultService = {
 export default function ItemServiceForm({
   item,
   isEditMode = false,
-  onSuccess,
 }: {
   item?: any;
   isEditMode?: boolean;
-  onSuccess?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const createItem = useCreateItem();
-  const updateItem = useUpdateItem(item?.id || "");
+  const updateItem = useUpdateItem();
 
   const form = useForm({
     resolver: zodResolver(serviceSchema),
@@ -81,16 +79,15 @@ export default function ItemServiceForm({
       };
 
       if (isEditMode && item?.id) {
-        await updateItem.mutateAsync(payload as any);
+        await updateItem.mutateAsync({ id: item.id, data: payload });
         toast.success("Service updated successfully!");
       } else {
-        await createItem.mutateAsync(payload as any);
+        await createItem.mutateAsync(payload);
         toast.success("Service created successfully!");
       }
 
       form.reset();
       setLoading(false);
-      onSuccess?.();
     } catch (error) {
       console.error("Error submitting service:", error);
       toast.error("Failed to save service");
@@ -219,7 +216,7 @@ export default function ItemServiceForm({
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value.replace(/^0+(?=\d)/, "")
+                            e.target.value.replace(/^0+(?=\d)/, ""),
                           )
                         }
                       />
@@ -260,7 +257,7 @@ export default function ItemServiceForm({
             type="button"
             variant="outline"
             onClick={() => {
-              if (onSuccess) onSuccess();
+              console.log("fjfj");
             }}
           >
             Cancel
@@ -273,8 +270,8 @@ export default function ItemServiceForm({
             {loading
               ? "Saving..."
               : isEditMode
-              ? "Update Service"
-              : "Add Service"}
+                ? "Update Service"
+                : "Add Service"}
           </Button>
         </div>
       </form>

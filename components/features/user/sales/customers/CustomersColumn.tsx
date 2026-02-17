@@ -1,16 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import {
-  MoreVertical,
-  Eye,
-  Edit3,
-  FilePlus,
-  FileText,
-  Trash2,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 // ...existing code...
 import { Badge } from "@/components/ui/badge";
 import { Column } from "@/components/local/custom/custom-table";
@@ -31,8 +20,12 @@ export const customerColumns: Column<Customer>[] = [
           {getInitials(row.name)}
         </div>
         <div>
-          <div className="font-normal text-gray-900 line-clamp-1">{row.name}</div>
-          <div className="text-xs text-gray-400 line-clamp-1">{row.companyName}</div>
+          <div className="font-normal text-gray-900 line-clamp-1">
+            {row.name}
+          </div>
+          <div className="text-xs text-gray-400 line-clamp-1">
+            {row.companyName}
+          </div>
         </div>
       </div>
     ),
@@ -67,7 +60,14 @@ export const customerColumns: Column<Customer>[] = [
       </span>
     ),
   },
-  { key: "invoices", title: "Invoices", className: "text-xs" },
+  {
+    key: "invoices",
+    title: "Invoices",
+    className: "text-xs",
+    render: (value, row) => (
+      <span className="font-normal text-gray-700">{row.invoiceCount}</span>
+    ),
+  },
   {
     key: "outstanding",
     title: "Outstanding",
@@ -78,7 +78,7 @@ export const customerColumns: Column<Customer>[] = [
         {new Intl.NumberFormat("en-NG", {
           style: "currency",
           currency: "NGN",
-        }).format(value)}
+        }).format(value || 0)}
       </span>
     ),
   },

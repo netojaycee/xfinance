@@ -7,7 +7,7 @@ import  { useState } from "react";
   import ItemProductForm from "./ItemProductForm";
   import ItemServiceForm from "./ItemServiceForm";
 
-  export default function ItemForm({ item, isEditMode = false, onSuccess }: { item?: any; isEditMode?: boolean; onSuccess?: () => void }) {
+  export default function ItemForm({ item, isEditMode = false }: { item?: any; isEditMode?: boolean; }) {
     // Determine which tab to show in edit mode, or allow switching in add mode
     const initialTab = isEditMode && item?.type ? item.type : "product";
     const [tab, setTab] = useState(initialTab);
@@ -28,12 +28,12 @@ import  { useState } from "react";
           )}
           <TabsContent value="product">
             {(!isEditMode || tab === "product") && (
-              <ItemProductForm item={item} isEditMode={isEditMode && tab === "product"} onSuccess={onSuccess} />
+              <ItemProductForm item={item} isEditMode={isEditMode && tab === "product"} />
             )}
           </TabsContent>
           <TabsContent value="service">
             {(!isEditMode || tab === "service") && (
-              <ItemServiceForm item={item} isEditMode={isEditMode && tab === "service"} onSuccess={onSuccess} />
+              <ItemServiceForm item={item} isEditMode={isEditMode && tab === "service"} />
             )}
           </TabsContent>
         </Tabs>

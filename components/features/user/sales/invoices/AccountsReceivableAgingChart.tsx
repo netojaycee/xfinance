@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { TrendingUp } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -10,40 +10,53 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
-export const description = "A bar chart"
+export const description = "A bar chart";
 
-const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-]
+
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  amount: {
+    label: "Amount",
     color: "var(--chart-1)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
-export function AccountsReceivableAgingChart() {
+interface ChartData {
+  month: string;
+  amount: number; // Assuming API returns 'amount' or similar, I'll map to 'desktop' equivalent
+}
+
+export function AccountsReceivableAgingChart({ data }: { data?: any }) {
+  // Transform object data { "0-30": 100, "31-60": 0 } to array
+  const chartData = data
+    ? Object.keys(data).map(key => ({
+      month: key, // Using 'month' as the XAxis key based on previous config, or rename to 'range'
+      amount: data[key] || 0
+    }))
+    : [
+      { month: "0-30 days", amount: 0 },
+      { month: "31-60 days", amount: 0 },
+      { month: "61-90 days", amount: 0 },
+      { month: "90+ days", amount: 0 },
+    ];
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bar Chart</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>Accounts Receivable Aging</CardTitle>
+        <CardDescription>
+          Outstanding invoices by age (in thousands)
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2 ">
         <ChartContainer config={chartConfig}>
           <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
@@ -52,24 +65,17 @@ export function AccountsReceivableAgingChart() {
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(value) => value}
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={<ChartTooltipContent hideLabel={false} />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
+            <YAxis />
+            <Bar dataKey="amount" fill="var(--color-amount)" radius={8} />
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card>
-  )
+  );
 }

@@ -1,20 +1,27 @@
 // lib/api/hooks/useGroup.ts
 
-import { useMutation, useQuery, UseMutationOptions, useQueryClient } from '@tanstack/react-query';
-import { 
-  createGroup, 
-  updateGroup, 
-  deleteGroup, 
-  getGroups, 
+import {
+  useMutation,
+  UseMutationOptions,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  createGroup,
+  updateGroup,
+  deleteGroup,
+  getGroups,
   getGroup,
   GroupFormData,
   transformGroupFormToApiPayload,
-} from '../services/groupService';
-import { Group } from '@/lib/types';
+} from "../services/groupService";
+import { Group } from "@/lib/types";
+import { useModal } from "@/components/providers/ModalProvider";
+import { toast } from "sonner";
+import { MODAL } from "@/lib/data/modal-data";
 
-type CreateGroupPayload = Omit<Group, 'id' | 'createdAt' | 'updatedAt'>;
+type CreateGroupPayload = Omit<Group, "id" | "createdAt" | "updatedAt">;
 type UpdateGroupPayload = Partial<CreateGroupPayload> & { id: string };
-
 
 /**
  * Hook for creating or submitting a group from GroupForm component.
@@ -22,53 +29,69 @@ type UpdateGroupPayload = Partial<CreateGroupPayload> & { id: string };
  * Handles logo file upload to backend.
  * Triggers background job 'create-group-user' on success.
  */
-export const useCreateGroup = (options?: UseMutationOptions<Group, Error, GroupFormData>) => {
+export const useCreateGroup = (
+  options?: UseMutationOptions<Group, Error, GroupFormData>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
   return useMutation({
     mutationFn: createGroup,
-    onSuccess: (data, variables, context, mutation) => {
-      queryClient.invalidateQueries({ queryKey: ['groups', 'list'] });
-      // Background job queued: create-group-user
-      // - Creates SUPERADMIN user for group
-      // - Creates default system roles
-      options?.onSuccess?.(data, variables, context, mutation);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groups", "list"] });
+      toast.success("Group created successfully");
+      closeModal(MODAL.GROUP_EDIT);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to create group");
     },
     ...options,
   });
 };
 
-
-export const useUpdateGroup = (options?: UseMutationOptions<Group, Error, UpdateGroupPayload>) => {
+export const useUpdateGroup = (
+  options?: UseMutationOptions<Group, Error, UpdateGroupPayload>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
   return useMutation({
     mutationFn: updateGroup,
-    onSuccess: (data, variables, context, mutation) => {
-      if (variables && 'id' in variables && variables.id) {
-        queryClient.invalidateQueries({ queryKey: ['groups', 'detail', variables.id] });
+    onSuccess: (_data, variables) => {
+      if (variables.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["groups", "detail", variables.id],
+        });
       }
-      queryClient.invalidateQueries({ queryKey: ['groups', 'list'] });
-      options?.onSuccess?.(data, variables, context, mutation);
+      queryClient.invalidateQueries({ queryKey: ["groups", "list"] });
+      toast.success("Group updated successfully");
+      closeModal(MODAL.GROUP_EDIT + "-" + variables.id);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update group");
     },
     ...options,
   });
 };
 
-
-export const useDeleteGroup = (options?: UseMutationOptions<void, Error, string>) => {
+export const useDeleteGroup = (
+  options?: UseMutationOptions<Group, Error, string>,
+) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
   return useMutation({
     mutationFn: deleteGroup,
-    onSuccess: (data, id, context, mutation) => {
+    onSuccess: (_data, id) => {
       if (id) {
-        queryClient.invalidateQueries({ queryKey: ['groups', 'detail', id] });
+        queryClient.invalidateQueries({ queryKey: ["groups", "detail", id] });
       }
-      queryClient.invalidateQueries({ queryKey: ['groups', 'list'] });
-      options?.onSuccess?.(data, id, context, mutation);
+      queryClient.invalidateQueries({ queryKey: ["groups", "list"] });
+      toast.success("Group deleted successfully");
+      closeModal(MODAL.GROUP_DELETE + "-" + id);
     },
-    ...options,
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to delete group");
+    },
   });
 };
-
 
 export const useGroups = (params?: {
   search?: string;
@@ -77,17 +100,23 @@ export const useGroups = (params?: {
   status?: string;
 }) => {
   return useQuery({
-    queryKey: ['groups', 'list', params?.search, params?.page, params?.limit, params?.status],
+    queryKey: [
+      "groups",
+      "list",
+      params?.search,
+      params?.page,
+      params?.limit,
+      params?.status,
+    ],
     queryFn: () => getGroups(params),
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchOnWindowFocus: true,
   });
 };
 
-
 export const useGroup = (id: string) => {
   return useQuery({
-    queryKey: ['groups', 'detail', id],
+    queryKey: ["groups", "detail", id],
     queryFn: () => getGroup(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,

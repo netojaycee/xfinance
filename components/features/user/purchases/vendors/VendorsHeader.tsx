@@ -8,6 +8,8 @@ import { CustomModal } from "@/components/local/custom/modal";
 import VendorsForm from "./VendorsForm";
 import { MODULES } from "@/lib/types/enums";
 import { VendorsResponse } from "./types";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 interface VendorsHeaderProps {
   loading?: boolean;
@@ -15,9 +17,8 @@ interface VendorsHeaderProps {
 }
 
 export default function VendorsHeader({ loading = false, data }: VendorsHeaderProps) {
-  const [open, setOpen] = React.useState(false);
   const totalVendors = data?.totalCount || 0;
-
+const { isOpen, openModal, closeModal } = useModal();
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
@@ -32,7 +33,7 @@ export default function VendorsHeader({ loading = false, data }: VendorsHeaderPr
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button onClick={() => openModal(MODAL.VENDOR_CREATE)} className="rounded-xl">
             <Plus /> New Vendor
           </Button>
         </div>
@@ -41,11 +42,11 @@ export default function VendorsHeader({ loading = false, data }: VendorsHeaderPr
       <CustomModal
         title="Add New Vendor"
         description="Create a new vendor profile with contact information and payment details"
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.VENDOR_CREATE)}
+        onOpenChange={(open) => (open ? openModal(MODAL.VENDOR_CREATE) : closeModal(MODAL.VENDOR_CREATE))}
         module={MODULES.PURCHASES}
       >
-        <VendorsForm  onSuccess={() => setOpen(false)} />{" "}
+        <VendorsForm />{" "}
       </CustomModal>
     </div>
   );

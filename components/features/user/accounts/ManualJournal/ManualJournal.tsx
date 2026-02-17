@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useJournal } from "@/lib/api/hooks/useAccounts";
+import { useJournals } from "@/lib/api/hooks/useAccounts";
 import ManualJournalHeader from "./ManualJournalHeader";
 import ManualJournalForm from "./ManualJournalForm";
 import { CustomTable } from "@/components/local/custom/custom-table";
@@ -12,7 +12,7 @@ export default function ManualJournal() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 
-  const { data: journalResponse, isLoading: loading } = useJournal({
+  const { data: journalResponse, isLoading: loading } = useJournals({
     search: debouncedSearchTerm,
   });
 

@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Toaster } from "sonner";
 import SessionProvider from "@/components/providers/SessionProvider";
+import { ModalProvider } from "@/components/providers/ModalProvider";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -34,7 +35,9 @@ export default function RootLayout({
       >
         <QueryProvider>
           <SessionProvider>
-            <main className="bg-[#f8fafc] min-h-screen">{children}</main>
+            <ModalProvider>
+              <main className="bg-[#f8fafc] min-h-screen">{children}</main>
+            </ModalProvider>
           </SessionProvider>
         </QueryProvider>
         <Toaster richColors closeButton />

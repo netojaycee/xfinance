@@ -60,7 +60,6 @@ interface EntityFormProps {
     logo?: { publicId?: string; secureUrl?: string };
   };
   isEditMode?: boolean;
-  onSuccess?: () => void;
 }
 
 const COUNTRIES = [
@@ -85,29 +84,12 @@ const FISCAL_YEAR_ENDS = ["December 31", "March 31", "June 30", "September 30"];
 export function EntityForm({
   entity,
   isEditMode = false,
-  onSuccess,
 }: EntityFormProps) {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  const createEntityMutation = useCreateEntity({
-    onSuccess: () => {
-      toast.success("Entity created successfully");
-      onSuccess?.();
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Failed to create entity");
-    },
-  });
 
-  const updateEntityMutation = useUpdateEntity({
-    onSuccess: () => {
-      toast.success("Entity updated successfully");
-      onSuccess?.();
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Failed to update entity");
-    },
-  });
+  const createEntityMutation = useCreateEntity();
+  const updateEntityMutation = useUpdateEntity();
 
   const form = useForm<EntityFormDataLocal>({
     resolver: zodResolver(entitySchema),
@@ -125,7 +107,7 @@ export function EntityForm({
       postalCode: entity?.postalCode || "",
       phoneNumber: entity?.phoneNumber || "",
       email: entity?.email || "",
-      website: (entity?.website && entity.website !== null) ? entity.website : "",
+      website: entity?.website && entity.website !== null ? entity.website : "",
     },
   });
 
@@ -195,7 +177,7 @@ export function EntityForm({
 
   const isLoading =
     createEntityMutation.isPending || updateEntityMutation.isPending;
-console.log(entity)
+  console.log(entity);
   return (
     <div className="w-full">
       <Form {...form}>
@@ -521,7 +503,11 @@ console.log(entity)
               disabled={isLoading}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
-              {isLoading ? "Please wait..." : isEditMode ? "Update Entity" : "Create Entity"}
+              {isLoading
+                ? "Please wait..."
+                : isEditMode
+                  ? "Update Entity"
+                  : "Create Entity"}
             </Button>
           </div>
         </form>

@@ -31,6 +31,7 @@ interface ItemSelectorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  disabledIds?: string[]; // new prop
 }
 
 export function ItemSelector({
@@ -39,6 +40,7 @@ export function ItemSelector({
   value,
   onChange,
   placeholder = "Select item...",
+  disabledIds = [],
 }: ItemSelectorProps) {
   const [open, setOpen] = useState(false);
 
@@ -73,9 +75,11 @@ export function ItemSelector({
                   key={item.id}
                   value={item.id}
                   onSelect={(currentValue) => {
+                    if (disabledIds.includes(item.id)) return;
                     onChange(currentValue === value ? "" : currentValue);
                     setOpen(false);
                   }}
+                  disabled={disabledIds.includes(item.id)}
                 >
                   <Check
                     className={cn(

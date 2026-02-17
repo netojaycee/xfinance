@@ -8,20 +8,17 @@ import { MODULES } from "@/lib/types/enums";
 import CollectionsForm from "./CollectionsForm";
 import CollectionsStatCardSmall from "./CollectionsStatCardSmall";
 import { CollectionsResponse } from "@/lib/api/hooks/types/productsTypes";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 export default function CollectionsHeader({
   data,
   loading,
-  onSearch,
-  searchValue,
 }: {
-  data?: CollectionsResponse;
+  data?: CollectionsResponse["stats"];
   loading: boolean;
-  onSearch?: (value: string) => void;
-  searchValue?: string;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const totalCount = data?.total || 0;
+  const { isOpen, openModal, closeModal } = useModal();
 
   return (
     <div className="mb-6">
@@ -29,7 +26,8 @@ export default function CollectionsHeader({
         <div>
           <h2 className="text-2xl font-bold text-indigo-900">Collections</h2>
           <p className="text-muted-foreground">
-            Organize items into collections ({totalCount} collections)
+            Organize items into collections ({data?.totalCollections}{" "}
+            collections)
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -37,7 +35,10 @@ export default function CollectionsHeader({
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button
+            onClick={() => openModal(MODAL.COLLECTION_CREATE)}
+            className="rounded-xl"
+          >
             <Plus /> New Collection
           </Button>
         </div>
@@ -46,33 +47,47 @@ export default function CollectionsHeader({
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <CollectionsStatCardSmall
           title="Total Collections"
-          value={<span>{totalCount}</span>}
-          subtitle={<span>{data?.collections.filter(c => c.featured).length || 0} featured</span>}
+          value={<span>{data?.totalCollections || 0}</span>}
+          subtitle={<span>{data?.activeCollections || 0} active</span>}
         />
         <CollectionsStatCardSmall
-          title="Active Collections"
-          value={<span>{data?.collections.filter(c => c.visibility).length || 0}</span>}
-          subtitle={<span>Visible collections</span>}
+          title="Total Items"
+          value={<span>{data?.totalItems || 0}</span>}
+          subtitle={<span>Across collections</span>}
         />
         <CollectionsStatCardSmall
-          title="Hidden Collections"
-          value={<span>{data?.collections.filter(c => !c.visibility).length || 0}</span>}
-          subtitle={<span>Not visible</span>}
+          title="Total Value"
+          value={
+            <span>
+              {data?.totalValue
+                ? data.totalValue >= 1000000000
+                  ? `₦${data.totalValue / 1000000000}b`
+                  : data.totalValue >= 1000000
+                    ? `₦${data.totalValue / 1000000}m`
+                    : `₦${data.totalValue / 1000}k`
+                : "₦0"}
+            </span>
+          }
+          subtitle={<span>Collection value</span>}
         />
         <CollectionsStatCardSmall
-          title="Featured"
-          value={<span>{data?.collections.filter(c => c.featured).length || 0}</span>}
-          subtitle={<span>Featured collections</span>}
+          title="Most Popular"
+          value={<span className="text-lg leading-1">{data?.mostPopularCollection}</span>}
+          subtitle={<span>{data?.mostPopularItemCount}</span>}
         />
       </div>
 
       <CustomModal
         title="Add New Collection"
         module={MODULES.PRODUCTS}
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.COLLECTION_CREATE)}
+        onOpenChange={(open) =>
+          open
+            ? openModal(MODAL.COLLECTION_CREATE)
+            : closeModal(MODAL.COLLECTION_CREATE)
+        }
       >
-        <CollectionsForm onSuccess={() => setOpen(false)} />
+        <CollectionsForm />
       </CustomModal>
     </div>
   );

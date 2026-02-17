@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Column } from "@/components/local/custom/custom-table";
 import { Invoice } from "./utils/types";
-import InvoicessActions from "./InvoicesActions";
+import InvoicesActions from "./InvoicesActions";
 
 const statusColors: Record<string, string> = {
   Sent: "bg-indigo-100 text-indigo-700",
@@ -94,7 +94,7 @@ export const InvoiceColumns: Column<Invoice>[] = [
     key: "actions",
     title: "",
     className: "w-8 text-xs",
-    render: (_, row) => <InvoicessActions row={row} />,
+    render: (_, row) => <InvoicesActions row={row} />,
     searchable: false,
   },
 ];

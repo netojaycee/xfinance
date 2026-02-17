@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { TrendingUp } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -10,40 +10,54 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
-export const description = "A bar chart"
+export const description = "A bar chart";
 
-const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-]
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  revenue: {
+    label: "Revenue",
     color: "var(--chart-1)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
-export function MonthlyInvoiceRevenue() {
+export function MonthlyInvoiceRevenue({ data }: { data?: any[] }) {
+  // Transform or use default if no data
+  const chartData =
+    data && data.length > 0
+      ? data.map((d) => ({
+        month: d.month,
+        revenue: d.revenue || 0,
+      }))
+      : [
+        { month: "Jan", revenue: 0 },
+        { month: "Feb", revenue: 0 },
+        { month: "Mar", revenue: 0 },
+        { month: "Apr", revenue: 0 },
+        { month: "May", revenue: 0 },
+        { month: "Jun", revenue: 0 },
+        { month: "Jul", revenue: 0 },
+        { month: "Aug", revenue: 0 },
+        { month: "Sep", revenue: 0 },
+        { month: "Oct", revenue: 0 },
+        { month: "Nov", revenue: 0 },
+        { month: "Dec", revenue: 0 },
+      ];
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bar Chart</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>Monthly Revenue</CardTitle>
+        <CardDescription>Revenue from invoices (in thousands)</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2 ">
         <ChartContainer config={chartConfig}>
           <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
@@ -56,20 +70,14 @@ export function MonthlyInvoiceRevenue() {
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={<ChartTooltipContent hideLabel={false} />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
+            <YAxis />
+
+            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={8} />
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card>
-  )
+  );
 }

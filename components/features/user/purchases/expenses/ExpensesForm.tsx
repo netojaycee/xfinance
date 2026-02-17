@@ -30,13 +30,16 @@ import {
   Layers,
   UploadCloud,
 } from "lucide-react";
-import { useCreateExpense, useVendors } from "@/lib/api/hooks/usePurchases";
+import { useCreateExpense, useUpdateExpense, useVendors } from "@/lib/api/hooks/usePurchases";
 import { toast } from "sonner";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
+import { useEffect } from "react";
 
 const expenseSchema = z.object({
   date: z.date(),
   reference: z.string().optional(),
-  supplier: z.string().min(1, "Supplier is required"),
+  vendorId: z.string().min(1, "vendorId is required"),
   category: z.string().min(1, "Category is required"),
   paymentMethod: z.enum([
     "Cash",
@@ -62,7 +65,7 @@ type ExpenseFormType = z.infer<typeof expenseSchema>;
 const defaultValues: ExpenseFormType = {
   date: new Date(),
   reference: "",
-  supplier: "",
+  vendorId: "",
   category: "",
   paymentMethod: "Cash",
   account: "",
@@ -73,71 +76,129 @@ const defaultValues: ExpenseFormType = {
   attachments: undefined,
 };
 
+interface ExpensesFormProps {
+  expense?: Partial<ExpenseFormType> & { id?: string };
+  isEditMode?: boolean;
+}
+
 export default function ExpensesForm({
-  onSuccess,
-}: {
-  onSuccess?: () => void;
-}) {
+  expense,
+  isEditMode = false,
+}: ExpensesFormProps = {}) {
+  const { closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expenseStatus, setExpenseStatus] = useState<"Draft" | "Active">(
-    "Draft",
-  );
   const createExpense = useCreateExpense();
+  const updateExpense = useUpdateExpense();
   const { data: vendorsData, isLoading: vendorsLoading } = useVendors();
 
   const vendors = (vendorsData as any)?.vendors || [];
 
   const form = useForm<ExpenseFormType>({
     resolver: zodResolver(expenseSchema),
-    defaultValues,
+    defaultValues: {
+      date: expense?.date ? new Date(expense.date as any) : new Date(),
+      reference: expense?.reference || "",
+      vendorId: expense?.vendorId || "",
+      category: expense?.category || "",
+      paymentMethod: (expense?.paymentMethod as any) || "Cash",
+      account: expense?.account || "",
+      amount: expense?.amount || 0,
+      tax: expense?.tax || 0,
+      description: expense?.description || "",
+      tags: expense?.tags || "",
+      attachments: undefined,
+    },
     mode: "onChange",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset form when expense prop changes (edit mode)
+  useEffect(() => {
+    if (expense) {
+      form.reset({
+        date: expense?.date ? new Date(expense.date as any) : new Date(),
+        reference: expense?.reference || "",
+        vendorId: expense?.vendorId || "",
+        category: expense?.category || "",
+        paymentMethod: (expense?.paymentMethod as any) || "Cash",
+        account: expense?.account || "",
+        amount: expense?.amount || 0,
+        tax: expense?.tax || 0,
+        description: expense?.description || "",
+        tags: expense?.tags || "",
+        attachments: undefined,
+      });
+    }
+  }, [expense, form]);
 
   const watchAmount = form.watch("amount");
   const watchTax = form.watch("tax");
   const total = (Number(watchAmount) || 0) + (Number(watchTax) || 0);
 
-  const onSubmit = async (values: ExpenseFormType) => {
+  const onSubmit = async (values: ExpenseFormType, status?: "draft" | "pending") => {
     try {
       setIsSubmitting(true);
 
-      // Create FormData for multipart request
-      const formData = new FormData();
-      formData.append("date", values.date.toISOString());
-      if (values.reference) formData.append("reference", values.reference);
-      formData.append("supplier", values.supplier);
-      formData.append("category", values.category);
-      formData.append("paymentMethod", values.paymentMethod);
-      formData.append("account", values.account);
-      formData.append("amount", Math.round(values.amount).toString());
-      if (values.tax) formData.append("tax", Math.round(values.tax).toString());
-      if (values.description)
-        formData.append("description", values.description);
+      if (isEditMode && expense?.id) {
+        // Update existing expense
+        const updateData: any = {
+          date: values.date.toISOString(),
+          vendorId: values.vendorId,
+          category: values.category,
+          paymentMethod: values.paymentMethod,
+          account: values.account,
+          amount: Math.round(values.amount),
+          tax: Math.round(values.tax || 0),
+        };
 
-      // Add tags if provided
-      if (values.tags) {
-        const tagArray = values.tags.split(",").map((tag) => tag.trim());
-        tagArray.forEach((tag) => {
-          formData.append("tags", tag);
-        });
+        if (values.reference) updateData.reference = values.reference;
+        if (values.description) updateData.description = values.description;
+        if (values.tags) {
+          const tagArray = values.tags.split(",").map((tag) => tag.trim());
+          updateData.tags = tagArray;
+        }
+
+        await updateExpense.mutateAsync({ id: expense.id, data: updateData });
+        toast.success("Expense updated successfully");
+      } else {
+        // Create new expense
+        const formData = new FormData();
+        formData.append("date", values.date.toISOString());
+        if (values.reference) formData.append("reference", values.reference);
+        formData.append("vendorId", values.vendorId);
+        formData.append("category", values.category);
+        formData.append("paymentMethod", values.paymentMethod);
+        formData.append("account", values.account);
+        formData.append("amount", Math.round(values.amount).toString());
+        if (values.tax) formData.append("tax", Math.round(values.tax).toString());
+        if (values.description) formData.append("description", values.description);
+
+        // Add tags if provided
+        if (values.tags) {
+          const tagArray = values.tags.split(",").map((tag) => tag.trim());
+          tagArray.forEach((tag) => {
+            formData.append("tags", tag);
+          });
+        }
+
+        // Add attachment if provided
+        if (values.attachments && values.attachments[0]) {
+          formData.append("attachment", values.attachments[0]);
+        }
+
+        formData.append("status", status || "draft");
+
+        await createExpense.mutateAsync(formData);
+        toast.success("Expense created successfully");
       }
 
-      // Add attachment if provided
-      if (values.attachments && values.attachments[0]) {
-        formData.append("attachment", values.attachments[0]);
-      }
-
-      formData.append("status", expenseStatus);
-
-      await createExpense.mutateAsync(formData);
-      toast.success("Expense created successfully");
       form.reset();
       setIsSubmitting(false);
-      onSuccess?.();
+      closeModal(MODAL.EXPENSE_CREATE);
+
     } catch (error) {
       console.error("Error creating expense:", error);
-      toast.error("Error creating expense");
+
       setIsSubmitting(false);
     }
   };
@@ -145,7 +206,8 @@ export default function ExpensesForm({
   return (
     <FormProvider {...form}>
       <Form {...form}>
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <form className="space-y-4" onSubmit={form.handleSubmit((v) => onSubmit(v))}
+        >
           {/* Basic Information */}
           <div className="rounded-2xl border bg-linear-to-br from-purple-50 to-white p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -201,7 +263,7 @@ export default function ExpensesForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="supplier"
+                name="vendorId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Vendor/Supplier *</FormLabel>
@@ -511,8 +573,8 @@ export default function ExpensesForm({
                 disabled={isSubmitting}
                 onClick={(e) => {
                   e.preventDefault();
-                  setExpenseStatus("Draft");
-                  form.handleSubmit(onSubmit)();
+                  form.handleSubmit((v) => onSubmit(v, "draft"))();
+
                 }}
               >
                 {isSubmitting ? "Please wait..." : "Save as Draft"}
@@ -523,11 +585,11 @@ export default function ExpensesForm({
                 disabled={isSubmitting}
                 onClick={(e) => {
                   e.preventDefault();
-                  setExpenseStatus("Active");
-                  form.handleSubmit(onSubmit)();
+                  form.handleSubmit((v) => onSubmit(v, "pending"))();
+
                 }}
               >
-                {isSubmitting ? "Creating..." : "Create Expense"}
+                {isSubmitting ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Expense" : "Create Expense")}
               </Button>
             </div>
           </div>

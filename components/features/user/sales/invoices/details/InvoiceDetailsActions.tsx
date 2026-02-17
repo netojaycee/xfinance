@@ -8,7 +8,10 @@ import {
   Trash2,
   Currency,
   X,
+  Printer,
   Edit3,
+  Send,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +27,9 @@ import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import InvoiceForm from "../InvoiceForm";
 import PaymentReceivedForm from "../../payment-received/PaymentReceivedForm";
+import { useMarkInvoicePaid, useVoidInvoice, useSendInvoice, useDownloadInvoice } from "@/lib/api/hooks/useSales";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 interface InvoiceDetailsActionsProps {
   invoice: any;
@@ -35,16 +41,21 @@ export default function InvoiceDetailsActions({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [recordOpen, setRecordOpen] = useState(false);
+
+  const { isOpen, openModal, closeModal } = useModal();
+  const markAsPaid = useMarkInvoicePaid();
+  const voidInvoice = useVoidInvoice();
+  const sendInvoice = useSendInvoice();
+  const downloadInvoice = useDownloadInvoice();
 
   const handleRecordPayment = () => {
     setDropdownOpen(false);
-    setTimeout(() => setRecordOpen(true), 100);
+    setTimeout(() => openModal(MODAL.PAYMENT_RECEIVED_CREATE), 100);
   };
 
   const handleMarkAsPaid = () => {
     setDropdownOpen(false);
-    toast.success("Invoice marked as paid");
+    markAsPaid.mutate(invoice.id);
   };
 
   const handleDuplicate = () => {
@@ -64,7 +75,7 @@ export default function InvoiceDetailsActions({
 
   const handleConfirmVoid = (confirmed: boolean) => {
     if (confirmed) {
-      toast.success("Invoice voided successfully");
+      voidInvoice.mutate(invoice.id);
       setVoidOpen(false);
     }
   };
@@ -86,6 +97,32 @@ export default function InvoiceDetailsActions({
           >
             <Currency className="size-4 mr-2" /> Record Payment
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => window.print()}
+          >
+            <Printer className="size-4 mr-2" /> Print
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              setDropdownOpen(false);
+              sendInvoice.mutate(invoice.id);
+            }}
+            disabled={sendInvoice.isPending}
+          >
+            <Send className="size-4 mr-2" /> {sendInvoice.isPending ? "Sending..." : "Send to Customer"}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              setDropdownOpen(false);
+              downloadInvoice.mutate(invoice.id);
+            }}
+            disabled={downloadInvoice.isPending}
+          >
+            <Download className="size-4 mr-2" /> {downloadInvoice.isPending ? "Downloading..." : "Download PDF"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -147,18 +184,19 @@ export default function InvoiceDetailsActions({
         <InvoiceForm
           invoice={invoice}
           isEditMode
-          onSuccess={() => setEditOpen(false)}
         />
       </CustomModal>
 
       <CustomModal
         title={`Record a Payment`}
         description={`Record a payment received for invoice ${invoice?.invoiceNumber} `}
-        open={recordOpen}
-        onOpenChange={setRecordOpen}
+        open={isOpen(MODAL.PAYMENT_RECEIVED_CREATE)}
+        onOpenChange={(open) =>
+          open ? openModal(MODAL.PAYMENT_RECEIVED_CREATE) : closeModal(MODAL.PAYMENT_RECEIVED_CREATE)
+        }
         module={MODULES.SALES}
       >
-        <PaymentReceivedForm invoiceId={invoice?.id} onSuccess={() => setRecordOpen(false)} />
+        <PaymentReceivedForm invoiceId={invoice?.id} />
       </CustomModal>
     </>
   );

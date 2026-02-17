@@ -23,6 +23,8 @@ export default function Vendors() {
   const vendors = (data as any)?.vendors || [];
   const totalVendors = (data as any)?.totalCount || 0;
 
+  console.log("Fetched vendors:", data); // Debug log to check fetched data
+
   return (
     <div className="space-y-4">
       <VendorsHeader loading={isLoading} data={data as any} />
@@ -37,7 +39,7 @@ export default function Vendors() {
         onStatusChange={setTypeFilter}
         display={{
           statusComponent: true,
-          filterComponent: true,
+          filterComponent: false,
           searchComponent: true,
           methodsComponent: false,
         }}

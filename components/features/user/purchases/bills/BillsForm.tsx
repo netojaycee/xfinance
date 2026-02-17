@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { useForm, FormProvider, useFieldArray } from "react-hook-form";
+import { useForm, FormProvider, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -24,13 +24,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { FileText, Layers, UploadCloud, Plus, Trash2 } from "lucide-react";
-import { useCreateBill, useVendors } from "@/lib/api/hooks/usePurchases";
+import { useCreateBill, useUpdateBill, useVendors } from "@/lib/api/hooks/usePurchases";
+import { useItems } from "@/lib/api/hooks/useProducts";
 import { toast } from "sonner";
+import { ItemSelector } from "@/components/features/user/sales/invoices/ItemSelector";
+import type { ItemsResponse } from "@/lib/api/hooks/types/productsTypes";
 
 const lineItemSchema = z.object({
-  description: z.string().min(1, "Description required"),
+  itemId: z.string().min(1, "Item required"),
   quantity: z.number().min(1, "Min 1"),
   rate: z.number().min(0, "Min 0"),
+  billItemId: z.string().optional(), // For tracking server-side IDs in edit mode
 });
 
 const billSchema = z.object({
@@ -57,7 +61,7 @@ const defaultValues: BillFormType = {
   dueDate: new Date(),
   poNumber: "",
   paymentTerms: "Net 30",
-  lineItems: [{ description: "", quantity: 1, rate: 0 }],
+  lineItems: [{ itemId: "", quantity: 1, rate: 0 }],
   discount: 0,
   tax: 0,
   category: "",
@@ -65,24 +69,81 @@ const defaultValues: BillFormType = {
   attachments: undefined,
 };
 
-export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
+interface BillsFormProps {
+  bill?: Partial<BillFormType> & { id?: string; billItem?: any[] };
+  isEditMode?: boolean;
+}
+
+export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [billStatus, setbillStatus] = useState<"Draft" | "paid">("Draft");
+
   const createBill = useCreateBill();
+  const updateBill = useUpdateBill();
   const { data: vendorsData, isLoading: vendorsLoading } = useVendors();
+  const itemsQuery = useItems({ type: "product" }) as { data?: ItemsResponse; isLoading: boolean };
 
   const vendors = (vendorsData as any)?.vendors || [];
+  const items = itemsQuery.data?.items || [];
+  const itemsLoading = itemsQuery.isLoading;
 
   const form = useForm<BillFormType>({
     resolver: zodResolver(billSchema),
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      vendor: bill?.vendor || "",
+      billNumber: bill?.billNumber || "",
+      poNumber: bill?.poNumber || "",
+      paymentTerms: bill?.paymentTerms || "Net 30",
+      category: bill?.category || "",
+      notes: bill?.notes || "",
+      discount: Number(bill?.discount) || 0,
+      tax: Number(bill?.tax) || 0,
+    },
     mode: "onChange",
   });
+
+  useEffect(() => {
+    if (bill) {
+      const mappedItems = (bill.billItem || []).map((ii: any) => ({
+        itemId: ii.itemId || ii.item?.id || "",
+        quantity: Number(ii.quantity) || 1,
+        rate: Number(ii.rate) || 0,
+        billItemId: ii.id,
+      }));
+
+      form.reset({
+        vendor: (bill as any).vendorId || (bill.vendor as any)?.id || "",
+        billDate: bill.billDate ? new Date(bill.billDate) : new Date(),
+        billNumber: bill.billNumber || "",
+        dueDate: bill.dueDate ? new Date(bill.dueDate) : new Date(),
+        poNumber: bill.poNumber || "",
+        paymentTerms: bill.paymentTerms || "Net 30",
+        lineItems: mappedItems.length > 0 ? mappedItems : [{ itemId: "", quantity: 1, rate: 0 }],
+        discount: Number(bill.discount) || 0,
+        tax: Number(bill.tax) || 0,
+        category: bill.category || "",
+        notes: bill.notes || "",
+      });
+    }
+  }, [bill, form]);
+  const [removedItemIds, setRemovedItemIds] = useState<string[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "lineItems",
   });
+
+  const handleRemove = (index: number) => {
+    const item = form.getValues(`lineItems.${index}`);
+    if (item?.billItemId) {
+      setRemovedItemIds((prev) => [...prev, item.billItemId!]);
+    }
+    remove(index);
+  };
+
+  // Calculate if all items are selected
+  const maxItemsSelected = form.watch("lineItems").length >= items.length;
 
   // Calculations
   const subtotal = form
@@ -97,42 +158,55 @@ export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
   const taxAmount = ((subtotal - discount) * taxPercent) / 100;
   const total = subtotal - discount + taxAmount;
 
-  const onSubmit = async (values: BillFormType) => {
+  const onSubmit = async (values: BillFormType, status?: "draft" | "pending") => {
     try {
       setIsSubmitting(true);
+      const billStatus = status || "draft";
 
-      // Create FormData for multipart request
-      const formData = new FormData();
-      formData.append("billDate", values.billDate.toISOString());
-      formData.append("billNumber", values.billNumber);
-      formData.append("vendorId", values.vendor);
-      formData.append("dueDate", values.dueDate.toISOString());
-      if (values.poNumber) formData.append("poNumber", values.poNumber);
-      formData.append("paymentTerms", values.paymentTerms);
-
-      // Add line items as array
-      values.lineItems.forEach((item) => {
-        formData.append("items", JSON.stringify(item));
+      // Prepare line items for payload
+      const itemsPayload = values.lineItems.map((li: any) => {
+        const out: any = {
+          itemId: li.itemId,
+          rate: Number(li.rate) || 0,
+          quantity: Number(li.quantity) || 0,
+        };
+        if (li.billItemId) out.id = li.billItemId;
+        return out;
       });
 
-      formData.append("total", Math.round(total).toString());
+      // Build FormData for create/update
+      const formData = new FormData();
+      formData.append("billDate", values.billDate instanceof Date ? values.billDate.toISOString() : String(values.billDate));
+      formData.append("billNumber", values.billNumber);
+      formData.append("vendorId", values.vendor);
+      formData.append("dueDate", values.dueDate instanceof Date ? values.dueDate.toISOString() : String(values.dueDate));
+      if (values.poNumber) formData.append("poNumber", values.poNumber);
+      formData.append("paymentTerms", values.paymentTerms);
       formData.append("category", values.category);
       if (values.notes) formData.append("notes", values.notes);
+      if (values.tax) formData.append("tax", String(Number(values.tax)));
+      if (values.discount) formData.append("discount", String(Number(values.discount)));
+      formData.append("items", JSON.stringify(itemsPayload));
 
       // Add attachment if provided
       if (values.attachments && values.attachments[0]) {
         formData.append("attachment", values.attachments[0]);
       }
 
-      formData.append("status", billStatus);
-      await createBill.mutateAsync(formData);
-      toast.success("Bill created successfully!");
+      if (isEditMode && bill?.id) {
+        // Add removeItemIds if any for updates
+        if (removedItemIds.length > 0) {
+          formData.append("removeItemIds", JSON.stringify(removedItemIds));
+        }
+        await updateBill.mutateAsync({ id: bill.id, data: formData });
+      } else {
+        await createBill.mutateAsync(formData);
+      }
+
       form.reset();
       setIsSubmitting(false);
-      onSuccess?.();
     } catch (error) {
-      toast.error("Failed to create bill. Please try again.");
-      console.error("Error creating bill:", error);
+      console.error(`Error ${isEditMode ? "updating" : "creating"} bill:`, error);
       setIsSubmitting(false);
     }
   };
@@ -142,7 +216,7 @@ export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
       <Form {...form}>
         <form
           className="max-w-lg mx-auto space-y-6"
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit((v) => onSubmit(v))}
         >
           {/* Bill Information */}
           <div className="rounded-2xl border bg-linear-to-br from-pink-50 to-white p-4">
@@ -299,49 +373,79 @@ export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
               <span className="font-semibold text-base text-purple-600">
                 Line Items
               </span>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="ml-auto"
-                onClick={() =>
-                  append({ description: "", quantity: 1, rate: 0 })
-                }
-              >
-                <Plus className="w-4 h-4 mr-1" /> Add Item
-              </Button>
-            </div>
-            <div className="overflow-x-auto">
-              <div className="grid grid-cols-7 gap-2 text-xs font-semibold text-gray-500 mb-1">
-                <div className="col-span-3">Description</div>
-                <div className="col-span-1 text-center">Quantity</div>
-                <div className="col-span-1 text-center">Rate</div>
-                <div className="col-span-1 text-center">Amount</div>
-                <div className="col-span-1 text-center"> </div>
-              </div>
-              {fields.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className="grid grid-cols-7 gap-2 mb-2 items-center"
+              {/* Hide Add Item button if all items are selected */}
+              {!maxItemsSelected && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto"
+                  onClick={() =>
+                    append({ itemId: "", quantity: 1, rate: 0 })
+                  }
                 >
-                  <FormField
-                    control={form.control}
-                    name={`lineItems.${idx}.description`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormControl>
-                          <Input placeholder="Item description" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`lineItems.${idx}.quantity`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-1">
-                        <FormControl>
+                  <Plus className="w-4 h-4 mr-1" /> Add Item
+                </Button>
+              )}
+            </div>
+            <div className="space-y-3">
+              {/* Header Row */}
+              <div className="grid grid-cols-[3fr_1.5fr_1.5fr] gap-2 w-full px-2 py-2 text-sm font-semibold text-gray-700 border-b">
+                <span>Item</span>
+                <span className="text-center">Qty</span>
+                <span className="text-center">Rate</span>
+              </div>
+              {fields.map((item, idx) => {
+                // All selected except the current one
+                const selectedIds = form.watch("lineItems").map((li: any, i: number) => i !== idx ? li.itemId : null).filter(Boolean);
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-2 bg-white rounded-xl p-2 shadow-sm"
+                  >
+                    <div className="flex justify-between w-full items-center">
+                      <p className="">Item {idx + 1}</p>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemove(idx)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-[3fr_1.5fr_1.5fr] gap-2 w-full items-center">
+                      <Controller
+                        control={form.control}
+                        name={`lineItems.${idx}.itemId`}
+                        render={({ field }) => (
+                          <ItemSelector
+                            items={items}
+                            isLoading={itemsLoading}
+                            value={field.value}
+                            onChange={(val) => {
+                              field.onChange(val);
+                              const selectedItem = items.find(
+                                (i: any) => i.id === val,
+                              );
+                              if (selectedItem) {
+                                form.setValue(
+                                  `lineItems.${idx}.rate`,
+                                  Number((selectedItem as any).sellingPrice || (selectedItem as any).purchasePrice || 0),
+                                );
+                              }
+                            }}
+                            placeholder="Select item..."
+                            disabledIds={selectedIds}
+                          />
+                        )}
+                      />
+                      <Controller
+                        control={form.control}
+                        name={`lineItems.${idx}.quantity`}
+                        render={({ field }) => (
                           <Input
                             type="number"
                             min={1}
@@ -350,17 +454,12 @@ export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
                               field.onChange(Number(e.target.value))
                             }
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`lineItems.${idx}.rate`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-1">
-                        <FormControl>
+                        )}
+                      />
+                      <Controller
+                        control={form.control}
+                        name={`lineItems.${idx}.rate`}
+                        render={({ field }) => (
                           <Input
                             type="number"
                             min={0}
@@ -369,32 +468,14 @@ export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
                             onChange={(e) =>
                               field.onChange(Number(e.target.value))
                             }
+                            disabled={true}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="col-span-1 text-center font-semibold">
-                    $
-                    {(
-                      (Number(form.watch(`lineItems.${idx}.quantity`)) || 0) *
-                      (Number(form.watch(`lineItems.${idx}.rate`)) || 0)
-                    ).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        )}
+                      />
+                    </div>
                   </div>
-                  <div className="col-span-1 text-center">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => remove(idx)}
-                      disabled={fields.length === 1}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-400" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {/* Totals */}
             <div className="mt-4 space-y-1 text-sm bg-white w-2/3 flex flex-col ml-auto p-3 border rounded-xl">
@@ -579,8 +660,8 @@ export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
                 disabled={isSubmitting}
                 onClick={(e) => {
                   e.preventDefault();
-                  setbillStatus("Draft");
-                  form.handleSubmit(onSubmit)();
+                  form.handleSubmit((v) => onSubmit(v, "draft"))();
+
                 }}
               >
                 {isSubmitting ? "Please wait..." : "Save as Draft"}
@@ -591,11 +672,11 @@ export default function BillsForm({ onSuccess }: { onSuccess: () => void }) {
                 disabled={isSubmitting}
                 onClick={(e) => {
                   e.preventDefault();
-                  setbillStatus("paid");
-                  form.handleSubmit(onSubmit)();
+                  form.handleSubmit((v) => onSubmit(v, "pending"))();
+
                 }}
               >
-                {isSubmitting ? "Creating..." : "Create Bill"}
+                {isSubmitting ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Bill" : "Create Bill")}
               </Button>
             </div>
           </div>

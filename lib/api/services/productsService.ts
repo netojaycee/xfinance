@@ -7,6 +7,7 @@ export const getCollections = async (params?: {
   page?: number;
   limit?: number;
   search?: string;
+
 }) => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", String(params.page));
@@ -54,11 +55,13 @@ export const getItems = async (params?: {
   limit?: number;
   category?: string;
   search?: string;
+  type?: "product" | "service";
 }) => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.limit) queryParams.append("limit", String(params.limit));
   if (params?.category) queryParams.append("category", params.category);
+  if (params?.type) queryParams.append("type", params.type);
   if (params?.search) queryParams.append("search", params.search);
 
   const queryString = queryParams.toString();

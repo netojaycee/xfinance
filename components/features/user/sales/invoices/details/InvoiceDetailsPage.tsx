@@ -62,7 +62,7 @@ export default function InvoiceDetailsPage() {
       const rate = Number(ii.rate) || 0;
       return {
         id: ii.id,
-        description: ii.itemId || "Item",
+        description: ii?.item?.name || "Item",
         details: "",
         quantity: qty,
         rate,

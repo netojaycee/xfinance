@@ -4,49 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Column } from "@/components/local/custom/custom-table";
 import ItemActions from "./ItemActions";
 
-// Data for the table
-export const itemsData = [
-  {
-    id: 1,
-    name: "Premium Wireless Mouse",
-    sku: "TECH-WM-001",
-    category: "Electronics",
-    quantity: 45,
-    unitPrice: 2500,
-    status: "in_stock",
-    code: "ITM-001",
-  },
-  {
-    id: 2,
-    name: "Ergonomic Keyboard",
-    sku: "TECH-KB-002",
-    category: "Electronics",
-    quantity: 8,
-    unitPrice: 4500,
-    status: "low_stock",
-    code: "ITM-002",
-  },
-  {
-    id: 3,
-    name: "Office Chair - Executive",
-    sku: "FURN-CH-001",
-    category: "Furniture",
-    quantity: 15,
-    unitPrice: 35000,
-    status: "in_stock",
-    code: "ITM-003",
-  },
-  {
-    id: 4,
-    name: "USB-C Hub Adapter",
-    sku: "TECH-HB-003",
-    category: "Electronics",
-    quantity: 0,
-    unitPrice: 1800,
-    status: "out_of_stock",
-    code: "ITM-004",
-  },
-];
+
 
 // Table columns for items
 export const itemColumns: Column<any>[] = [
@@ -79,7 +37,7 @@ export const itemColumns: Column<any>[] = [
     key: "quantity",
     title: "Quantity",
     className: "text-xs",
-    render: (value) => <span className="text-gray-700">{value}</span>,
+    render: (value, row) => <span className="text-gray-700">{row?.currentStock || 0}</span>,
   },
   {
     key: "unitPrice",

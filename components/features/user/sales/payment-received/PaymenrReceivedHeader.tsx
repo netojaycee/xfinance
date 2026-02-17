@@ -10,17 +10,18 @@ import { CustomModal } from "@/components/local/custom/modal";
 import PaymentReceivedForm from "./PaymentReceivedForm";
 import { MODULES } from "@/lib/types/enums";
 import { PaymentReceivedStats } from "./utils/types";
+import { useModal } from '@/components/providers/ModalProvider';
+import { MODAL } from '@/lib/data/modal-data';
 
 interface PaymentReceivedHeaderProps {
   stats?: PaymentReceivedStats;
   loading?: boolean;
 }
-
 export default function PaymentReceivedHeader({
   stats,
   loading = false,
 }: PaymentReceivedHeaderProps) {
-  const [open, setOpen] = React.useState(false);
+  const { isOpen, openModal, closeModal } = useModal();
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
@@ -37,7 +38,7 @@ export default function PaymentReceivedHeader({
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button onClick={() => openModal(MODAL.PAYMENT_RECEIVED_CREATE)} className="rounded-xl">
             <Plus /> Record Paymnent
           </Button>
         </div>
@@ -89,11 +90,11 @@ export default function PaymentReceivedHeader({
       <CustomModal
         title="Record Payment"
         description="Record a payment received for invoice"
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.PAYMENT_RECEIVED_CREATE)}
+        onOpenChange={(open) => open ? openModal(MODAL.PAYMENT_RECEIVED_CREATE) : closeModal(MODAL.PAYMENT_RECEIVED_CREATE)}
         module={MODULES.SALES}
       >
-        <PaymentReceivedForm onSuccess={() => setOpen(false)} />
+        <PaymentReceivedForm />
       </CustomModal>
     </div>
   );

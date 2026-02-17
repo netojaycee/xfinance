@@ -58,7 +58,7 @@ export default function ChartOfAccountsForm({
   onSuccess,
 }: ChartOfAccountsFormProps) {
   const createAccount = useCreateAccount();
-  const updateAccount = useUpdateAccount(account?.id || "");
+  const updateAccount = useUpdateAccount();
 
   const form = useForm<ChartOfAccountsFormData>({
     resolver: zodResolver(chartOfAccountsSchema) as any,
@@ -93,13 +93,13 @@ export default function ChartOfAccountsForm({
         name: values.accountName,
         code: values.accountCode,
         category: values.accountType as AccountCategoryEnum,
-        subCategory: values.primaryCategory,
+        subCategory: values.primaryCategory as AccountSubCategoryEnum,
         description: values.description,
         type: values.accountType,
       };
 
       if (isEditMode && account?.id) {
-        await updateAccount.mutateAsync(payload);
+        await updateAccount.mutateAsync({ id: account.id, data: payload });
       } else {
         await createAccount.mutateAsync(payload);
       }

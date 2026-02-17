@@ -7,9 +7,11 @@ import { Download, Plus } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import CustomerForm from "./CustomerForm";
 import { MODULES } from "@/lib/types/enums";
+import { useModal } from '@/components/providers/ModalProvider';
+import { MODAL } from '@/lib/data/modal-data';
 
-export default function CustomersHeader({data, loading}: {data?: any, loading: boolean}) {
-  const [open, setOpen] = React.useState(false);
+export default function CustomersHeader({ data, loading }: { data: any, loading: boolean }) {
+  const { isOpen, openModal, closeModal } = useModal();
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
@@ -24,7 +26,7 @@ export default function CustomersHeader({data, loading}: {data?: any, loading: b
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button onClick={() => openModal(MODAL.CUSTOMER_CREATE)} className="rounded-xl">
             <Plus /> New Customer
           </Button>
         </div>
@@ -35,39 +37,35 @@ export default function CustomersHeader({data, loading}: {data?: any, loading: b
           title="Total Customers"
           value={<span className="text-3xl">{data?.total || 0}</span>}
           subtitle="Total in system"
-                    loading={loading}
-
+          loading={loading}
         />
         <CustomerStatCardSmall
           title="Active Customers"
           value={<span className="text-3xl">{data?.active || 0}</span>}
           subtitle={`${((data?.active || 0) / (data?.total || 1) * 100).toFixed(2)}% of total`}
-                    loading={loading}
-
+          loading={loading}
         />
         <CustomerStatCardSmall
           title="Outstanding Receivables"
-          value={<span className="text-3xl">₦135,500</span>}
+          value={<span className="text-3xl">₦{data?.outstandingReceivables?.toLocaleString() || 0}</span>}
           subtitle="Total receivables"
-                    loading={loading}
-
+          loading={loading}
         />
         <CustomerStatCardSmall
           title="Avg. Balance"
-          value={<span className="text-3xl">₦45,167</span>}
+          value={<span className="text-3xl">₦{data?.averageBalance?.toLocaleString() || 0}</span>}
           subtitle="Average per customer"
-                    loading={loading}
-
+          loading={loading}
         />
       </div>
 
       <CustomModal
         title="Add New Customer"
         module={MODULES.SALES}
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.CUSTOMER_CREATE)}
+        onOpenChange={(open) => open ? openModal(MODAL.CUSTOMER_CREATE) : closeModal(MODAL.CUSTOMER_CREATE)}
       >
-        <CustomerForm onSuccess={() => setOpen(false)} />
+        <CustomerForm />
       </CustomModal>
     </div>
   );

@@ -1,19 +1,16 @@
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Eye, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+import { BillActions } from "./BillActions";
 
 type BillRow = {
-  billNo: string;
-  date: string;
-  vendor: string;
+  id: string;
+  billNumber: string;
+  billDate: string;
+  vendor: {
+    displayName: string;
+    name: string;
+  };
   dueDate: string;
-  amount: string;
+  total: string;
   status: "unpaid" | "paid" | "draft" | string;
 };
 
@@ -52,7 +49,7 @@ export const billsColumns: BillColumn[] = [
     title: "Vendor",
     className: "text-xs",
     render: (value: unknown) => (
-      <span className="text-xs font-medium">{(value as any).displayName}</span>
+      <span className="text-xs font-medium">{(value as any)?.displayName || (value as any)?.name}</span>
     ),
   },
   {
@@ -74,7 +71,7 @@ export const billsColumns: BillColumn[] = [
     title: "Amount",
     className: "text-xs",
     render: (value: unknown) => {
-      const amount = parseFloat(value as string);
+      const amount = parseFloat(value as string) || 0;
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -91,16 +88,17 @@ export const billsColumns: BillColumn[] = [
     render: (value: unknown) => {
       const status = value as string;
       let badgeClass = "";
-      let text = status;
-      if (status === "paid") badgeClass = "bg-green-100 text-green-700";
-      else if (status === "unpaid")
+      if (status === "paid" || status === "Paid") badgeClass = "bg-green-100 text-green-700";
+      else if (status === "unpaid" || status === "Unpaid")
         badgeClass = "bg-yellow-100 text-yellow-700";
+      else if (status === "partial" || status === "Partial")
+        badgeClass = "bg-blue-100 text-blue-700";
       else badgeClass = "bg-gray-100 text-gray-700";
       return (
         <Badge
-          className={`${badgeClass} px-3 py-1 rounded-full text-xs font-medium`}
+          className={`${badgeClass} px-3 py-1 rounded-full text-xs font-medium capitalize`}
         >
-          {text}
+          {status}
         </Badge>
       );
     },
@@ -110,29 +108,7 @@ export const billsColumns: BillColumn[] = [
     title: "Actions",
     className: "text-xs text-center",
     render: (_: unknown, row?: BillRow) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full bg-gray-100 hover:bg-gray-200"
-          >
-            <MoreHorizontal className="w-5 h-5 text-gray-500" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => alert(`View bill: ${row?.billNo}`)}>
-            {" "}
-            <Eye className="w-5 h-5" />
-            View
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => alert(`Make payment for: ${row?.billNo}`)}
-          >
-            <DollarSign className="w-5 h-5" /> Make Payment
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <BillActions bill={row} />
     ),
   },
 ];

@@ -49,7 +49,7 @@ export default function Bills() {
         onStatusChange={setCategoryFilter}
         display={{
           statusComponent: true,
-          filterComponent: true,
+          filterComponent: false,
           searchComponent: true,
           methodsComponent: false,
         }}

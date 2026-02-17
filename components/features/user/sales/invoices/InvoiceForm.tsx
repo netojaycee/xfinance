@@ -40,19 +40,24 @@ type InvoiceFormData = z.infer<typeof invoiceSchema>;
 interface InvoiceFormProps {
   invoice?: Partial<InvoiceFormData> & { id?: string };
   isEditMode?: boolean;
-  onSuccess?: () => void;
+  defaultCustomerId?: string;
+  disabledCustomerSelect?: boolean;
 }
 
 export default function InvoiceForm({
   invoice,
   isEditMode = false,
-  onSuccess,
+  defaultCustomerId,
+  disabledCustomerSelect,
 }: InvoiceFormProps) {
   const [invoiceStatus, setInvoiceStatus] = useState<"Draft" | "Sent">(
     (invoice as any)?.status || "Draft",
   );
   const { data, isLoading: customersLoading } = useCustomers();
-  const itemsQuery = useItems() as { data?: ItemsResponse; isLoading: boolean };
+  const itemsQuery = useItems({ type: "product" }) as {
+    data?: ItemsResponse;
+    isLoading: boolean;
+  };
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
 
@@ -60,12 +65,12 @@ export default function InvoiceForm({
   const items = itemsQuery.data?.items || [];
   const itemsLoading = itemsQuery.isLoading;
 
-  console.log("Fetched customers for invoice form:", invoice); // Debug log to check fetched customers
+  console.log("Fetched customers for invoice form:", invoice, items); // Debug log to check fetched customers
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      customerId: invoice?.customerId || "",
+      customerId: invoice?.customerId || defaultCustomerId || "",
       invoiceDate: invoice?.invoiceDate
         ? new Date(invoice.invoiceDate)
         : new Date(),
@@ -118,6 +123,9 @@ export default function InvoiceForm({
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
+  // Calculate if all items are selected
+  const maxItemsSelected = form.watch("lineItems").length >= items.length;
+
   useEffect(() => {
     if (invoice) {
       // Reset non-array fields
@@ -165,44 +173,18 @@ export default function InvoiceForm({
         toast.error("Invoice must have at least one line item");
         return;
       }
-      // Calculate subtotal, tax, total
-      const subtotal = values.lineItems.reduce(
-        (sum, item) =>
-          sum + (Number(item.quantity) || 0) * (Number(item.rate) || 0),
-        0,
-      );
-      const tax = subtotal * 0.1;
-      const total = Math.round(subtotal + tax);
 
       if (isEditMode && invoice?.id) {
-        // Build items array for update: include `id` for existing items so backend can update, omit id for new
+        // Edit: include id for existing items, omit for new
         const items = values.lineItems.map((li: any) => {
           const out: any = {
             itemId: li.itemId,
             rate: Number(li.rate) || 0,
             quantity: Number(li.quantity) || 0,
           };
-          // server-side invoice-line id is stored as `invoiceItemId` in the form
           if (li.invoiceItemId) out.id = li.invoiceItemId;
-          // console.log
           return out;
         });
-
-        const payload: any = {
-          total,
-          status,
-          items,
-        };
-        if (removedItemIds.length > 0) payload.removeItemIds = removedItemIds;
-        await updateInvoice.mutateAsync({ id: invoice.id, data: payload });
-      } else {
-        // Create payload: all required fields
-        const items = values.lineItems.map((li) => ({
-          itemId: li.itemId,
-          rate: Number(li.rate) || 0,
-          quantity: Number(li.quantity) || 0,
-        }));
-
         const payload: any = {
           customerId: values.customerId,
           invoiceDate:
@@ -215,12 +197,34 @@ export default function InvoiceForm({
               : String(values.dueDate),
           paymentTerms: values.paymentTerms,
           currency: values.currency,
-          total,
-          notes: values.notes,
-          status,
           items,
+          notes: values.notes,
+          status: status === "Draft" ? "Draft" : "Sent",
         };
-
+        await updateInvoice.mutateAsync({ id: invoice.id, data: payload });
+      } else {
+        // Create: no id in items
+        const items = values.lineItems.map((li) => ({
+          itemId: li.itemId,
+          rate: Number(li.rate) || 0,
+          quantity: Number(li.quantity) || 0,
+        }));
+        const payload: any = {
+          customerId: values.customerId,
+          invoiceDate:
+            values.invoiceDate instanceof Date
+              ? values.invoiceDate.toISOString()
+              : String(values.invoiceDate),
+          dueDate:
+            values.dueDate instanceof Date
+              ? values.dueDate.toISOString()
+              : String(values.dueDate),
+          paymentTerms: values.paymentTerms,
+          currency: values.currency,
+          items,
+          notes: values.notes,
+          status: status === "Draft" ? "Draft" : "Sent",
+        };
         await createInvoice.mutateAsync(payload);
       }
     } catch (error) {
@@ -228,24 +232,24 @@ export default function InvoiceForm({
     }
   };
 
-  useEffect(() => {
-    if (createInvoice.isSuccess || updateInvoice.isSuccess) {
-      toast.success("Invoice saved successfully");
-      if (onSuccess) onSuccess();
-    }
-    if (createInvoice.isError) {
-      toast.error(createInvoice.error?.message || "Failed to create invoice");
-    }
-    if (updateInvoice.isError) {
-      toast.error(updateInvoice.error?.message || "Failed to update invoice");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    createInvoice.isSuccess,
-    createInvoice.isError,
-    updateInvoice.isSuccess,
-    updateInvoice.isError,
-  ]);
+  // useEffect(() => {
+  //   if (createInvoice.isSuccess || updateInvoice.isSuccess) {
+  //     toast.success("Invoice saved successfully");
+  //     if (onSuccess) onSuccess();
+  //   }
+  //   if (createInvoice.isError) {
+  //     toast.error(createInvoice.error?.message || "Failed to create invoice");
+  //   }
+  //   if (updateInvoice.isError) {
+  //     toast.error(updateInvoice.error?.message || "Failed to update invoice");
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [
+  //   createInvoice.isSuccess,
+  //   createInvoice.isError,
+  //   updateInvoice.isSuccess,
+  //   updateInvoice.isError,
+  // ]);
 
   return (
     <div className="w-full max-w-lg mx-auto">
@@ -270,7 +274,7 @@ export default function InvoiceForm({
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
-                        disabled={customersLoading}
+                        disabled={customersLoading || disabledCustomerSelect}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue
@@ -417,14 +421,16 @@ export default function InvoiceForm({
               <h4 className="font-semibold text-green-900 flex items-center gap-2">
                 <Plus className="w-4 h-4" /> Line Items *
               </h4>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ itemId: "", quantity: 1, rate: 0 })}
-              >
-                <Plus className="w-4 h-4" /> Add Item
-              </Button>
+              {!maxItemsSelected && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ itemId: "", quantity: 1, rate: 0 })}
+                >
+                  <Plus className="w-4 h-4" /> Add Item
+                </Button>
+              )}
             </div>
             <div className="space-y-3">
               {/* Header Row */}
@@ -432,85 +438,102 @@ export default function InvoiceForm({
                 <span>Item</span>
                 <span className="text-center">Qty</span>
                 <span className="text-center">Rate</span>
-                <span className="text-right">Total</span>
+                {/* <span className="text-right">Total</span> */}
               </div>
-              {fields.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col gap-2 bg-white rounded-xl p-2 shadow-sm"
-                >
-                  <div className="flex justify-between w-full items-center">
-                    <p className="">Item {idx + 1}</p>
-                    {fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openConfirm(idx)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-400" />
-                      </Button>
-                    )}
+              {fields.map((item, idx) => {
+                // All selected except the current one
+                const selectedIds = form.watch("lineItems").map((li: any) => li.itemId).filter((id: string, i: number) => i !== idx);
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-2 bg-white rounded-xl p-2 shadow-sm"
+                  >
+                    <div className="flex justify-between w-full items-center">
+                      <p className="">Item {idx + 1}</p>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openConfirm(idx)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-[3fr_1.5fr_1.5fr] gap-2 w-full items-center">
+                      <Controller
+                        control={form.control}
+                        name={`lineItems.${idx}.itemId`}
+                        render={({ field }) => (
+                          <ItemSelector
+                            items={items}
+                            isLoading={itemsLoading}
+                            value={field.value}
+                            onChange={(val) => {
+                              field.onChange(val);
+                              const selectedItem = items.find(
+                                (i: any) => i.id === val,
+                              );
+                              if (selectedItem) {
+                                form.setValue(
+                                  `lineItems.${idx}.rate`,
+                                  Number(selectedItem.sellingPrice) || 0,
+                                );
+                                // Optional: if you had a description field
+                                // form.setValue(`lineItems.${idx}.description`, selectedItem.description || "");
+                              }
+                            }}
+                            placeholder="Select item..."
+                            disabledIds={selectedIds}
+                          />
+                        )}
+                      />
+                      <Controller
+                        control={form.control}
+                        name={`lineItems.${idx}.quantity`}
+                        render={({ field }) => (
+                          <Input
+                            type="number"
+                            min={1}
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                          />
+                        )}
+                      />
+                      <Controller
+                        control={form.control}
+                        name={`lineItems.${idx}.rate`}
+                        render={({ field }) => (
+                          <Input
+                            type="number"
+                            min={0}
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                            prefix="$"
+                            disabled={true}
+                          />
+                        )}
+                      />
+                      {/* <span className=" text-right font-semibold rounded-xl bg-gray-200 h-9 flex items-center justify-center">
+                        {form.watch(`currency`) === "NGN"
+                          ? "₦"
+                          : form.watch(`currency`) === "GBP"
+                            ? "£"
+                            : "$"}
+                        {(
+                          (form.watch(`lineItems.${idx}.quantity`) || 0) *
+                          (form.watch(`lineItems.${idx}.rate`) || 0)
+                        ).toLocaleString()}
+                      </span> */}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-[4fr_1fr_1fr_2fr] gap-2 w-full items-center">
-                    <Controller
-                      control={form.control}
-                      name={`lineItems.${idx}.itemId`}
-                      render={({ field }) => (
-                        <ItemSelector
-                          items={items}
-                          isLoading={itemsLoading}
-                          value={field.value}
-                          onChange={field.onChange}
-                          placeholder="Select item..."
-                        />
-                      )}
-                    />
-                    <Controller
-                      control={form.control}
-                      name={`lineItems.${idx}.quantity`}
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          min={1}
-                          {...field}
-                          // className="w-16"
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      )}
-                    />
-                    <Controller
-                      control={form.control}
-                      name={`lineItems.${idx}.rate`}
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          min={0}
-                          {...field}
-                          // className="w-24"
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                          prefix="$"
-                        />
-                      )}
-                    />
-                    <span className=" text-right font-semibold rounded-xl bg-gray-200 h-9 flex items-center justify-center">
-                      {form.watch(`currency`) === "NGN"
-                        ? "₦"
-                        : form.watch(`currency`) === "GBP"
-                          ? "£"
-                          : "$"}
-                      {(
-                        (form.watch(`lineItems.${idx}.quantity`) || 0) *
-                        (form.watch(`lineItems.${idx}.rate`) || 0)
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {/* Confirmation modal for removing existing items */}
               <CustomModal
                 open={confirmOpen}

@@ -15,10 +15,20 @@ export interface Collection {
   entityId: string;
   createdAt: string;
   updatedAt?: string;
+  totalItems: number;
+  totalValue: number;
 }
 
 export interface CollectionsResponse {
   collections: Collection[];
+  stats: {
+    totalCollections: number;
+    activeCollections: number;
+    totalItems: number;
+    totalValue: number;
+    mostPopularCollection: string;
+    mostPopularItemCount: number;
+  };
   total: number;
   currentPage: number;
   pageSize: number;

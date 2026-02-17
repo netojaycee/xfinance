@@ -2,6 +2,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Table } from "lucide-react";
 import { Collection } from "@/lib/api/hooks/types/productsTypes";
+import { MODAL } from "@/lib/data/modal-data";
+import { useModal } from "@/components/providers/ModalProvider";
+import { CustomModal } from "@/components/local/custom/modal";
+import { MODULES } from "@/lib/types/enums";
+import CollectionsForm from "./CollectionsForm";
+import React from "react";
+
+const formatCurrency = (value: number, currency: string = "USD"): string => {
+  const symbol = currency === "NGN" ? "₦" : "$";
+  if (value >= 1_000_000_000) {
+    return `${symbol}${value / 1_000_000_000}B`;
+  } else if (value >= 1_000_000) {
+    return `${symbol}${value / 1_000_000}M`;
+  } else if (value >= 1_000) {
+    return `${symbol}${value / 1_000}K`;
+  }
+  return `${symbol}${value}`;
+};
 
 interface CollectionCardGridProps {
   collections: Collection[];
@@ -25,6 +43,9 @@ export default function CollectionCardGrid({
   searchValue,
 }: CollectionCardGridProps) {
   const totalPages = Math.ceil(totalCount / rowsPerPage);
+  const { openModal, closeModal, isOpen } = useModal();
+  const [selectedCollection, setSelectedCollection] =
+    React.useState<Collection | null>(null);
 
   return (
     <>
@@ -69,30 +90,35 @@ export default function CollectionCardGrid({
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="bg-indigo-100 rounded-xl p-2 flex items-center justify-center">
-                    <Table className="w-4 h-4" />
+                    <Table className="w-5 h-5 text-indigo-500" />
                   </div>
                   <span className="absolute top-4 right-4 bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1 rounded-full">
-                    {col.featured ? "Featured" : "Regular"}
+                    {col.totalItems} items
                   </span>
                 </div>
-                <div className="font-semibold text-base text-gray-800 mb-1">
+                <div className="font-semibold text-lg text-gray-800 mb-0.5">
                   {col.name}
                 </div>
-                <div className="text-gray-400 text-sm mb-4 line-clamp-2">
+                <div className="text-gray-400 text-sm mb-2 line-clamp-2">
                   {col.description}
                 </div>
-                <div className="flex items-center justify-between">
+                {/* <div className="text-xs text-gray-400 mb-1">
+                  Top selling products
+                </div> */}
+                <div className="flex items-center justify-between mt-2">
                   <div>
-                    <div className="text-xs text-gray-400">Status</div>
-                    <div className="text-sm font-semibold">
-                      {col.visibility ? (
-                        <span className="text-green-600">Visible</span>
-                      ) : (
-                        <span className="text-gray-500">Hidden</span>
-                      )}
+                    <div className="text-xs text-gray-400">Total Value</div>
+                    <div className="text-base font-semibold text-blue-700">
+                      {formatCurrency(col.totalValue, "NGN")}
                     </div>
                   </div>
-                  <Button className="border border-gray-200 rounded-xl px-4 py-2 font-semibold text-gray-700 bg-white hover:bg-gray-50 transition">
+                  <Button
+                    onClick={() => {
+                      setSelectedCollection(col);
+                      openModal(MODAL.COLLECTION_EDIT + "-" + col.id);
+                    }}
+                    className="border border-gray-200 rounded-xl px-4 py-2 font-semibold text-gray-700 bg-white hover:bg-gray-50 transition"
+                  >
                     Edit
                   </Button>
                 </div>
@@ -124,6 +150,19 @@ export default function CollectionCardGrid({
           </div>
         </>
       )}
+
+      <CustomModal
+        title="Add New Collection"
+        module={MODULES.PRODUCTS}
+        open={isOpen(MODAL.COLLECTION_EDIT + "-" + selectedCollection?.id)}
+        onOpenChange={(open) =>
+          open
+            ? openModal(MODAL.COLLECTION_EDIT + "-" + selectedCollection?.id)
+            : closeModal(MODAL.COLLECTION_EDIT + "-" + selectedCollection?.id)
+        }
+      >
+        <CollectionsForm collection={selectedCollection as any} isEditMode />
+      </CustomModal>
     </>
   );
 }

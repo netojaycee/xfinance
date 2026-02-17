@@ -7,6 +7,8 @@ import { CustomModal } from "@/components/local/custom/modal";
 import ExpensesForm from "./ExpensesForm";
 import { MODULES } from "@/lib/types/enums";
 import { ExpensesResponse } from "./types";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 interface ExpensesHeaderProps {
   loading?: boolean;
@@ -14,7 +16,7 @@ interface ExpensesHeaderProps {
 }
 
 export default function ExpensesHeader({ loading = false, data }: ExpensesHeaderProps) {
-  const [open, setOpen] = React.useState(false);
+  const { openModal, closeModal, isOpen } = useModal();
   const totalExpenses = data?.totalCount || 0;
 
   return (
@@ -31,7 +33,7 @@ export default function ExpensesHeader({ loading = false, data }: ExpensesHeader
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button onClick={() => openModal(MODAL.EXPENSE_CREATE)} className="rounded-xl">
             <Plus /> New Expense
           </Button>
         </div>
@@ -40,11 +42,11 @@ export default function ExpensesHeader({ loading = false, data }: ExpensesHeader
       <CustomModal
         title="New Expense"
         description="Add details about the expense to create a new entry"
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.EXPENSE_CREATE)}
+        onOpenChange={(open) => open ? openModal(MODAL.EXPENSE_CREATE) : closeModal(MODAL.EXPENSE_CREATE)}
         module={MODULES.PURCHASES}
       >
-        <ExpensesForm onSuccess={() => setOpen(false)} />
+        <ExpensesForm />
       </CustomModal>
     </div>
   );

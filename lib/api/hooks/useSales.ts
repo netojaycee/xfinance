@@ -1,285 +1,595 @@
 // lib/api/hooks/useSales.ts
 
-import { useQuery, useMutation, UseMutationOptions, useQueryClient } from '@tanstack/react-query';
-import * as salesService from '../services/salesService';
-import { CustomersResponse } from '@/components/features/user/sales/customers/utils/types';
-import { InvoicesResponse, PaidInvoicesResponse } from '@/components/features/user/sales/invoices/utils/types';
-import { ReceiptsResponse } from '@/components/features/user/sales/sales-receipt/utils/types';
-import { PaymentReceivedResponse } from '@/components/features/user/sales/payment-received/utils/types';
+import {
+  useQuery,
+  useMutation,
+  UseMutationOptions,
+  useQueryClient,
+} from "@tanstack/react-query";
+import * as salesService from "../services/salesService";
+import { CustomersResponse } from "@/components/features/user/sales/customers/utils/types";
+import {
+  InvoicesResponse,
+  PaidInvoicesResponse,
+} from "@/components/features/user/sales/invoices/utils/types";
+import { ReceiptsResponse } from "@/components/features/user/sales/sales-receipt/utils/types";
+import { PaymentReceivedResponse } from "@/components/features/user/sales/payment-received/utils/types";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
+import { toast } from "sonner";
 
+// ────────────────────────────────────────────────
 // Customers
+// ────────────────────────────────────────────────
 
-
-
-export const useCustomers = () => useQuery<CustomersResponse>({
-	queryKey: ['customers'],
-	queryFn: () => salesService.getCustomers() as Promise<CustomersResponse>,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-export const useCustomer = (id: string | number) => useQuery({
-	queryKey: ['customer', id],
-	queryFn: () => salesService.getCustomerById(id),
-	enabled: !!id,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-export const useCreateCustomer = (options?: UseMutationOptions<any, Error, any>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.createCustomer,
-		onSuccess: (data, variables, context, mutation) => {
-			queryClient.invalidateQueries({ queryKey: ['customers'] });
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
-};
-export const useUpdateCustomer = (options?: UseMutationOptions<any, Error, { id: string | number; data: any }>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: ({ id, data }) => salesService.updateCustomer(id, data),
-		onSuccess: (data, variables, context, mutation) => {
-			if (variables && variables.id) {
-				queryClient.invalidateQueries({ queryKey: ['customer', variables.id] });
-			}
-			queryClient.invalidateQueries({ queryKey: ['customers'] });
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
-};
-export const useDeleteCustomer = (options?: UseMutationOptions<any, Error, string | number>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.deleteCustomer,
-		onSuccess: (data, id, context, mutation) => {
-			if (id) {
-				queryClient.invalidateQueries({ queryKey: ['customer', id] });
-			}
-			queryClient.invalidateQueries({ queryKey: ['customers'] });
-			options?.onSuccess?.(data, id, context, mutation);
-		},
-		...options,
-	});
+export const useCustomers = (params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  return useQuery<CustomersResponse>({
+    queryKey: ["customers", params?.search, params?.page, params?.limit],
+    queryFn: () =>
+      salesService.getCustomers(params) as Promise<CustomersResponse>,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
 };
 
+export const useCustomer = (id: string) => {
+  return useQuery({
+    queryKey: ["customers", "detail", id],
+    queryFn: () => salesService.getCustomerById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useCreateCustomer = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.createCustomer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      toast.success("Customer created successfully");
+      closeModal(MODAL.CUSTOMER_CREATE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create customer",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useUpdateCustomer = (
+  options?: UseMutationOptions<any, Error, { id: string; data: any }>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => salesService.updateCustomer(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["customers", "detail", variables.id],
+        });
+      }
+      toast.success("Customer updated successfully");
+      closeModal(MODAL.CUSTOMER_EDIT);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update customer",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useDeleteCustomer = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.deleteCustomer,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["customers", "detail", id],
+        });
+      }
+      toast.success("Customer deleted successfully");
+      closeModal(MODAL.CUSTOMER_DELETE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete customer",
+      );
+    },
+    ...options,
+  });
+};
+
+// ────────────────────────────────────────────────
 // Invoices
+// ────────────────────────────────────────────────
 
 export const useInvoices = (params?: {
-	page?: number;
-	limit?: number;
-	status?: string;
-	search?: string;
-}) => useQuery<InvoicesResponse>({
-	queryKey: ['invoices', params],
-	queryFn: () => salesService.getInvoices(params) as Promise<InvoicesResponse>,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-export const useInvoice = (id: string | number) => useQuery({
-	queryKey: ['invoice', id],
-	queryFn: () => salesService.getInvoiceById(id),
-	enabled: !!id,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-export const useCreateInvoice = (options?: UseMutationOptions<any, Error, any>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.createInvoice,
-		onSuccess: (data, variables, context, mutation) => {
-			queryClient.invalidateQueries({ queryKey: ['invoices'] });
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
-};
-export const useUpdateInvoice = (options?: UseMutationOptions<any, Error, { id: string | number; data: any }>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: ({ id, data }) => salesService.updateInvoice(id, data),
-		onSuccess: (data, variables, context, mutation) => {
-			if (variables && variables.id) {
-				queryClient.invalidateQueries({ queryKey: ['invoice', variables.id] });
-			}
-			queryClient.invalidateQueries({ queryKey: ['invoices'] });
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
-};
-export const useDeleteInvoice = (options?: UseMutationOptions<any, Error, string | number>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.deleteInvoice,
-		onSuccess: (data, id, context, mutation) => {
-			if (id) {
-				queryClient.invalidateQueries({ queryKey: ['invoice', id] });
-			}
-			queryClient.invalidateQueries({ queryKey: ['invoices'] });
-			options?.onSuccess?.(data, id, context, mutation);
-		},
-		...options,
-	});
+  search?: string;
+  page?: number;
+  limit?: number;
+  status?: string;
+  customerId?: string;
+}) => {
+  return useQuery<InvoicesResponse>({
+    queryKey: [
+      "invoices",
+      params?.search,
+      params?.page,
+      params?.limit,
+      params?.status,
+      params?.customerId,
+    ],
+    queryFn: () =>
+      salesService.getInvoices(params) as Promise<InvoicesResponse>,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
 };
 
-// Paid Invoices
+export const useInvoice = (id: string) => {
+  return useQuery({
+    queryKey: ["invoices", "detail", id],
+    queryFn: () => salesService.getInvoiceById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useCreateInvoice = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.createInvoice,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice created successfully");
+      closeModal(MODAL.INVOICE_CREATE); // ← changed to _CREATE (more consistent)
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create invoice",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useUpdateInvoice = (
+  options?: UseMutationOptions<any, Error, { id: string; data: any }>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => salesService.updateInvoice(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["invoices", "detail", variables.id],
+        });
+      }
+      toast.success("Invoice updated successfully");
+      closeModal(MODAL.INVOICE_EDIT + "-" + variables.id); // ← changed to include ID for better handling of multiple edits
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update invoice",
+      );
+    },
+    ...options,
+  });
+};
+
+// ────────────────────────────────────────────────
+// Invoice Actions & Graphs
+// ────────────────────────────────────────────────
+
+export const useMarkInvoicePaid = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => salesService.updateInvoice(id, { status: "Paid" }),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", "detail", id] });
+      toast.success("Invoice marked as paid");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to mark invoice as paid");
+    },
+    ...options,
+  });
+};
+
+export const useVoidInvoice = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => salesService.updateInvoice(id, { status: "Void" }),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", "detail", id] });
+      toast.success("Invoice voided successfully");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to void invoice");
+    },
+    ...options,
+  });
+};
+
+export const useSendInvoice = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  return useMutation({
+    mutationFn: salesService.sendInvoice,
+    onSuccess: () => {
+      toast.success("Invoice sent to customer");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to send invoice");
+    },
+    ...options,
+  });
+};
+
+export const useDownloadInvoice = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  return useMutation({
+    mutationFn: salesService.downloadInvoice,
+    onSuccess: (data) => { // data is Blob
+        // Create a link and download
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `invoice.pdf`); // Ideally get filename from headers
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        toast.success("Invoice download started");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to download invoice");
+    },
+    ...options,
+  });
+};
+
+export const useInvoiceGraphs = (params?: any) => {
+    return useQuery({
+        queryKey: ["invoices", "graphs", params],
+        queryFn: () => salesService.getInvoiceGraphs(params),
+        staleTime: 5 * 60 * 1000,
+    });
+};
+
+export const useDeleteInvoice = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.deleteInvoice,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["invoices", "detail", id],
+        });
+      }
+      toast.success("Invoice deleted successfully");
+      closeModal(MODAL.INVOICE_DELETE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete invoice",
+      );
+    },
+    ...options,
+  });
+};
+
+// ────────────────────────────────────────────────
+// Paid Invoices (list only – no CRUD)
+// ────────────────────────────────────────────────
+
 export const usePaidInvoices = (params?: {
-	page?: number;
-	limit?: number;
-	search?: string;
-}) => useQuery<PaidInvoicesResponse>({
-	queryKey: ['paidInvoices', params],
-	queryFn: () => salesService.getPaidInvoices(params) as Promise<PaidInvoicesResponse>,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
+  search?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  return useQuery<PaidInvoicesResponse>({
+    queryKey: ["paid-invoices", params?.search, params?.page, params?.limit],
+    queryFn: () =>
+      salesService.getPaidInvoices(params) as Promise<PaidInvoicesResponse>,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
 
+// ────────────────────────────────────────────────
 // Receipts
+// ────────────────────────────────────────────────
 
 export const useReceipts = (params?: {
-	page?: number;
-	limit?: number;
-	status?: string;
-	search?: string;
-	paymentMethod?: string;
-}) => useQuery<ReceiptsResponse>({
-	queryKey: ['receipts', params],
-	queryFn: () => salesService.getReceipts(params) as Promise<ReceiptsResponse>,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-export const useReceipt = (id: string | number) => useQuery({
-	queryKey: ['receipt', id],
-	queryFn: () => salesService.getReceiptById(id),
-	enabled: !!id,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-export const useCreateReceipt = (options?: UseMutationOptions<any, Error, any>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.createReceipt,
-		onSuccess: (data, variables, context, mutation) => {
-			queryClient.invalidateQueries({ queryKey: ['receipts'] });
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
-};
-export const useUpdateReceipt = (options?: UseMutationOptions<any, Error, { id: string | number; data: any }>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: ({ id, data }) => salesService.updateReceipt(id, data),
-		onSuccess: (data, variables, context, mutation) => {
-			if (variables && variables.id) {
-				queryClient.invalidateQueries({ queryKey: ['receipt', variables.id] });
-			}
-			queryClient.invalidateQueries({ queryKey: ['receipts'] });
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
-};
-export const useDeleteReceipt = (options?: UseMutationOptions<any, Error, string | number>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.deleteReceipt,
-		onSuccess: (data, id, context, mutation) => {
-			if (id) {
-				queryClient.invalidateQueries({ queryKey: ['receipt', id] });
-			}
-			queryClient.invalidateQueries({ queryKey: ['receipts'] });
-			options?.onSuccess?.(data, id, context, mutation);
-		},
-		...options,
-	});
+  search?: string;
+  page?: number;
+  limit?: number;
+  status?: string;
+  paymentMethod?: string;
+}) => {
+  return useQuery<ReceiptsResponse>({
+    queryKey: [
+      "receipts",
+      params?.search,
+      params?.page,
+      params?.limit,
+      params?.status,
+      params?.paymentMethod,
+    ],
+    queryFn: () =>
+      salesService.getReceipts(params) as Promise<ReceiptsResponse>,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
 };
 
-// Payment Received
+export const useReceipt = (id: string) => {
+  return useQuery({
+    queryKey: ["receipts", "detail", id],
+    queryFn: () => salesService.getReceiptById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useCreateReceipt = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.createReceipt,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["receipts"] });
+      toast.success("Receipt created successfully");
+      closeModal(MODAL.SALES_RECEIPT_CREATE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create receipt",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useUpdateReceipt = (
+  options?: UseMutationOptions<any, Error, { id: string; data: any }>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => salesService.updateReceipt(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["receipts"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["receipts", "detail", variables.id],
+        });
+      }
+      toast.success("Receipt updated successfully");
+      closeModal(MODAL.SALES_RECEIPT_EDIT + "-" + variables.id); // ← changed to include ID for better handling of multiple edits
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update receipt",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useDeleteReceipt = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.deleteReceipt,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["receipts"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["receipts", "detail", id],
+        });
+      }
+      toast.success("Receipt deleted successfully");
+      closeModal(MODAL.SALES_RECEIPT_DELETE + "-" + id);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete receipt",
+      );
+    },
+    ...options,
+  });
+};
+
+// ────────────────────────────────────────────────
+// Payments Received
+// ────────────────────────────────────────────────
 
 export const usePaymentsReceived = (params?: {
-	page?: number;
-	limit?: number;
-	search?: string;
-	status?: string;
-}) => useQuery<PaymentReceivedResponse>({
-	queryKey: ['payment-received', params],
-	queryFn: () => salesService.getPaymentsReceived(params) as Promise<PaymentReceivedResponse>,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-
-export const usePaymentReceived = (id: string | number) => useQuery({
-	queryKey: ['payment-received', id],
-	queryFn: () => salesService.getPaymentReceivedById(id),
-	enabled: !!id,
-	staleTime: 2 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
-
-export const useCreatePaymentReceived = (options?: UseMutationOptions<any, Error, any>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.createPaymentReceived,
-		onSuccess: async (data, variables, context, mutation) => {
-			await Promise.all([
-				queryClient.refetchQueries({ queryKey: ['payment-received'] }),
-				queryClient.refetchQueries({ queryKey: ['invoices'] }),
-			]);
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
+  search?: string;
+  page?: number;
+  limit?: number;
+  status?: string;
+}) => {
+  return useQuery<PaymentReceivedResponse>({
+    queryKey: [
+      "payment-received",
+      params?.search,
+      params?.page,
+      params?.limit,
+      params?.status,
+    ],
+    queryFn: () =>
+      salesService.getPaymentsReceived(
+        params,
+      ) as Promise<PaymentReceivedResponse>,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
 };
 
-export const useUpdatePaymentReceived = (options?: UseMutationOptions<any, Error, { id: string | number; data: any }>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: ({ id, data }) => salesService.updatePaymentReceived(id, data),
-		onSuccess: async (data, variables, context, mutation) => {
-			if (variables && variables.id) {
-				await queryClient.refetchQueries({ queryKey: ['payment-received', variables.id] });
-			}
-			await Promise.all([
-				queryClient.refetchQueries({ queryKey: ['payment-received'] }),
-				queryClient.refetchQueries({ queryKey: ['invoices'] }),
-			]);
-			options?.onSuccess?.(data, variables, context, mutation);
-		},
-		...options,
-	});
+export const usePaymentReceived = (id: string) => {
+  return useQuery({
+    queryKey: ["payment-received", "detail", id],
+    queryFn: () => salesService.getPaymentReceivedById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
 };
 
-export const useDeletePaymentReceived = (options?: UseMutationOptions<any, Error, string | number>) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: salesService.deletePaymentReceived,
-		onSuccess: async (data, id, context, mutation) => {
-			if (id) {
-				await queryClient.refetchQueries({ queryKey: ['payment-received', id] });
-			}
-			await Promise.all([
-				queryClient.refetchQueries({ queryKey: ['payment-received'] }),
-				queryClient.refetchQueries({ queryKey: ['invoices'] }),
-			]);
-			options?.onSuccess?.(data, id, context, mutation);
-		},
-		...options,
-	});
+export const useCreatePaymentReceived = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.createPaymentReceived,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment-received"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Payment received created successfully");
+      closeModal(MODAL.PAYMENT_RECEIVED_CREATE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create payment received",
+      );
+    },
+    ...options,
+  });
 };
 
+export const useUpdatePaymentReceived = (
+  options?: UseMutationOptions<any, Error, { id: string; data: any }>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => salesService.updatePaymentReceived(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["payment-received"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["payment-received", "detail", variables.id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Payment received updated successfully");
+      closeModal(MODAL.PAYMENT_RECEIVED_EDIT);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update payment received",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useDeletePaymentReceived = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.deletePaymentReceived,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["payment-received"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["payment-received", "detail", id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Payment received deleted successfully");
+      closeModal(MODAL.PAYMENT_RECEIVED_DELETE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete payment received",
+      );
+    },
+    ...options,
+  });
+};
+
+// Optional – keep if needed, otherwise remove
 export const usePaymentReceivedReportsSummary = (params?: {
-	page?: number;
-	limit?: number;
-	search?: string;
-	status?: string;
-	from?: string;
-	to?: string;
-}) => useQuery<PaymentReceivedResponse>({
-	queryKey: ['payment-received-reports', params],
-	queryFn: () => salesService.getPaymentReceivedReportsSummary(params) as Promise<PaymentReceivedResponse>,
-	staleTime: 5 * 60 * 1000,
-	refetchOnWindowFocus: true,
-});
+  search?: string;
+  page?: number;
+  limit?: number;
+  status?: string;
+  from?: string;
+  to?: string;
+}) => {
+  return useQuery<PaymentReceivedResponse>({
+    queryKey: ["payment-received-reports", params],
+    queryFn: () =>
+      salesService.getPaymentReceivedReportsSummary(
+        params,
+      ) as Promise<PaymentReceivedResponse>,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};

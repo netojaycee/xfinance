@@ -41,7 +41,7 @@ export default function LineItemsTable({
                 #
               </th>
               <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-semibold text-gray-900">
-                Description
+                Name
               </th>
               <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-semibold text-gray-900 hidden sm:table-cell">
                 Qty

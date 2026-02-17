@@ -18,7 +18,8 @@ export default function Collections() {
   });
 
   const collections = (data as any)?.collections || [];
-  const totalCount = (data as any)?.total || 0;
+  console.log("Fetched collections:", data); // Debug log to check fetched data
+  const stats = (data as any)?.stats || 0;
 
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
@@ -31,18 +32,13 @@ export default function Collections() {
 
   return (
     <div className="space-y-4">
-      <CollectionsHeader
-        data={data as any}
-        loading={isLoading}
-        onSearch={handleSearch}
-        searchValue={searchTerm}
-      />
+      <CollectionsHeader data={stats as any} loading={isLoading} />
       <CollectionCardGrid
         collections={collections}
         loading={isLoading}
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
+        totalCount={data?.total || 0}
         onPageChange={handlePageChange}
         onSearch={handleSearch}
         searchValue={searchTerm}

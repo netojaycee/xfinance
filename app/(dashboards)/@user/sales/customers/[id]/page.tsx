@@ -1,16 +1,26 @@
 "use client";
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import CustomerDetails from "@/components/features/user/sales/customers/details/CustomerDetails";
 
 export default function CustomerDetailsPage() {
-    const params = useParams();
-    const router = useRouter();
-    const { id } = params;
+  const router = useRouter();
+
   return (
-    <div>
-        <Button variant={"ghost"} className="cursor-pointer" onClick={() => router.back()}><ArrowLeft /> Back</Button>
-        CustomerDetailsPage {id}</div>
-  )
+    <div className="space-y-4">
+      <div>
+        <Button
+          variant={"ghost"}
+          className="cursor-pointer gap-2"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </Button>
+      </div>
+      <CustomerDetails />
+    </div>
+  );
 }

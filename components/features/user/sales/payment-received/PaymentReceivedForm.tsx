@@ -48,14 +48,12 @@ const paymentStatusOptions = [
 interface PaymentReceivedFormProps {
   payment?: Partial<PaymentReceivedFormData> & { id?: string };
   isEditMode?: boolean;
-  onSuccess?: () => void;
   invoiceId?: string;
 }
 
 export default function PaymentReceivedForm({
   payment,
   isEditMode = false,
-  onSuccess,
   invoiceId,
 }: PaymentReceivedFormProps) {
   const [submitting, setSubmitting] = useState(false);
@@ -95,15 +93,15 @@ export default function PaymentReceivedForm({
           id: payment.id,
           data: payload,
         });
-        toast.success("Payment updated successfully");
+        // toast.success("Payment updated successfully");
       } else {
         await createPayment.mutateAsync(payload);
-        toast.success("Payment recorded successfully");
+        // toast.success("Payment recorded successfully");
       }
 
-      onSuccess?.();
+      // onSuccess?.();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to record payment");
+      // toast.error(error?.message || "Failed to record payment");
     } finally {
       setSubmitting(false);
     }
@@ -247,10 +245,19 @@ export default function PaymentReceivedForm({
                       Deposit To <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="e.g., Bank Account - Main, Cash Drawer, etc."
-                        {...field}
-                      />
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select account" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Main_Account">Main Account</SelectItem>
+                          <SelectItem value="Petty_Cash">Petty Cash</SelectItem>
+                          <SelectItem value="Savings">Savings</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

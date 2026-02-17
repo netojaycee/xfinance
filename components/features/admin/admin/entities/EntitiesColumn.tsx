@@ -1,4 +1,5 @@
 import { Column } from "@/components/local/custom/custom-table";
+import EntitiesActions from "./EntitiesActions";
 
 export interface Entity {
   id: string;
@@ -58,7 +59,7 @@ export const entitiesColumns: Column<any>[] = [
     key: "id",
     title: "",
     className: "w-8 text-sm",
-    render: (_, row: any) => <>&nbsp;</>, // Actions will be rendered by component
+    render: (_, row: any) => <EntitiesActions row={row} />, // Actions will be rendered by component
     searchable: false,
   },
 ];

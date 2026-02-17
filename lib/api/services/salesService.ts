@@ -9,10 +9,21 @@ import { ReceiptsResponse } from "@/components/features/user/sales/sales-receipt
 import { PaymentReceivedResponse } from "@/components/features/user/sales/payment-received/utils/types";
 
 // Customers
-export const getCustomers: () => Promise<CustomersResponse> = () =>
-  apiClient("sales/customers", {
-    method: "GET",
-  });
+export const getCustomers: (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) => Promise<CustomersResponse> = (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.append("page", String(params.page));
+  if (params.limit) queryParams.append("limit", String(params.limit));
+  if (params.search) queryParams.append("search", params.search);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `sales/customers?${queryString}` : "sales/customers";
+
+  return apiClient(url, { method: "GET" });
+};
 export const getCustomerById = (id: string | number) =>
   apiClient(`sales/customers/${id}`, {
     method: "GET",
@@ -34,13 +45,14 @@ export const getInvoices: (params?: {
   limit?: number;
   status?: string;
   search?: string;
+  customerId?: string;
 }) => Promise<InvoicesResponse> = (params = {}) => {
   const queryParams = new URLSearchParams();
   if (params.page) queryParams.append("page", String(params.page));
   if (params.limit) queryParams.append("limit", String(params.limit));
   if (params.status && params.status !== "All Statuses") queryParams.append("status", params.status);
   if (params.search) queryParams.append("search", params.search);
-
+if (params.customerId) queryParams.append("customerId", params.customerId);
   const queryString = queryParams.toString();
   const url = queryString ? `sales/invoices?${queryString}` : "sales/invoices";
 
@@ -59,6 +71,29 @@ export const updateInvoice = (id: string | number, data: any) =>
   });
 export const deleteInvoice = (id: string | number) =>
   apiClient(`sales/invoices/${id}`, { method: "DELETE" });
+
+export const sendInvoice = (id: string | number) =>
+  apiClient(`sales/invoices/${id}/send`, { method: "POST" });
+
+export const downloadInvoice = async (id: string | number) => {
+  // Return blob response for PDF
+  const response = await apiClient(`sales/invoices/${id}/download`, {
+    method: "GET",
+    headers: {
+        Accept: "application/pdf"
+    }
+  });
+  return response; 
+};
+
+export const getInvoiceGraphs = (params: any = {}) => {
+    const queryParams = new URLSearchParams();
+     if (params.from) queryParams.append("from", params.from);
+     if (params.to) queryParams.append("to", params.to);
+     const queryString = queryParams.toString();
+     const url = queryString ? `sales/invoices/analytics?${queryString}` : "sales/invoices/analytics";
+     return apiClient(url, { method: "GET" });
+}
 
 // Get Paid Invoices
 export const getPaidInvoices: (params?: {

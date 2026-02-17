@@ -20,47 +20,36 @@ import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import { useDeleteCustomer } from "@/lib/api/hooks/useSales";
-import { toast } from "sonner";
 import CustomerForm from "./CustomerForm";
 import { useRouter } from "next/navigation";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 export default function CustomersActions({ row }: { row: any }) {
-    const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const deleteCustomer = useDeleteCustomer({
-    onSuccess: () => {
-      toast.success("Customer deleted successfully");
-    },
-    onError: (err) => {
-      toast.error(err?.message || "Failed to delete customer");
-    },
-  });
+  const { isOpen, openModal, closeModal } = useModal();
+  const deleteCustomer = useDeleteCustomer();
+
+  const deleteKey = MODAL.CUSTOMER_DELETE + "-" + row.id;
+  const editKey = MODAL.CUSTOMER_EDIT + "-" + row.id;
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setOpen(true), 100);
+    setTimeout(() => openModal(deleteKey), 100);
   };
 
   const handleEditClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => setEditOpen(true), 100);
+    setTimeout(() => openModal(editKey), 100);
   };
 
   const handleConfirm = (confirmed: boolean) => {
     if (confirmed) {
       deleteCustomer.mutate(row.id);
-    } else {
-      setOpen(false);
     }
+    closeModal(deleteKey);
   };
-
-  React.useEffect(() => {
-    if (deleteCustomer.isSuccess || deleteCustomer.isError) {
-      setOpen(false);
-    }
-  }, [deleteCustomer.isSuccess, deleteCustomer.isError]);
 
   return (
     <>
@@ -98,6 +87,7 @@ export default function CustomersActions({ row }: { row: any }) {
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
+              router.push(`/sales/invoices?customerId=${row.id}`);
             }}
           >
             <FileText className="size-4 mr-2" /> View invoices
@@ -116,23 +106,27 @@ export default function CustomersActions({ row }: { row: any }) {
       </DropdownMenu>
       <CustomModal
         title={"Confirm Deletion"}
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(deleteKey)}
+        onOpenChange={(open) =>
+          open ? openModal(deleteKey) : closeModal(deleteKey)
+        }
         module={MODULES.SALES}
       >
         <ConfirmationForm
-          title={`Are you sure you want to delete ${row.name}?`}
+          title={`Are you sure you want to delete ${row?.name || row.name}?`}
           onResult={handleConfirm}
           loading={deleteCustomer.isPending}
         />
       </CustomModal>
       <CustomModal
         title={`Edit Customer: ${row.name}`}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        open={isOpen(editKey)}
+        onOpenChange={(open) =>
+          open ? openModal(editKey) : closeModal(editKey)
+        }
         module={MODULES.SALES}
       >
-        <CustomerForm customer={row} isEditMode onSuccess={() => setEditOpen(false)} />
+        <CustomerForm customer={row} isEditMode />
       </CustomModal>
     </>
   );

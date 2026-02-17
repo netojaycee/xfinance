@@ -27,7 +27,6 @@ import {
 import { ArrowRight, Loader2 } from "lucide-react";
 import { employeeSchema } from "./utils/schema";
 
-
 type EmployeeFormData = z.infer<typeof employeeSchema>;
 
 interface EmployeeFormProps {
@@ -41,9 +40,8 @@ export default function EmployeeForm({
   isEditMode = false,
   onSuccess,
 }: EmployeeFormProps) {
-
   const createEmployee = useCreateEmployee();
-  const updateEmployee = useUpdateEmployee(employee?.id || "");
+  const updateEmployee = useUpdateEmployee();
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema) as any,
@@ -76,7 +74,8 @@ export default function EmployeeForm({
       country: employee?.country || "",
       emergencyContactName: employee?.emergencyContactName || "",
       emergencyContactPhone: employee?.emergencyContactPhone || "",
-      emergencyContactRelationship: employee?.emergencyContactRelationship || "",
+      emergencyContactRelationship:
+        employee?.emergencyContactRelationship || "",
       note: employee?.note || "",
     },
   });
@@ -113,7 +112,8 @@ export default function EmployeeForm({
         country: employee?.country || "",
         emergencyContactName: employee?.emergencyContactName || "",
         emergencyContactPhone: employee?.emergencyContactPhone || "",
-        emergencyContactRelationship: employee?.emergencyContactRelationship || "",
+        emergencyContactRelationship:
+          employee?.emergencyContactRelationship || "",
         note: employee?.note || "",
       });
     }
@@ -122,22 +122,34 @@ export default function EmployeeForm({
   const onSubmit = async (values: EmployeeFormData) => {
     try {
       const formData = new FormData();
-      
+
       // Basic fields
       formData.append("firstName", values.firstName || "");
       formData.append("lastName", values.lastName || "");
       formData.append("email", values.email || "");
       formData.append("phoneNumber", values.phoneNumber || "");
-      formData.append("dateOfBirth", values.dateOfBirth ? new Date(values.dateOfBirth).toISOString() : "");
+      formData.append(
+        "dateOfBirth",
+        values.dateOfBirth ? new Date(values.dateOfBirth).toISOString() : "",
+      );
       formData.append("employeeId", values.employeeId || "");
       formData.append("department", values.department || "");
       formData.append("position", values.jobTitle || "");
       formData.append("employmentType", values.employmentType || "");
-      formData.append("dateOfHire", values.hireDate ? new Date(values.hireDate).toISOString() : "");
+      formData.append(
+        "dateOfHire",
+        values.hireDate ? new Date(values.hireDate).toISOString() : "",
+      );
       formData.append("reportingManager", values.reportsTo || "");
       formData.append("anualLeave", String(values.annualLeaveDays || 0));
-      formData.append("salary", String(Math.round(Number(values.baseSalary) * 100) || 0));
-      formData.append("allowances", String(Math.round(Number(values.allowances) * 100) || 0));
+      formData.append(
+        "salary",
+        String(Math.round(Number(values.baseSalary) * 100) || 0),
+      );
+      formData.append(
+        "allowances",
+        String(Math.round(Number(values.allowances) * 100) || 0),
+      );
       formData.append("perFrequency", values.payFrequency || "");
       formData.append("currency", values.currency || "");
       formData.append("bankName", values.bankName || "");
@@ -145,7 +157,7 @@ export default function EmployeeForm({
       formData.append("accountNumber", values.accountNumber || "");
       formData.append("routingNumber", values.routingNumber || "");
       formData.append("note", values.note || "");
-      
+
       // Address Info as JSON
       formData.append(
         "addressInfo",
@@ -155,9 +167,9 @@ export default function EmployeeForm({
           province: values.state || "",
           postalCode: values.postalCode || "",
           country: values.country || "",
-        })
+        }),
       );
-      
+
       // Emergency Contact as JSON
       formData.append(
         "emergencyContact",
@@ -165,16 +177,16 @@ export default function EmployeeForm({
           contactName: values.emergencyContactName,
           contactPhone: values.emergencyContactPhone,
           relationship: values.emergencyContactRelationship,
-        })
+        }),
       );
-      
+
       // Profile Picture (if it's a File)
       if (values.profilePicture instanceof File) {
         formData.append("profileImage", values.profilePicture);
       }
-      
+
       if (isEditMode && employee?.id) {
-        await updateEmployee.mutateAsync(formData);
+        await updateEmployee.mutateAsync({ id: employee.id, formData });
       } else {
         await createEmployee.mutateAsync(formData);
       }
@@ -195,7 +207,12 @@ export default function EmployeeForm({
       toast.error(updateEmployee.error?.message || "Failed to update employee");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createEmployee.isSuccess, createEmployee.isError, updateEmployee.isSuccess, updateEmployee.isError]);
+  }, [
+    createEmployee.isSuccess,
+    createEmployee.isError,
+    updateEmployee.isSuccess,
+    updateEmployee.isError,
+  ]);
 
   return (
     <div className="w-full">
@@ -215,9 +232,15 @@ export default function EmployeeForm({
                   <FormItem className="md:col-span-2">
                     <FormLabel>Profile Picture</FormLabel>
                     <FormControl>
-                      <Input type="file" accept="image/*" onChange={e => field.onChange(e.target.files?.[0])} />
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => field.onChange(e.target.files?.[0])}
+                      />
                     </FormControl>
-                    <div className="text-xs text-muted-foreground">Recommended: Square image, at least 400x400px</div>
+                    <div className="text-xs text-muted-foreground">
+                      Recommended: Square image, at least 400x400px
+                    </div>
                   </FormItem>
                 )}
               />
@@ -254,7 +277,11 @@ export default function EmployeeForm({
                   <FormItem>
                     <FormLabel>Email Address *</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="john.doe@company.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="john.doe@company.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -293,7 +320,10 @@ export default function EmployeeForm({
                   <FormItem>
                     <FormLabel>Employee ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="Auto-generated if left blank" {...field} />
+                      <Input
+                        placeholder="Auto-generated if left blank"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -341,7 +371,10 @@ export default function EmployeeForm({
                   <FormItem>
                     <FormLabel>Employment Type</FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
@@ -438,7 +471,10 @@ export default function EmployeeForm({
                   <FormItem>
                     <FormLabel>Pay Frequency *</FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select frequency" />
                         </SelectTrigger>
@@ -496,7 +532,10 @@ export default function EmployeeForm({
                   <FormItem>
                     <FormLabel>Account Type</FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
@@ -673,7 +712,10 @@ export default function EmployeeForm({
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Any additional information about the employee..." {...field} />
+                    <Textarea
+                      placeholder="Any additional information about the employee..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -688,28 +730,37 @@ export default function EmployeeForm({
               <ul className="list-disc ml-4">
                 <li>All required fields must be completed before submitting</li>
                 <li>Employee ID will be auto-generated if not provided</li>
-                <li>Ensure all contact information is accurate for payroll and communication</li>
+                <li>
+                  Ensure all contact information is accurate for payroll and
+                  communication
+                </li>
                 <li>Employee records can be edited after creation</li>
               </ul>
             </div>
-           
           </div>
-           <div className="flex flex-wrap justify-end gap-2 border-t pt-3">
-              <Button variant={"outline"}>Cancel</Button>
-              <Button type="button" variant="secondary">Save as Draft</Button>
-              <Button type="submit" className="bg-linear-to-r from-indigo-500 to-purple-500 text-white" disabled={createEmployee.isPending || updateEmployee.isPending}>
-                {(createEmployee.isPending || updateEmployee.isPending) ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> <span>Please wait</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{isEditMode ? "Update Employee" : "Add Employee"}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </div>
+          <div className="flex flex-wrap justify-end gap-2 border-t pt-3">
+            <Button variant={"outline"}>Cancel</Button>
+            <Button type="button" variant="secondary">
+              Save as Draft
+            </Button>
+            <Button
+              type="submit"
+              className="bg-linear-to-r from-indigo-500 to-purple-500 text-white"
+              disabled={createEmployee.isPending || updateEmployee.isPending}
+            >
+              {createEmployee.isPending || updateEmployee.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                  <span>Please wait</span>
+                </>
+              ) : (
+                <>
+                  <span>{isEditMode ? "Update Employee" : "Add Employee"}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

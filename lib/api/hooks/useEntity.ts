@@ -15,6 +15,9 @@ import {
   EntityFormData,
 } from "../services/entityService";
 import { Entity } from "@/lib/types";
+import { toast } from "sonner";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 type CreateEntityPayload = EntityFormData;
 type UpdateEntityPayload = EntityFormData & { id: string };
@@ -29,14 +32,18 @@ export const useCreateEntity = (
   options?: UseMutationOptions<Entity, Error, CreateEntityPayload>,
 ) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
   return useMutation({
     mutationFn: createEntity,
-    onSuccess: async (data, variables, context, mutation) => {
-      await queryClient.refetchQueries({ queryKey: ["entities", "list"] });
-      // Background job queued: create-entity-user
-      // - Creates entity admin user
-      // - Entity ready for financial data entry
-      options?.onSuccess?.(data, variables, context, mutation);
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["entities", "list"] });
+      toast.success("Entity created successfully");
+      closeModal(MODAL.ENTITY_CREATE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create entity",
+      );
     },
     ...options,
   });
@@ -51,16 +58,24 @@ export const useUpdateEntity = (
   options?: UseMutationOptions<Entity, Error, UpdateEntityPayload>,
 ) => {
   const queryClient = useQueryClient();
+  const { closeModal, isOpen } = useModal();
   return useMutation({
     mutationFn: updateEntity,
-    onSuccess: async (data, variables, context, mutation) => {
-      if (variables && "id" in variables && variables.id) {
+    onSuccess: async (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["entities", "list"] });
+      if (variables?.id) {
         queryClient.invalidateQueries({
           queryKey: ["entities", "detail", variables.id],
         });
       }
-      await queryClient.refetchQueries({ queryKey: ["entities", "list"] });
-      options?.onSuccess?.(data, variables, context, mutation);
+      // console.log(isOpen, "isOpen in useUpdateEntity onSuccess"); // Debug log
+      closeModal(MODAL.ENTITY_EDIT);
+      toast.success("Entity updated successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update entity",
+      );
     },
     ...options,
   });
@@ -75,14 +90,23 @@ export const useDeleteEntity = (
   options?: UseMutationOptions<void, Error, string>,
 ) => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
   return useMutation({
     mutationFn: deleteEntity,
-    onSuccess: async (data, id, context, mutation) => {
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["entities", "list"] });
       if (id) {
         queryClient.invalidateQueries({ queryKey: ["entities", "detail", id] });
       }
-      await queryClient.refetchQueries({ queryKey: ["entities", "list"] });
-      options?.onSuccess?.(data, id, context, mutation);
+
+      closeModal(MODAL.ENTITY_DELETE);
+
+      toast.success("Entity deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete entity",
+      );
     },
     ...options,
   });
@@ -99,9 +123,9 @@ export const useEntities = (params?: {
   limit?: number;
 }) => {
   return useQuery({
-    queryKey: ["entities", "list"],
+    // queryKey: ["entities", "list"],
 
-    // queryKey: ['entities', 'list', params?.search, params?.page, params?.limit],
+    queryKey: ["entities", "list", params?.search, params?.page, params?.limit],
     queryFn: () => getEntities(params),
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchOnWindowFocus: true,

@@ -18,6 +18,8 @@ import { CustomModal } from "@/components/local/custom/modal";
 import SalesReceiptsForm from "./SalesReceiptsForm";
 import { MODULES } from "@/lib/types/enums";
 import { ReceiptStats } from "./utils/types";
+import { useModal } from '@/components/providers/ModalProvider';
+import { MODAL } from '@/lib/data/modal-data';
 
 export default function SalesReceiptHeader({
   stats,
@@ -26,7 +28,7 @@ export default function SalesReceiptHeader({
   stats?: ReceiptStats;
   loading: boolean;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const { isOpen, openModal, closeModal } = useModal();
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
@@ -41,7 +43,7 @@ export default function SalesReceiptHeader({
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button onClick={() => openModal(MODAL.SALES_RECEIPT_CREATE)} className="rounded-xl">
             <Plus /> New Receipt
           </Button>
         </div>
@@ -85,11 +87,11 @@ export default function SalesReceiptHeader({
       <CustomModal
         title="New Sales Receipt"
         description="Create a new sales receipt for non-invoiced sales"
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.SALES_RECEIPT_CREATE)}
+        onOpenChange={(open) => open ? openModal(MODAL.SALES_RECEIPT_CREATE) : closeModal(MODAL.SALES_RECEIPT_CREATE)}
         module={MODULES.SALES}
       >
-        <SalesReceiptsForm onSuccess={() => setOpen(false)} />
+        <SalesReceiptsForm />
       </CustomModal>
     </div>
   );
