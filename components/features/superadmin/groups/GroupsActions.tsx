@@ -70,14 +70,14 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
-    setTimeout(() => openModal(MODAL.GROUP_DELETE), 100);
+    setTimeout(() => openModal(MODAL.GROUP_DELETE + "-" + row.id), 100);
   };
 
   const handleConfirmDelete = (confirmed: boolean) => {
     if (confirmed) {
       deleteGroup.mutate(row.id);
     }
-    closeModal(MODAL.GROUP_DELETE);
+    closeModal(MODAL.GROUP_DELETE + "-" + row.id);
   };
 
   return (
@@ -152,11 +152,11 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
       {/* Suspend Confirmation Modal */}
       <CustomModal
         title="Confirm Suspension"
-        open={isOpen(MODAL.GROUP_SUSPEND)}
+        open={isOpen(MODAL.GROUP_SUSPEND + "-" + row.id)}
         onOpenChange={(open) =>
           open
-            ? openModal(MODAL.GROUP_SUSPEND)
-            : closeModal(MODAL.GROUP_SUSPEND)
+            ? openModal(MODAL.GROUP_SUSPEND + "-" + row.id)
+            : closeModal(MODAL.GROUP_SUSPEND + "-" + row.id)
         }
         module={MODULES.GROUP}
       >
@@ -166,7 +166,7 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
             if (confirmed) {
               // TODO: Implement suspend API call
             }
-            closeModal(MODAL.GROUP_SUSPEND);
+            closeModal(MODAL.GROUP_SUSPEND + "-" + row.id);
           }}
           loading={false}
         />
@@ -175,9 +175,9 @@ export default function GroupsActions({ row }: { row: GroupRow }) {
       {/* Delete Confirmation Modal */}
       <CustomModal
         title="Confirm Deletion"
-        open={isOpen(MODAL.GROUP_DELETE)}
+        open={isOpen(MODAL.GROUP_DELETE + "-" + row.id)}
         onOpenChange={(open) =>
-          open ? openModal(MODAL.GROUP_DELETE) : closeModal(MODAL.GROUP_DELETE)
+          open ? openModal(MODAL.GROUP_DELETE + "-" + row.id) : closeModal(MODAL.GROUP_DELETE + "-" + row.id)
         }
         module={MODULES.GROUP}
       >

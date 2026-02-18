@@ -3,19 +3,6 @@
 import { useMutation, UseMutationOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loginUser, getProfile, impersonateEntity, stopEntityImpersonation, impersonateGroup, stopGroupImpersonation, logout } from '../services/authService';
 
-// Logout hook
-export const useLogout = (options?: UseMutationOptions<void, Error, void>) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: logout,
-    onSuccess: async (...args) => {
-      // Clear all react-query cache (global state)
-      await queryClient.clear();
-      options?.onSuccess?.(...args);
-    },
-    ...options,
-  });
-};
 // --- Group Impersonation Hooks ---
 import { UserPayload } from '@/lib/types';
 import { LoginCredentials } from '@/lib/schema';
@@ -88,6 +75,21 @@ export const useStopEntityImpersonation = (
 ) => {
   return useMutation({
     mutationFn: stopEntityImpersonation,
+    ...options,
+  });
+};
+
+
+// Logout hook
+export const useLogout = (options?: UseMutationOptions<void, Error, void>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: logout,
+    onSuccess: async (...args) => {
+      // Clear all react-query cache (global state)
+      await queryClient.clear();
+      options?.onSuccess?.(...args);
+    },
     ...options,
   });
 };
