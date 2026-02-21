@@ -40,7 +40,9 @@ export default function PaymentMadeForm() {
   const { data: accountsData, isLoading: accountsLoading } = useAccounts({
     subCategory: "Cash and Cash Equivalents",
   });
-  const cashAccounts = accountsData?.data || [];
+  const cashAccounts = (accountsData as any) || [];
+
+  console.log(accountsData, "accounts")
 
   const form = useForm<z.infer<typeof paymentSchema>>({
     resolver: zodResolver(paymentSchema) as any,
@@ -163,7 +165,7 @@ export default function PaymentMadeForm() {
                         </SelectTrigger>
                         <SelectContent>
                           {cashAccounts.length > 0 ? (
-                            cashAccounts.map((account) => (
+                            cashAccounts.map((account: any) => (
                               <SelectItem key={account.id} value={account.id}>
                                 {account.name} ({account.code})
                               </SelectItem>

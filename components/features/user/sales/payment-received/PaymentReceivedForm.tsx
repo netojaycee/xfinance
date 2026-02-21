@@ -68,7 +68,7 @@ export default function PaymentReceivedForm({
   const updatePayment = useUpdatePaymentReceived();
   const invoices = invoicesData?.invoices || [];
 
-  const cashAccounts = accountsData?.data || [];
+  const cashAccounts = (accountsData as any) || [];
 
   const form = useForm<PaymentReceivedFormData>({
     resolver: zodResolver(paymentReceivedSchema),
@@ -260,7 +260,7 @@ export default function PaymentReceivedForm({
                         </SelectTrigger>
                         <SelectContent>
                           {cashAccounts.length > 0 ? (
-                            cashAccounts.map((account) => (
+                            cashAccounts.map((account: any) => (
                               <SelectItem key={account.id} value={account.id}>
                                 {account.name} ({account.code})
                               </SelectItem>
