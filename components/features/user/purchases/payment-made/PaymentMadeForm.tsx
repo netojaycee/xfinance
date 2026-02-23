@@ -40,7 +40,7 @@ export default function PaymentMadeForm() {
   const { data: accountsData, isLoading: accountsLoading } = useAccounts({
     subCategory: "Cash and Cash Equivalents",
   });
-  const cashAccounts = (accountsData as any) || [];
+  const cashAccounts = (accountsData?.data as any) || [];
 
   console.log(accountsData, "accounts")
 

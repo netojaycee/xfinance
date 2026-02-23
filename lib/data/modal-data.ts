@@ -81,6 +81,8 @@ export const MODAL = {
   ACCOUNT_CATEGORY_EDIT: "account-category-edit",
   ACCOUNT_CATEGORY_DELETE: "account-category-delete",
 
-
+  BANK_CONNECT: "bank-connect",
+  BANK_EDIT: "bank-edit",
+  BANK_DELETE: "bank-delete",
 
 };

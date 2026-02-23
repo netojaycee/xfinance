@@ -379,6 +379,7 @@ export function GroupForm({
                             United Kingdom
                           </SelectItem>
                           <SelectItem value="Australia">Australia</SelectItem>
+                          <SelectItem value="Nigeria">Nigeria</SelectItem>
                           <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                       </Select>

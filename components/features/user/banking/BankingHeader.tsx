@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Download, Plus, RefreshCcw } from "lucide-react";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 import BankingStatCardSmall from "./BankingStatCardSmall";
 
 export default function BankingHeader({
@@ -14,7 +16,7 @@ export default function BankingHeader({
   data?: any;
   loading: boolean;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const { openModal } = useModal();
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
@@ -25,11 +27,11 @@ export default function BankingHeader({
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl">
+          {/* <Button variant="outline" className="rounded-xl">
             <RefreshCcw />
             Sync Banks
-          </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          </Button> */}
+          <Button onClick={() => openModal(MODAL.BANK_CONNECT)} className="rounded-xl">
             <Plus /> Connect Bank
           </Button>
         </div>

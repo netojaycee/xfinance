@@ -146,7 +146,7 @@ export interface JournalResponse {
 // Zod Schemas
 export const createAccountSchema = z.object({
   name: z.string().min(1, "Account name is required"),
-  code: z.string().min(1, "Account code is required"),
+  // code: z.string().min(1, "Account code is required"),
   categoryId:  z.string().min(1, "Category is required"),
   subCategoryId: z.string().min(1, "Sub-category is required"),
   description: z.string().min(1, "Description is required"),

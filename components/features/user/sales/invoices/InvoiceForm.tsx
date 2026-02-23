@@ -442,7 +442,10 @@ export default function InvoiceForm({
               </div>
               {fields.map((item, idx) => {
                 // All selected except the current one
-                const selectedIds = form.watch("lineItems").map((li: any) => li.itemId).filter((id: string, i: number) => i !== idx);
+                const selectedIds = form
+                  .watch("lineItems")
+                  .map((li: any) => li.itemId)
+                  .filter((id: string, i: number) => i !== idx);
                 return (
                   <div
                     key={item.id}

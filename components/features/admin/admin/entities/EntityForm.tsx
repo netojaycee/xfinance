@@ -70,6 +70,7 @@ const COUNTRIES = [
   "France",
   "Japan",
   "Australia",
+  "Nigeria",
 ];
 const CURRENCIES = [
   "USD - US Dollar",
@@ -78,6 +79,7 @@ const CURRENCIES = [
   "JPY - Japanese Yen",
   "AUD - Australian Dollar",
   "CAD - Canadian Dollar",
+  "NGN - Nigerian Naira",
 ];
 const FISCAL_YEAR_ENDS = ["December 31", "March 31", "June 30", "September 30"];
 

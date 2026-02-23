@@ -68,7 +68,7 @@ export default function PaymentReceivedForm({
   const updatePayment = useUpdatePaymentReceived();
   const invoices = invoicesData?.invoices || [];
 
-  const cashAccounts = (accountsData as any) || [];
+  const cashAccounts = (accountsData?.data as any) || [];
 
   const form = useForm<PaymentReceivedFormData>({
     resolver: zodResolver(paymentReceivedSchema),

@@ -31,7 +31,7 @@ export const chartOfAccountsColumns: Column<any>[] = [
     className: "text-xs",
     render: (value, row) => (
       <div>
-        <div className="font-medium text-gray-900 line-clamp-1">{value}</div>
+        <div className="font-medium text-gray-900 line-clamp-1">{row.name}</div>
         <div className="text-xs text-gray-400 line-clamp-1">
           {row.description}
         </div>

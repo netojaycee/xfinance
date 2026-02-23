@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Download, Filter, Search } from "lucide-react";
+import { Download, Filter, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -32,6 +32,7 @@ interface CustomTableProps<T> {
   onSearchChange?: (value: string) => void;
   onStatusChange?: (value: string) => void;
   onMethodsChange?: (value: string) => void;
+  onRowClick?: (row: T, rowIndex: number) => void;
   display?: {
     searchComponent?: boolean;
     filterComponent?: boolean;
@@ -42,6 +43,13 @@ interface CustomTableProps<T> {
   statusOptions?: string[];
   methodsOptions?: string[];
   loading?: boolean;
+  // Pagination props
+  pagination?: {
+    page: number;
+    totalPages: number;
+    total?: number;
+    onPageChange: (page: number) => void;
+  };
 }
 
 export function CustomTable<T extends { [key: string]: any }>({
@@ -55,6 +63,7 @@ export function CustomTable<T extends { [key: string]: any }>({
   onSearchChange,
   onStatusChange,
   onMethodsChange,
+  onRowClick,
   display: {
     searchComponent = true,
     filterComponent = false,
@@ -65,34 +74,41 @@ export function CustomTable<T extends { [key: string]: any }>({
   statusOptions = [],
   methodsOptions = [],
   loading = false,
+  pagination,
 }: CustomTableProps<T>) {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  
+  // Use provided pagination or local pagination
+  const isServerPaginated = !!pagination;
+  const currentPage = pagination?.page || 1;
+  const totalPages = pagination?.totalPages || Math.ceil(data.length / pageSize);
+  const [localPage, setLocalPage] = useState(1);
+  const page = isServerPaginated ? currentPage : localPage;
 
-  // Filter data by search - DISABLED (using API-side filtering instead)
-  // const filteredData = useMemo(() => {
-  //   if (!search) return data;
-  //   return data.filter((row) =>
-  //     columns.some((col) => {
-  //       if (col.searchable === false) return false;
-  //       const value = row[col.key];
-  //       return (
-  //         value && value.toString().toLowerCase().includes(search.toLowerCase())
-  //       );
-  //     })
-  //   );
-  // }, [search, data, columns]);
+  // For local pagination: slice data
+  // For server pagination: use data as-is (already paginated by API)
+  const pagedData = useMemo(() => {
+    if (isServerPaginated) {
+      return data;
+    }
+    return data.slice((page - 1) * pageSize, page * pageSize);
+  }, [data, page, pageSize, isServerPaginated]);
 
-  // Pagination
-  const totalPages = Math.ceil(data.length / pageSize);
-  const pagedData = useMemo(
-    () => data.slice((page - 1) * pageSize, page * pageSize),
-    [data, page, pageSize],
-  );
+  const handlePreviousPage = () => {
+    if (isServerPaginated) {
+      pagination?.onPageChange?.(Math.max(page - 1, 1));
+    } else {
+      setLocalPage((prev) => Math.max(prev - 1, 1));
+    }
+  };
 
-  React.useEffect(() => {
-    if (page > totalPages) setPage(1);
-  }, [totalPages, page]);
+  const handleNextPage = () => {
+    if (isServerPaginated) {
+      pagination?.onPageChange?.(Math.min(page + 1, totalPages));
+    } else {
+      setLocalPage((prev) => Math.min(prev + 1, totalPages));
+    }
+  };
 
   return (
     <div className={cn("w-full bg-white p-4 rounded-2xl shadow-md", className)}>
@@ -214,7 +230,14 @@ export function CustomTable<T extends { [key: string]: any }>({
               </tr>
             ) : (
               pagedData.map((row, rowIndex) => (
-                <tr key={rowIndex} className="border-t hover:bg-gray-50 ">
+                <tr 
+                  key={rowIndex} 
+                  className={cn(
+                    "border-t hover:bg-gray-50",
+                    onRowClick && "cursor-pointer"
+                  )}
+                  onClick={() => onRowClick?.(row, rowIndex)}
+                >
                   {columns.map((col) => (
                     <td
                       key={col.key}
@@ -231,6 +254,43 @@ export function CustomTable<T extends { [key: string]: any }>({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 px-0 py-3">
+          <div className="text-sm text-gray-600">
+            Page <span className="font-semibold">{page}</span> of{" "}
+            <span className="font-semibold">{totalPages}</span>
+            {pagination?.total && (
+              <span className="ml-2">
+                (Total: <span className="font-semibold">{pagination.total}</span> items)
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreviousPage}
+              disabled={page === 1 || loading}
+              className="flex items-center gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextPage}
+              disabled={page === totalPages || loading}
+              className="flex items-center gap-1"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

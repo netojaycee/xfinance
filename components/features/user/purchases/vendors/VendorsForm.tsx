@@ -64,7 +64,7 @@ const financialInfoSchema = z.object({
   currency: z.string().optional(),
   accountNumber: z.string().optional(),
   creditLimit: z.string().optional(),
-  defaultExpenseAccount: z.string().optional(),
+  // defaultExpenseAccount: z.string().optional(),
   bankName: z.string().optional(),
   routingNumber: z.string().optional(),
   bankAccountNumber: z.string().optional(),
@@ -107,7 +107,7 @@ const defaultValues: VendorFormType = {
     currency: "USD ($)",
     accountNumber: "",
     creditLimit: "0.00",
-    defaultExpenseAccount: "",
+    // defaultExpenseAccount: "",
     bankName: "",
     routingNumber: "",
     bankAccountNumber: "",
@@ -118,10 +118,10 @@ const defaultValues: VendorFormType = {
 export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
-    subCategory: "Prepaid Expenses",
-  });
-  const expenseAccounts = accountsData?.data || [];
+  // const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+  //   subCategory: "Prepaid Expenses",
+  // });
+  // const expenseAccounts = accountsData?.data || [];
   const form = useForm<VendorFormType>({
     resolver: zodResolver(vendorSchema),
     defaultValues,
@@ -202,7 +202,7 @@ export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
         currency: data.financialInfo.currency || "USD",
         accountNumber: data.financialInfo.accountNumber || "",
         creditLimit: data.financialInfo.creditLimit || "",
-        expenseAccount: data.financialInfo.defaultExpenseAccount || "",
+        // expenseAccount: data.financialInfo.defaultExpenseAccount || "",
         bankName: data.financialInfo.bankName || "",
         accountName: data.contactDetails.contactName,
         routingNumber: data.financialInfo.routingNumber || "",
@@ -210,7 +210,7 @@ export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
       };
 
       await createVendor.mutateAsync(payload);
-      toast.success("Vendor created successfully");
+      // toast.success("Vendor created successfully");
       localStorage.removeItem(LOCAL_STORAGE_KEY);
       setLoading(false);
       onSuccess?.();
@@ -619,7 +619,7 @@ export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
                       </FormItem>
                     )}
                   />
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="financialInfo.defaultExpenseAccount"
                     render={({ field }) => (
@@ -651,7 +651,7 @@ export default function VendorsForm({ onSuccess }: { onSuccess?: () => void }) {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
                 </div>
                 <div className="mt-6 flex items-center gap-2 mb-2">
                   <Landmark className="text-violet-500" />

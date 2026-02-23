@@ -30,11 +30,16 @@ import {
   Layers,
   UploadCloud,
 } from "lucide-react";
-import { useCreateExpense, useUpdateExpense, useVendors } from "@/lib/api/hooks/usePurchases";
+import {
+  useCreateExpense,
+  useUpdateExpense,
+  useVendors,
+} from "@/lib/api/hooks/usePurchases";
 import { toast } from "sonner";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { useEffect } from "react";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
 
 const expenseSchema = z.object({
   date: z.date(),
@@ -92,6 +97,12 @@ export default function ExpensesForm({
   const { data: vendorsData, isLoading: vendorsLoading } = useVendors();
 
   const vendors = (vendorsData as any)?.vendors || [];
+  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+    type: "Expenses",
+  });
+
+  const expenseAccounts = (accountsData?.data as any) || [];
+  console.log(expenseAccounts, "gg");
 
   const form = useForm<ExpenseFormType>({
     resolver: zodResolver(expenseSchema),
@@ -135,7 +146,10 @@ export default function ExpensesForm({
   const watchTax = form.watch("tax");
   const total = (Number(watchAmount) || 0) + (Number(watchTax) || 0);
 
-  const onSubmit = async (values: ExpenseFormType, status?: "draft" | "pending") => {
+  const onSubmit = async (
+    values: ExpenseFormType,
+    status?: "draft" | "pending",
+  ) => {
     try {
       setIsSubmitting(true);
 
@@ -146,7 +160,7 @@ export default function ExpensesForm({
           vendorId: values.vendorId,
           category: values.category,
           paymentMethod: values.paymentMethod,
-          account: values.account,
+          accountId: values.account,
           amount: Math.round(values.amount),
           tax: Math.round(values.tax || 0),
         };
@@ -168,10 +182,12 @@ export default function ExpensesForm({
         formData.append("vendorId", values.vendorId);
         formData.append("category", values.category);
         formData.append("paymentMethod", values.paymentMethod);
-        formData.append("account", values.account);
+        formData.append("accountId", values.account);
         formData.append("amount", Math.round(values.amount).toString());
-        if (values.tax) formData.append("tax", Math.round(values.tax).toString());
-        if (values.description) formData.append("description", values.description);
+        if (values.tax)
+          formData.append("tax", Math.round(values.tax).toString());
+        if (values.description)
+          formData.append("description", values.description);
 
         // Add tags if provided
         if (values.tags) {
@@ -195,7 +211,6 @@ export default function ExpensesForm({
       form.reset();
       setIsSubmitting(false);
       closeModal(MODAL.EXPENSE_CREATE);
-
     } catch (error) {
       console.error("Error creating expense:", error);
 
@@ -206,7 +221,9 @@ export default function ExpensesForm({
   return (
     <FormProvider {...form}>
       <Form {...form}>
-        <form className="space-y-4" onSubmit={form.handleSubmit((v) => onSubmit(v))}
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit((v) => onSubmit(v))}
         >
           {/* Basic Information */}
           <div className="rounded-2xl border bg-linear-to-br from-purple-50 to-white p-4">
@@ -405,10 +422,17 @@ export default function ExpensesForm({
                           <SelectValue placeholder="Select account" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Main Account">
-                            Main Account
-                          </SelectItem>
-                          <SelectItem value="Petty Cash">Petty Cash</SelectItem>
+                          {expenseAccounts.length > 0 ? (
+                            expenseAccounts.map((account: any) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name} ({account.code})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-accounts" disabled>
+                              No cash accounts found
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -574,7 +598,6 @@ export default function ExpensesForm({
                 onClick={(e) => {
                   e.preventDefault();
                   form.handleSubmit((v) => onSubmit(v, "draft"))();
-
                 }}
               >
                 {isSubmitting ? "Please wait..." : "Save as Draft"}
@@ -586,10 +609,15 @@ export default function ExpensesForm({
                 onClick={(e) => {
                   e.preventDefault();
                   form.handleSubmit((v) => onSubmit(v, "pending"))();
-
                 }}
               >
-                {isSubmitting ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Expense" : "Create Expense")}
+                {isSubmitting
+                  ? isEditMode
+                    ? "Updating..."
+                    : "Creating..."
+                  : isEditMode
+                    ? "Update Expense"
+                    : "Create Expense"}
               </Button>
             </div>
           </div>

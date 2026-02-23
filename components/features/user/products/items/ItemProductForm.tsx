@@ -77,10 +77,8 @@ export default function ItemProductForm({
         sku: values.sku,
         unit: values.unit,
         description: values.description || "",
-        sellingPrice: Math.round(Number(values.sellingPrice) * 100),
-        costPrice: values.costPrice
-          ? Math.round(Number(values.costPrice) * 100)
-          : 0,
+        sellingPrice: Math.round(Number(values.sellingPrice)),
+        costPrice: values.costPrice ? Math.round(Number(values.costPrice)) : 0,
         taxable: values.taxable,
         currentStock: values.currentStock,
         lowStock: values.lowStockAlert,
@@ -377,7 +375,7 @@ export default function ItemProductForm({
             type="button"
             variant="outline"
             onClick={() => {
-              console.log("fjjf")
+              console.log("fjjf");
             }}
           >
             Cancel

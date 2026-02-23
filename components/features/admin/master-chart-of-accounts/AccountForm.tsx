@@ -44,8 +44,36 @@ export function AccountForm() {
     }
   };
 
+  // Filter categories by selected type for subcategory mode
+  const filteredCategories = typeId
+    ? categories?.filter((cat) => cat.typeId === typeId)
+    : [];
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
+      {/* Section: Select Account Type (Top Most) */}
+      <div className="bg-purple-50 p-4 rounded-xl space-y-2">
+        <h6 className="font-medium text-sm mb-2">Account Type</h6>
+        <Select
+          value={typeId}
+          onValueChange={setTypeId}
+          disabled={loadingTypes}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue
+              placeholder={loadingTypes ? "Loading..." : "Select account type"}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {accountTypes?.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.code} - {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Section: Select Mode */}
       <div className="bg-blue-50 p-4 rounded-xl space-y-2">
         <h6 className="font-medium text-sm mb-2">
@@ -53,7 +81,7 @@ export function AccountForm() {
         </h6>
         <Select value={mode} onValueChange={(v) => setMode(v as any)}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select type" />
+            <SelectValue placeholder="Select mode" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="category">Category</SelectItem>
@@ -66,31 +94,6 @@ export function AccountForm() {
       {mode === "category" && (
         <div className="bg-green-50 p-4 rounded-xl space-y-4">
           <h6 className="font-medium text-sm mb-2">Category Details</h6>
-          <div className="space-y-2">
-            <Label htmlFor="type" className="text-sm font-medium">
-              Account Type
-            </Label>
-            <Select
-              value={typeId}
-              onValueChange={setTypeId}
-              disabled={loadingTypes}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={
-                    loadingTypes ? "Loading..." : "Select account type"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {accountTypes?.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.code} - {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium">
               Name
@@ -127,17 +130,24 @@ export function AccountForm() {
             <Select
               value={categoryId}
               onValueChange={setCategoryId}
-              disabled={loadingCategories}
+              disabled={
+                !typeId ||
+                (filteredCategories && filteredCategories.length === 0)
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue
                   placeholder={
-                    loadingCategories ? "Loading..." : "Select category"
+                    !typeId
+                      ? "Select a type first"
+                      : filteredCategories && filteredCategories.length === 0
+                        ? "No categories available"
+                        : "Select category"
                   }
                 />
               </SelectTrigger>
               <SelectContent>
-                {categories?.map((c) => (
+                {filteredCategories?.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.code} - {c.name}
                   </SelectItem>

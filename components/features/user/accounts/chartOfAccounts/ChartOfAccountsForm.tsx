@@ -25,7 +25,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { ChartOfAccountsFormData, chartOfAccountsSchema } from "./utils/schema";
-import { useCreateAccount, useUpdateAccount } from "@/lib/api/hooks/useAccounts";
+import {
+  useCreateAccount,
+  useUpdateAccount,
+} from "@/lib/api/hooks/useAccounts";
+import { useAccountTypes } from "@/lib/api/hooks/useAccountTypes";
 import { useAccountCategories } from "@/lib/api/hooks/useAccountCategories";
 import { useSubCategoriesByCategory } from "@/lib/api/hooks/useAccountSubCategories";
 
@@ -36,19 +40,18 @@ interface ChartOfAccountsFormProps {
   isEditMode?: boolean;
 }
 
-
-
 export default function ChartOfAccountsForm({
   account,
   isEditMode = false,
 }: ChartOfAccountsFormProps) {
   const createAccount = useCreateAccount();
   const updateAccount = useUpdateAccount();
+  const [typeId, setTypeId] = React.useState<string>("");
 
   const form = useForm<ChartOfAccountsFormData>({
     resolver: zodResolver(chartOfAccountsSchema) as any,
     defaultValues: {
-      accountCode: account?.accountCode || "",
+      // accountCode: account?.accountCode || "",
       accountName: account?.accountName || "",
       categoryId: account?.categoryId || "",
       subCategoryId: account?.subCategoryId || "",
@@ -57,16 +60,25 @@ export default function ChartOfAccountsForm({
     },
   });
 
-  // Load categories and subcategories
-  const { data: categories, isLoading: loadingCategories } = useAccountCategories();
+  // Load account types, categories, and subcategories
+  const { data: accountTypes, isLoading: loadingTypes } = useAccountTypes();
+  const { data: categories, isLoading: loadingCategories } =
+    useAccountCategories();
+
+  // Filter categories by selected type
+  const filteredCategories = typeId
+    ? categories?.filter((cat) => cat.typeId === typeId)
+    : [];
+
   const selectedCategoryId = form.watch("categoryId");
-  const { data: subcategories, isLoading: loadingSubcategories } = useSubCategoriesByCategory(selectedCategoryId);
+  const { data: subcategories, isLoading: loadingSubcategories } =
+    useSubCategoriesByCategory(selectedCategoryId);
 
   useEffect(() => {
     if (account) {
       form.reset({
         accountType: account?.accountType || "",
-        accountCode: account?.accountCode || "",
+        // accountCode: account?.accountCode || "",
         accountName: account?.accountName || "",
         categoryId: account?.categoryId || "",
         subCategoryId: account?.subCategoryId || "",
@@ -80,7 +92,7 @@ export default function ChartOfAccountsForm({
     try {
       const payload = {
         name: values.accountName,
-        code: values.accountCode,
+        // code: values.accountCode,
         subCategoryId: values.subCategoryId,
         categoryId: values.categoryId,
         description: values.description,
@@ -95,14 +107,47 @@ export default function ChartOfAccountsForm({
     }
   };
 
-
-
-
-
   return (
     <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Account Type Section (Top Most) */}
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <FormField
+              control={form.control}
+              name="accountType"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="text-base font-semibold text-gray-900">
+                    Account Type <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select
+                    value={typeId}
+                    onValueChange={setTypeId}
+                    disabled={loadingTypes}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full rounded-lg border-gray-300">
+                        <SelectValue
+                          placeholder={
+                            loadingTypes ? "Loading..." : "Select account type"
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {accountTypes?.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.code} - {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Category Section */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -117,15 +162,27 @@ export default function ChartOfAccountsForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={loadingCategories}
+                    disabled={
+                      !typeId ||
+                      (filteredCategories && filteredCategories.length === 0)
+                    }
                   >
                     <FormControl>
                       <SelectTrigger className="w-full rounded-lg border-gray-300">
-                        <SelectValue placeholder={loadingCategories ? "Loading..." : "Select category"} />
+                        <SelectValue
+                          placeholder={
+                            !typeId
+                              ? "Select a type first"
+                              : filteredCategories &&
+                                  filteredCategories.length === 0
+                                ? "No categories available"
+                                : "Select category"
+                          }
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories?.map((cat) => (
+                      {filteredCategories?.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.code} - {cat.name}
                         </SelectItem>
@@ -136,63 +193,6 @@ export default function ChartOfAccountsForm({
                 </FormItem>
               )}
             />
-          </div>
-
-          {/* Account Code and Account Name Section */}
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="accountCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">🔢</span>
-                      <FormLabel className="text-base font-semibold text-gray-900">
-                        Account Code <span className="text-red-500">*</span>
-                      </FormLabel>
-                    </div>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., 1110"
-                        className="rounded-lg border-gray-300"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <p className="text-xs text-gray-600 mt-1">
-                      Unique numeric code for the account
-                    </p>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="accountName"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">=</span>
-                      <FormLabel className="text-base font-semibold text-gray-900">
-                        Account Name <span className="text-red-500">*</span>
-                      </FormLabel>
-                    </div>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Cash and Cash Equivalent"
-                        className="rounded-lg border-gray-300"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <p className="text-xs text-gray-600 mt-1">
-                      Descriptive name for the account
-                    </p>
-                  </FormItem>
-                )}
-              />
-            </div>
           </div>
 
           {/* Subcategory Section */}
@@ -212,7 +212,13 @@ export default function ChartOfAccountsForm({
                   >
                     <FormControl>
                       <SelectTrigger className="w-full rounded-lg border-gray-300">
-                        <SelectValue placeholder={loadingSubcategories ? "Loading..." : "Select subcategory"} />
+                        <SelectValue
+                          placeholder={
+                            loadingSubcategories
+                              ? "Loading..."
+                              : "Select subcategory"
+                          }
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -224,6 +230,35 @@ export default function ChartOfAccountsForm({
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Account Name Section */}
+          <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+            <FormField
+              control={form.control}
+              name="accountName"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">=</span>
+                    <FormLabel className="text-base font-semibold text-gray-900">
+                      Account Name <span className="text-red-500">*</span>
+                    </FormLabel>
+                  </div>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Cash and Cash Equivalent"
+                      className="rounded-lg border-gray-300"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Descriptive name for the account
+                  </p>
                 </FormItem>
               )}
             />
@@ -303,13 +338,11 @@ export default function ChartOfAccountsForm({
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between w-full gap-3 border-t pt-4">
-              <p className="text-xs text-gray-600">
-                <span className="text-red-500">*</span> Required fields
-              </p>{" "}
-              
-                       <div className="flex flex-wrap gap-3 items-center">
-
-            <Button variant="outline" className="rounded-lg" type="button">
+            <p className="text-xs text-gray-600">
+              <span className="text-red-500">*</span> Required fields
+            </p>{" "}
+            <div className="flex flex-wrap gap-3 items-center">
+              <Button variant="outline" className="rounded-lg" type="button">
                 Cancel
               </Button>
               <Button
@@ -333,7 +366,8 @@ export default function ChartOfAccountsForm({
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
-              </Button> </div>
+              </Button>{" "}
+            </div>
           </div>
         </form>
       </Form>

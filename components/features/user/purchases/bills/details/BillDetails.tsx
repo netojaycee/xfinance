@@ -125,17 +125,12 @@ export default function BillDetails({ bill }: BillDetailsProps) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {bill.billItem?.map((item: any, idx: number) => (
-              <tr key={item.id || idx} className="hover:bg-gray-50">
+            {bill.items?.map((item: any, idx: number) => (
+              <tr key={idx} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div className="font-medium text-gray-900">
-                    {item.item?.name || "Item"}
+                    {item.name || "Item"}
                   </div>
-                  {item.description && (
-                    <div className="text-xs text-gray-500">
-                      {item.description}
-                    </div>
-                  )}
                 </td>
                 <td className="px-4 py-3 text-center text-gray-600">
                   {item.quantity}
@@ -148,9 +143,9 @@ export default function BillDetails({ bill }: BillDetailsProps) {
                 </td>
                 <td className="px-4 py-3 text-right font-medium text-gray-900">
                   $
-                  {(
-                    Number(item.quantity) * Number(item.rate) || 0
-                  ).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {(Number(item.total) || 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
                 </td>
               </tr>
             ))}

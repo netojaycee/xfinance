@@ -25,16 +25,14 @@ import {
 } from "@/components/ui/form";
 import { FileText, Layers, UploadCloud, Plus, Trash2 } from "lucide-react";
 import { useCreateBill, useUpdateBill, useVendors } from "@/lib/api/hooks/usePurchases";
-import { useItems } from "@/lib/api/hooks/useProducts";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
 import { toast } from "sonner";
-import { ItemSelector } from "@/components/features/user/sales/invoices/ItemSelector";
-import type { ItemsResponse } from "@/lib/api/hooks/types/productsTypes";
 
 const lineItemSchema = z.object({
-  itemId: z.string().min(1, "Item required"),
+  name: z.string().min(1, "Item name required"),
   quantity: z.number().min(1, "Min 1"),
   rate: z.number().min(0, "Min 0"),
-  billItemId: z.string().optional(), // For tracking server-side IDs in edit mode
+  expenseAccountId: z.string().optional(),
 });
 
 const billSchema = z.object({
@@ -48,6 +46,8 @@ const billSchema = z.object({
   discount: z.number().min(0, "Min 0"),
   tax: z.number().min(0, "Min 0"),
   category: z.string().min(1, "Category required"),
+  accountsPayableId: z.string().optional(),
+  subject: z.string().optional(),
   notes: z.string().optional(),
   attachments: z.any().optional(),
 });
@@ -61,10 +61,12 @@ const defaultValues: BillFormType = {
   dueDate: new Date(),
   poNumber: "",
   paymentTerms: "Net 30",
-  lineItems: [{ itemId: "", quantity: 1, rate: 0 }],
+  lineItems: [{ name: "", quantity: 1, rate: 0, expenseAccountId: "" }],
   discount: 0,
   tax: 0,
   category: "",
+  accountsPayableId: "",
+  subject: "",
   notes: "",
   attachments: undefined,
 };
@@ -80,11 +82,17 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
   const createBill = useCreateBill();
   const updateBill = useUpdateBill();
   const { data: vendorsData, isLoading: vendorsLoading } = useVendors();
-  const itemsQuery = useItems() as { data?: ItemsResponse; isLoading: boolean };
+  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+    type: "Expenses",
+  });
+  const { data: payableAccountsData, isLoading: payableAccountsLoading } = useAccounts({
+    subCategory: "Accounts Payable",
+  });
 
   const vendors = (vendorsData as any)?.vendors || [];
-  const items = itemsQuery.data?.items || [];
-  const itemsLoading = itemsQuery.isLoading;
+  const expenseAccounts = (accountsData?.data as any) || [];
+  const payableAccounts = (payableAccountsData?.data as any) || [];
+  console.log("accountsData:", accountsData);
 
   const form = useForm<BillFormType>({
     resolver: zodResolver(billSchema),
@@ -95,6 +103,8 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
       poNumber: bill?.poNumber || "",
       paymentTerms: bill?.paymentTerms || "Net 30",
       category: bill?.category || "",
+      accountsPayableId: (bill as any)?.accountsPayableId || "",
+      subject: bill?.subject || "",
       notes: bill?.notes || "",
       discount: Number(bill?.discount) || 0,
       tax: Number(bill?.tax) || 0,
@@ -105,10 +115,10 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
   useEffect(() => {
     if (bill) {
       const mappedItems = (bill.billItem || []).map((ii: any) => ({
-        itemId: ii.itemId || ii.item?.id || "",
+        name: ii.name || "",
         quantity: Number(ii.quantity) || 1,
         rate: Number(ii.rate) || 0,
-        billItemId: ii.id,
+        expenseAccountId: ii.expenseAccountId || "",
       }));
 
       form.reset({
@@ -118,15 +128,16 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
         dueDate: bill.dueDate ? new Date(bill.dueDate) : new Date(),
         poNumber: bill.poNumber || "",
         paymentTerms: bill.paymentTerms || "Net 30",
-        lineItems: mappedItems.length > 0 ? mappedItems : [{ itemId: "", quantity: 1, rate: 0 }],
+        lineItems: mappedItems.length > 0 ? mappedItems : [{ name: "", quantity: 1, rate: 0 }],
         discount: Number(bill.discount) || 0,
         tax: Number(bill.tax) || 0,
         category: bill.category || "",
+        accountsPayableId: (bill as any)?.accountsPayableId || "",
+        subject: bill?.subject || "",
         notes: bill.notes || "",
       });
     }
   }, [bill, form]);
-  const [removedItemIds, setRemovedItemIds] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { fields, append, remove } = useFieldArray({
@@ -135,15 +146,8 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
   });
 
   const handleRemove = (index: number) => {
-    const item = form.getValues(`lineItems.${index}`);
-    if (item?.billItemId) {
-      setRemovedItemIds((prev) => [...prev, item.billItemId!]);
-    }
     remove(index);
   };
-
-  // Calculate if all items are selected
-  const maxItemsSelected = form.watch("lineItems").length >= items.length;
 
   // Calculations
   const subtotal = form
@@ -164,42 +168,50 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
       const billStatus = status || "draft";
 
       // Prepare line items for payload
-      const itemsPayload = values.lineItems.map((li: any) => {
-        const out: any = {
-          itemId: li.itemId,
-          rate: Number(li.rate) || 0,
-          quantity: Number(li.quantity) || 0,
-        };
-        if (li.billItemId) out.id = li.billItemId;
-        return out;
-      });
-
-      // Build FormData for create/update
-      const formData = new FormData();
-      formData.append("billDate", values.billDate instanceof Date ? values.billDate.toISOString() : String(values.billDate));
-      formData.append("billNumber", values.billNumber);
-      formData.append("vendorId", values.vendor);
-      formData.append("dueDate", values.dueDate instanceof Date ? values.dueDate.toISOString() : String(values.dueDate));
-      if (values.poNumber) formData.append("poNumber", values.poNumber);
-      formData.append("paymentTerms", values.paymentTerms);
-      formData.append("category", values.category);
-      if (values.notes) formData.append("notes", values.notes);
-      if (values.tax) formData.append("tax", String(Number(values.tax)));
-      if (values.discount) formData.append("discount", String(Number(values.discount)));
-      formData.append("items", JSON.stringify(itemsPayload));
-
-      // Add attachment if provided
-      if (values.attachments && values.attachments[0]) {
-        formData.append("attachment", values.attachments[0]);
-      }
+      const itemsPayload = values.lineItems.map((li: any) => ({
+        name: li.name,
+        rate: Number(li.rate) || 0,
+        quantity: Number(li.quantity) || 0,
+        ...(li.expenseAccountId && { expenseAccountId: li.expenseAccountId }),
+      }));
 
       if (isEditMode && bill?.id) {
-        // Add removeItemIds if any for updates
-        if (removedItemIds.length > 0) {
-          formData.append("removeItemIds", JSON.stringify(removedItemIds));
-        }
-        await updateBill.mutateAsync({ id: bill.id, data: formData });
+        // PATCH request for update
+        await updateBill.mutateAsync({
+          id: bill.id,
+          data: {
+            billDate: values.billDate instanceof Date ? values.billDate.toISOString() : String(values.billDate),
+            vendorId: values.vendor,
+            dueDate: values.dueDate instanceof Date ? values.dueDate.toISOString() : String(values.dueDate),
+            tax: Number(values.tax) || 0,
+            discount: Number(values.discount) || 0,
+            ...(values.accountsPayableId && { accountsPayableId: values.accountsPayableId }),
+            ...(values.subject && { subject: values.subject }),
+            items: itemsPayload,
+          },
+        });
       } else {
+        // POST request for create
+        const formData = new FormData();
+        formData.append("billDate", values.billDate instanceof Date ? values.billDate.toISOString() : String(values.billDate));
+        formData.append("billNumber", values.billNumber);
+        formData.append("vendorId", values.vendor);
+        formData.append("dueDate", values.dueDate instanceof Date ? values.dueDate.toISOString() : String(values.dueDate));
+        if (values.poNumber) formData.append("poNumber", values.poNumber);
+        formData.append("paymentTerms", values.paymentTerms);
+        formData.append("category", values.category);
+        if (values.accountsPayableId) formData.append("accountsPayableId", values.accountsPayableId);
+        if (values.subject) formData.append("subject", values.subject);
+        if (values.notes) formData.append("notes", values.notes);
+        if (values.tax) formData.append("tax", String(Number(values.tax)));
+        if (values.discount) formData.append("discount", String(Number(values.discount)));
+        formData.append("items", JSON.stringify(itemsPayload));
+
+        // Add attachment if provided
+        if (values.attachments && values.attachments[0]) {
+          formData.append("attachment", values.attachments[0]);
+        }
+
         await createBill.mutateAsync(formData);
       }
 
@@ -326,6 +338,62 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
               />
               <FormField
                 control={form.control}
+                name="accountsPayableId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Accounts Payable</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                        disabled={payableAccountsLoading}
+                      >
+                        <SelectTrigger className="w-full bg-white">
+                          <SelectValue
+                            placeholder={
+                              payableAccountsLoading
+                                ? "Loading accounts..."
+                                : "Select payable account"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.isArray(payableAccounts) &&
+                            payableAccounts.length > 0 ? (
+                            payableAccounts.map((account: any) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name} - {account.code}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-payable" disabled>
+                              {payableAccountsLoading
+                                ? "Loading accounts..."
+                                : "No payable accounts available"}
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="subject"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subject</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Bill subject" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="poNumber"
                 render={({ field }) => (
                   <FormItem>
@@ -373,109 +441,122 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
               <span className="font-semibold text-base text-purple-600">
                 Line Items
               </span>
-              {/* Hide Add Item button if all items are selected */}
-              {!maxItemsSelected && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="ml-auto"
-                  onClick={() =>
-                    append({ itemId: "", quantity: 1, rate: 0 })
-                  }
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Add Item
-                </Button>
-              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="ml-auto"
+                onClick={() =>
+                  append({ name: "", quantity: 1, rate: 0, expenseAccountId: "" })
+                }
+              >
+                <Plus className="w-4 h-4 mr-1" /> Add Item
+              </Button>
             </div>
             <div className="space-y-3">
               {/* Header Row */}
-              <div className="grid grid-cols-[3fr_1.5fr_1.5fr] gap-2 w-full px-2 py-2 text-sm font-semibold text-gray-700 border-b">
+              <div className="grid grid-cols-[2fr_1.2fr_1.2fr_1.5fr] gap-2 w-full px-2 py-2 text-sm font-semibold text-gray-700 border-b">
                 <span>Item</span>
                 <span className="text-center">Qty</span>
                 <span className="text-center">Rate</span>
+                <span className="text-center">Account</span>
               </div>
-              {fields.map((item, idx) => {
-                // All selected except the current one
-                const selectedIds = form.watch("lineItems").map((li: any, i: number) => i !== idx ? li.itemId : null).filter(Boolean);
-                return (
-                  <div
-                    key={item.id}
-                    className="flex flex-col gap-2 bg-white rounded-xl p-2 shadow-sm"
-                  >
-                    <div className="flex justify-between w-full items-center">
-                      <p className="">Item {idx + 1}</p>
-                      {fields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemove(idx)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-[3fr_1.5fr_1.5fr] gap-2 w-full items-center">
-                      <Controller
-                        control={form.control}
-                        name={`lineItems.${idx}.itemId`}
-                        render={({ field }) => (
-                          <ItemSelector
-                            items={items}
-                            isLoading={itemsLoading}
-                            value={field.value}
-                            onChange={(val) => {
-                              field.onChange(val);
-                              const selectedItem = items.find(
-                                (i: any) => i.id === val,
-                              );
-                              if (selectedItem) {
-                                form.setValue(
-                                  `lineItems.${idx}.rate`,
-                                  Number((selectedItem as any).sellingPrice || (selectedItem as any).purchasePrice || 0),
-                                );
-                              }
-                            }}
-                            placeholder="Select item..."
-                            disabledIds={selectedIds}
-                          />
-                        )}
-                      />
-                      <Controller
-                        control={form.control}
-                        name={`lineItems.${idx}.quantity`}
-                        render={({ field }) => (
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                          />
-                        )}
-                      />
-                      <Controller
-                        control={form.control}
-                        name={`lineItems.${idx}.rate`}
-                        render={({ field }) => (
-                          <Input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                            disabled={true}
-                          />
-                        )}
-                      />
-                    </div>
+              {fields.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-2 bg-white rounded-xl p-2 shadow-sm"
+                >
+                  <div className="flex justify-between w-full items-center">
+                    <p className="">Item {idx + 1}</p>
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemove(idx)}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-400" />
+                      </Button>
+                    )}
                   </div>
-                );
-              })}
+                  <div className="grid grid-cols-[2fr_1.2fr_1.2fr_1.5fr] gap-2 w-full items-center">
+                    <Controller
+                      control={form.control}
+                      name={`lineItems.${idx}.name`}
+                      render={({ field }) => (
+                        <Input
+                          placeholder="Item name (e.g., Printer Ink)"
+                          {...field}
+                        />
+                      )}
+                    />
+                    <Controller
+                      control={form.control}
+                      name={`lineItems.${idx}.quantity`}
+                      render={({ field }) => (
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder="Qty"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      )}
+                    />
+                    <Controller
+                      control={form.control}
+                      name={`lineItems.${idx}.rate`}
+                      render={({ field }) => (
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          placeholder="Rate"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      )}
+                    />
+                    <Controller
+                      control={form.control}
+                      name={`lineItems.${idx}.expenseAccountId`}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                          disabled={accountsLoading}
+                        >
+                          <SelectTrigger className="w-full bg-white">
+                            <SelectValue
+                              placeholder={accountsLoading ? "Loading..." : "Select account"}
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(expenseAccounts) &&
+                              expenseAccounts.length > 0 ? (
+                              expenseAccounts.map((account: any) => (
+                                <SelectItem key={account.id} value={account.id}>
+                                  {account.name} - {account.code}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-accounts" disabled>
+                                {accountsLoading
+                                  ? "Loading accounts..."
+                                  : "No accounts available"}
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
             {/* Totals */}
             <div className="mt-4 space-y-1 text-sm bg-white w-2/3 flex flex-col ml-auto p-3 border rounded-xl">

@@ -15,10 +15,7 @@ export function BankingTabs() {
           <TabsTrigger value="reconciliation">Bank Reconciliation</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions">
-          <BankReconciliationCard />
-        </TabsContent>
-        <TabsContent value="reconciliation">
-          <CustomTable
+           <CustomTable
             tableTitle="Recent Transactions"
             tableSubtitle="Latest bank activity"
             columns={bankingColumns}
@@ -27,6 +24,10 @@ export function BankingTabs() {
             loading={loading}
             display={{ searchComponent: false, exportButton: true }}
           />
+        </TabsContent>
+        <TabsContent value="reconciliation">
+                   <BankReconciliationCard />
+
         </TabsContent>
       </Tabs>
     </div>

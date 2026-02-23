@@ -95,7 +95,7 @@ export const deleteSubCategory = async (id: string) =>
  */
 export const createAccount = async (data: {
   name: string;
-  code: string;
+  // code: string;
   categoryId: string;
   subCategoryId: string;
   description: string;
@@ -110,10 +110,11 @@ export const createAccount = async (data: {
   });
 };
 
-export const getAccounts = async (params?: { search?: string; subCategory?: string; page?: number; limit?: number }) => {
+export const getAccounts = async (params?: { search?: string; subCategory?: string; type?: string; page?: number; limit?: number }) => {
   const queryParams = new URLSearchParams();
   if (params?.search) queryParams.append("search", params.search);
   if (params?.subCategory) queryParams.append("subCategory", params.subCategory);
+  if (params?.type) queryParams.append("type", params.type);
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
 

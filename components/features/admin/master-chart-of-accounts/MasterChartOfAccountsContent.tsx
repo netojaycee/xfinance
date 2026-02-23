@@ -6,6 +6,24 @@ import { Badge } from "@/components/ui/badge";
 import { useAccountCategories } from "@/lib/api/hooks/useAccountCategories";
 import { useAccountTypes } from "@/lib/api/hooks/useAccountTypes";
 
+// Utility function to generate code from entity name
+const generateEntityCode = (entityName: string): string => {
+  if (!entityName) return "";
+  
+  // Remove extra whitespace and split by spaces
+  const words = entityName.trim().split(/\s+/);
+  
+  // Take first two words, or first two letters if one word
+  let code = "";
+  if (words.length >= 2) {
+    code = (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+  } else if (words.length === 1) {
+    code = words[0].substring(0, 2).toUpperCase();
+  }
+  
+  return code || "";
+};
+
 // Data Types
 export interface EntityMapping {
   code: string;
@@ -17,7 +35,7 @@ export interface ChartAccount {
   id: string;
   code: string;
   name: string;
-  type: "category" | "subcategory" | "account";
+  type: "type" | "category" | "subcategory";
   entityMappings?: EntityMapping[];
   children?: ChartAccount[];
 }
@@ -38,15 +56,16 @@ function AccountRow({
   onToggle,
 }: AccountRowProps) {
   const hasChildren = account.children && account.children.length > 0;
-  const isExpandable = account.type !== "account" && hasChildren;
+  // Only "type" and "category" are collapsible, "subcategory" is not
+  const isExpandable = (account.type === "type" || account.type === "category") && hasChildren;
 
   const typeVariant = (type: string) => {
     switch (type) {
-      case "category":
+      case "type":
         return "bg-black text-white";
-      case "subcategory":
+      case "category":
         return "bg-gray-200 text-gray-800";
-      case "account":
+      case "subcategory":
         return "bg-gray-100 text-gray-700";
       default:
         return "bg-gray-100 text-gray-700";
@@ -55,12 +74,12 @@ function AccountRow({
 
   const typeLabel = (type: string) => {
     switch (type) {
+      case "type":
+        return "Type";
       case "category":
         return "Category";
       case "subcategory":
         return "Subcategory";
-      case "account":
-        return "Account";
       default:
         return "";
     }
@@ -115,7 +134,7 @@ function AccountRow({
                 key={idx}
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-50 border border-indigo-200"
               >
-                <span className="font-semibold text-indigo-700 text-xs">
+                <span className="font-semibold text-indigo-700 text-[10px] rounded-full h-4 w-4 flex items-center justify-center bg-white shadow">
                   {mapping.code}
                 </span>
                 <span className="text-primary text-xs">
@@ -153,14 +172,16 @@ export function MasterChartOfAccountsContent() {
   const { data: categories, isLoading: loadingCategories } =
     useAccountCategories();
 
-  // Dynamically open the first category and its first subcategory
+    console.log("Categories:", categories);
+
+  // Dynamically open the first type and its first category
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
   React.useEffect(() => {
     if (accountTypes && categories) {
-      const firstCat = accountTypes[0]?.id;
-      const firstSub = categories.find((cat) => cat.typeId === firstCat)?.id;
-      if (firstCat) {
-        setExpandedIds(new Set(firstSub ? [firstCat, firstSub] : [firstCat]));
+      const firstType = accountTypes[0]?.id;
+      const firstCat = categories.find((cat) => cat.typeId === firstType)?.id;
+      if (firstType) {
+        setExpandedIds(new Set(firstCat ? [firstType, firstCat] : [firstType]));
       }
     }
   }, [accountTypes, categories]);
@@ -184,22 +205,28 @@ export function MasterChartOfAccountsContent() {
           id: type.id,
           code: type.code,
           name: type.name,
-          type: "category",
+          type: "type",
           children: categories
             .filter((cat) => cat.typeId === type.id)
             .map((cat) => ({
               id: cat.id,
               code: cat.code,
               name: cat.name,
-              type: "subcategory",
-              // For now, subcategories as children, accounts not yet mapped
+              type: "category",
               children:
                 cat.subCategories?.map((sub) => ({
                   id: sub.id,
                   code: sub.code,
                   name: sub.name,
-                  type: "account",
-                  entityMappings: [], // Placeholder, as entity mapping is not yet dynamic
+                  type: "subcategory",
+                  entityMappings:
+                    sub.accounts?.map((account) => ({
+                      code: (account as any).entity
+                        ? generateEntityCode(((account as any).entity as any).name)
+                        : "",
+                      accountCode: account.code,
+                      accountName: account.name,
+                    })) || [],
                 })) || [],
             })),
         }))
