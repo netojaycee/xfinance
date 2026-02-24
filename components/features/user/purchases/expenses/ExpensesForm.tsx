@@ -45,7 +45,7 @@ const expenseSchema = z.object({
   date: z.date(),
   reference: z.string().optional(),
   vendorId: z.string().min(1, "vendorId is required"),
-  category: z.string().min(1, "Category is required"),
+  expenseAccountId: z.string().min(1, "Expense Account is required"),
   paymentMethod: z.enum([
     "Cash",
     "Card",
@@ -57,7 +57,7 @@ const expenseSchema = z.object({
     "ACH",
     "Wire_Transfer",
   ]),
-  account: z.string().min(1, "Account is required"),
+  paymentAccountId: z.string().min(1, "Payment Account is required"),
   amount: z.number().min(0.01, "Amount is required"),
   tax: z.number().min(0, ""),
   description: z.string().optional(),
@@ -71,9 +71,9 @@ const defaultValues: ExpenseFormType = {
   date: new Date(),
   reference: "",
   vendorId: "",
-  category: "",
+  expenseAccountId: "",
   paymentMethod: "Cash",
-  account: "",
+  paymentAccountId: "",
   amount: 0,
   tax: 0,
   description: "",
@@ -100,6 +100,12 @@ export default function ExpensesForm({
   const { data: accountsData, isLoading: accountsLoading } = useAccounts({
     type: "Expenses",
   });
+  const { data: paymentAccountsData, isLoading: paymentAccountsLoading } =
+    useAccounts({
+      subCategory: "Cash and Cash Equivalents",
+    });
+
+  const paymentAccounts = (paymentAccountsData?.data as any) || [];
 
   const expenseAccounts = (accountsData?.data as any) || [];
   console.log(expenseAccounts, "gg");
@@ -110,9 +116,9 @@ export default function ExpensesForm({
       date: expense?.date ? new Date(expense.date as any) : new Date(),
       reference: expense?.reference || "",
       vendorId: expense?.vendorId || "",
-      category: expense?.category || "",
+      expenseAccountId: expense?.expenseAccountId || "",
       paymentMethod: (expense?.paymentMethod as any) || "Cash",
-      account: expense?.account || "",
+      paymentAccountId: expense?.paymentAccountId || "",
       amount: expense?.amount || 0,
       tax: expense?.tax || 0,
       description: expense?.description || "",
@@ -130,9 +136,9 @@ export default function ExpensesForm({
         date: expense?.date ? new Date(expense.date as any) : new Date(),
         reference: expense?.reference || "",
         vendorId: expense?.vendorId || "",
-        category: expense?.category || "",
+        expenseAccountId: expense?.expenseAccountId || "",
         paymentMethod: (expense?.paymentMethod as any) || "Cash",
-        account: expense?.account || "",
+        paymentAccountId: expense?.paymentAccountId || "",
         amount: expense?.amount || 0,
         tax: expense?.tax || 0,
         description: expense?.description || "",
@@ -158,9 +164,9 @@ export default function ExpensesForm({
         const updateData: any = {
           date: values.date.toISOString(),
           vendorId: values.vendorId,
-          category: values.category,
+          expenseAccountId: values.expenseAccountId,
           paymentMethod: values.paymentMethod,
-          accountId: values.account,
+          paymentAccountId: values.paymentAccountId,
           amount: Math.round(values.amount),
           tax: Math.round(values.tax || 0),
         };
@@ -180,9 +186,9 @@ export default function ExpensesForm({
         formData.append("date", values.date.toISOString());
         if (values.reference) formData.append("reference", values.reference);
         formData.append("vendorId", values.vendorId);
-        formData.append("category", values.category);
+        formData.append("expenseAccountId", values.expenseAccountId);
         formData.append("paymentMethod", values.paymentMethod);
-        formData.append("accountId", values.account);
+        formData.append("paymentAccountId", values.paymentAccountId);
         formData.append("amount", Math.round(values.amount).toString());
         if (values.tax)
           formData.append("tax", Math.round(values.tax).toString());
@@ -320,37 +326,30 @@ export default function ExpensesForm({
               />
               <FormField
                 control={form.control}
-                name="category"
+                name="expenseAccountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category *</FormLabel>
+                    <FormLabel>Expense Account *</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <SelectTrigger className="w-full bg-white">
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder="Select account" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Office Supplies">
-                            Office Supplies
-                          </SelectItem>
-                          <SelectItem value="IT & Software">
-                            IT & Software
-                          </SelectItem>
-                          <SelectItem value="Utilities">Utilities</SelectItem>
-                          <SelectItem value="Travel">Travel</SelectItem>
-                          <SelectItem value="Meals & Entertainment">
-                            Meals & Entertainment
-                          </SelectItem>
-                          <SelectItem value="Equipment">Equipment</SelectItem>
-                          <SelectItem value="Repairs & Maintenance">
-                            Repairs & Maintenance
-                          </SelectItem>
-                          <SelectItem value="Professional Services">
-                            Professional Services
-                          </SelectItem>
+                          {expenseAccounts.length > 0 ? (
+                            expenseAccounts.map((account: any) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name} ({account.code})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-accounts" disabled>
+                              No expense accounts found
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -409,10 +408,10 @@ export default function ExpensesForm({
               />
               <FormField
                 control={form.control}
-                name="account"
+                name="paymentAccountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Account *</FormLabel>
+                    <FormLabel>Payment Account *</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
@@ -422,15 +421,15 @@ export default function ExpensesForm({
                           <SelectValue placeholder="Select account" />
                         </SelectTrigger>
                         <SelectContent>
-                          {expenseAccounts.length > 0 ? (
-                            expenseAccounts.map((account: any) => (
+                          {paymentAccounts.length > 0 ? (
+                            paymentAccounts.map((account: any) => (
                               <SelectItem key={account.id} value={account.id}>
                                 {account.name} ({account.code})
                               </SelectItem>
                             ))
                           ) : (
                             <SelectItem value="no-accounts" disabled>
-                              No cash accounts found
+                              No payment accounts found
                             </SelectItem>
                           )}
                         </SelectContent>
