@@ -10,6 +10,8 @@ import NotesAndBank from "./NotesAndBank";
 import ActivityTimeline from "./ActivityTimeline";
 import { useRouter, useParams } from "next/navigation";
 import { useInvoice } from "@/lib/api/hooks/useSales";
+import Loader from "@/app/loading";
+import { useEntity } from "@/lib/api/hooks/useEntity";
 
 export default function InvoiceDetailsPage() {
   const router = useRouter();
@@ -23,30 +25,48 @@ export default function InvoiceDetailsPage() {
     isError,
   } = useInvoice(invoiceId || "");
 
-  useEffect(() => {
-    if (invoiceId) {
-      console.log("Fetching invoice for id:", invoiceId);
-    }
-  }, [invoiceId]);
+  const {
+    data: fetchedEntity,
+    isLoading: entityLoading,
+    isError: entityError,
+  } = useEntity((fetchedInvoice as any)?.entityId || "");
 
-  useEffect(() => {
-    if (fetchedInvoice) {
-      console.log("Invoice fetch result:", fetchedInvoice);
-    }
-    if (isError) {
-      console.error("Failed to fetch invoice:", invoiceId);
-    }
-  }, [fetchedInvoice, isError, invoiceId]);
-  // Build page `invoice` by merging fetched data (when available) with defaults.
-  const sampleCompany = {
-    name: "Hunslow Inc.",
-    address: "525 Market Street, Suite 3500",
-    city: "San Francisco, CA 94105",
-    country: "United States",
-    email: "billing@hunslow.com",
-    phone: "+1 (415) 555-0123",
-    logo: "H",
-  };
+  console.log("Fetched Entity:", fetchedEntity);
+
+  // Build company info from fetchedEntity or use defaults
+  const company = fetchedEntity
+    ? {
+        name: fetchedEntity.name || "Company Name",
+        address: fetchedEntity.address || "",
+        city: fetchedEntity.city || "",
+        country: fetchedEntity.country || "",
+        email: fetchedEntity.email || "",
+        phone: fetchedEntity.phoneNumber || "",
+        logo: (fetchedEntity as any).logo?.secureUrl ? (
+          <img
+            src={(fetchedEntity as any).logo.secureUrl}
+            alt={(fetchedEntity as any).name}
+            className="w-12 h-12 rounded-lg object-cover"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+            {(fetchedEntity as any).name?.charAt(0) || "C"}
+          </div>
+        ),
+      }
+    : {
+        name: "Hunslow Inc.",
+        address: "525 Market Street, Suite 3500",
+        city: "San Francisco, CA 94105",
+        country: "United States",
+        email: "billing@hunslow.com",
+        phone: "+1 (415) 555-0123",
+        logo: (
+          <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+            H
+          </div>
+        ),
+      };
 
   const sampleBank = {
     bankName: "Wells Fargo Bank",
@@ -92,8 +112,8 @@ export default function InvoiceDetailsPage() {
           : "",
         poNumber: (fetchedInvoice as any).poNumber || "PO-45892",
         paymentTerms: (fetchedInvoice as any).paymentTerms || "",
-        taxId: (fetchedInvoice as any).taxId || "",
-        company: sampleCompany,
+        taxId: fetchedEntity?.taxId || (fetchedInvoice as any).taxId || "",
+        company,
         billTo: {
           name: (fetchedInvoice as any).customer?.name || "",
           attn: (fetchedInvoice as any).customer?.name || "",
@@ -120,7 +140,10 @@ export default function InvoiceDetailsPage() {
               action: a.activityType || "Updated",
               description: a.description || a.activityType || "Activity",
               date: a.createdAt ? new Date(a.createdAt).toLocaleString() : "",
-              actor: a.performedBy || "",
+              actor:
+                a.user?.firstName && a.user?.lastName
+                  ? a.user.firstName + " " + a.user.lastName
+                  : "",
             }))
           : [],
       }
@@ -134,7 +157,7 @@ export default function InvoiceDetailsPage() {
         poNumber: "PO-45892",
         paymentTerms: "Net 30",
         taxId: "94-1234567",
-        company: sampleCompany,
+        company,
         billTo: {
           name: "Acme Corporation",
           attn: "John Smith",
@@ -165,6 +188,11 @@ export default function InvoiceDetailsPage() {
         activity: [],
       };
 
+  if (invoiceLoading) {
+    return <Loader />;
+  }
+
+  console.log("Fetched Invoice:", fetchedInvoice);
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
       {/* Header with actions */}
@@ -179,10 +207,8 @@ export default function InvoiceDetailsPage() {
             <div className="flex-1">
               {" "}
               <div>
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg mr-3">
-                    {invoice.company.logo}
-                  </div>
+                <div className="flex items-center mb-4 gap-2">
+                  {invoice.company.logo}
                   <div>
                     <h3 className="font-semibold text-base text-gray-900">
                       {invoice.company.name}

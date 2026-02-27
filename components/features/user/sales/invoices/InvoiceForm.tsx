@@ -50,6 +50,8 @@ export default function InvoiceForm({
   defaultCustomerId,
   disabledCustomerSelect,
 }: InvoiceFormProps) {
+  // Lock editing if invoice status is not Draft
+  const isLockedForEditing = isEditMode && (invoice as any)?.status !== "Draft";
   const [invoiceStatus, setInvoiceStatus] = useState<"Draft" | "Sent">(
     (invoice as any)?.status || "Draft",
   );
@@ -88,34 +90,6 @@ export default function InvoiceForm({
     name: "lineItems",
   });
 
-  const [removedItemIds, setRemovedItemIds] = useState<string[]>([]);
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmIndex, setConfirmIndex] = useState<number | null>(null);
-
-  const handleRemove = (index: number) => {
-    const item = form.getValues(`lineItems.${index}` as any);
-    // Prefer server invoice-line id stored on the value as `invoiceItemId`.
-    const invoiceLineId =
-      (item && ((item as any).invoiceItemId || (item as any).id)) || null;
-    if (invoiceLineId) {
-      setRemovedItemIds((prev) => [...prev, invoiceLineId]);
-    }
-    remove(index);
-  };
-
-  const openConfirm = (index: number) => {
-    const item = form.getValues(`lineItems.${index}` as any);
-    // If item exists on server (has id) show confirmation modal
-    if (item && ((item as any).invoiceItemId || (item as any).id)) {
-      setConfirmIndex(index);
-      setConfirmOpen(true);
-    } else {
-      // new item, remove immediately
-      handleRemove(index);
-    }
-  };
-
   // Calculate subtotal, tax, total
   const subtotal = form
     .watch("lineItems")
@@ -142,11 +116,8 @@ export default function InvoiceForm({
       });
 
       // Replace field array with server items to avoid double entries
-      // NOTE: useFieldArray reserves `id` for internal keys, so store server
-      // invoice-line id under `invoiceItemId` to preserve it in form values.
       const mapped = (invoice as any)?.invoiceItem
         ? (invoice as any).invoiceItem.map((ii: any) => ({
-            invoiceItemId: ii.id,
             itemId: ii.itemId,
             rate: ii.rate,
             quantity: ii.quantity,
@@ -174,57 +145,35 @@ export default function InvoiceForm({
         return;
       }
 
+      // Build same payload for both create and edit
+      const items = values.lineItems.map((li) => ({
+        itemId: li.itemId,
+        rate: Number(li.rate) || 0,
+        quantity: Number(li.quantity) || 0,
+      }));
+      const payload: any = {
+        customerId: values.customerId,
+        invoiceDate:
+          values.invoiceDate instanceof Date
+            ? values.invoiceDate.toISOString()
+            : String(values.invoiceDate),
+        dueDate:
+          values.dueDate instanceof Date
+            ? values.dueDate.toISOString()
+            : String(values.dueDate),
+        paymentTerms: values.paymentTerms,
+        currency: values.currency,
+        items,
+        notes: values.notes,
+        status: status === "Draft" ? "Draft" : "Sent",
+      };
+
       if (isEditMode && invoice?.id) {
-        // Edit: include id for existing items, omit for new
-        const items = values.lineItems.map((li: any) => {
-          const out: any = {
-            itemId: li.itemId,
-            rate: Number(li.rate) || 0,
-            quantity: Number(li.quantity) || 0,
-          };
-          if (li.invoiceItemId) out.id = li.invoiceItemId;
-          return out;
-        });
-        const payload: any = {
-          customerId: values.customerId,
-          invoiceDate:
-            values.invoiceDate instanceof Date
-              ? values.invoiceDate.toISOString()
-              : String(values.invoiceDate),
-          dueDate:
-            values.dueDate instanceof Date
-              ? values.dueDate.toISOString()
-              : String(values.dueDate),
-          paymentTerms: values.paymentTerms,
-          currency: values.currency,
-          items,
-          notes: values.notes,
-          status: status === "Draft" ? "Draft" : "Sent",
-        };
+        // Edit mode: always send as Draft (only editing Draft invoices allowed)
+        payload.status = "Draft";
         await updateInvoice.mutateAsync({ id: invoice.id, data: payload });
       } else {
-        // Create: no id in items
-        const items = values.lineItems.map((li) => ({
-          itemId: li.itemId,
-          rate: Number(li.rate) || 0,
-          quantity: Number(li.quantity) || 0,
-        }));
-        const payload: any = {
-          customerId: values.customerId,
-          invoiceDate:
-            values.invoiceDate instanceof Date
-              ? values.invoiceDate.toISOString()
-              : String(values.invoiceDate),
-          dueDate:
-            values.dueDate instanceof Date
-              ? values.dueDate.toISOString()
-              : String(values.dueDate),
-          paymentTerms: values.paymentTerms,
-          currency: values.currency,
-          items,
-          notes: values.notes,
-          status: status === "Draft" ? "Draft" : "Sent",
-        };
+        // Create mode
         await createInvoice.mutateAsync(payload);
       }
     } catch (error) {
@@ -274,7 +223,7 @@ export default function InvoiceForm({
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
-                        disabled={customersLoading || disabledCustomerSelect}
+                        disabled={customersLoading || disabledCustomerSelect || isLockedForEditing}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue
@@ -458,7 +407,7 @@ export default function InvoiceForm({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => openConfirm(idx)}
+                          onClick={() => remove(idx)}
                         >
                           <Trash2 className="w-4 h-4 text-red-400" />
                         </Button>
@@ -481,7 +430,7 @@ export default function InvoiceForm({
                               if (selectedItem) {
                                 form.setValue(
                                   `lineItems.${idx}.rate`,
-                                  Number(selectedItem.sellingPrice) || 0,
+                                  Number(selectedItem.sellingPrice) || Number(selectedItem.rate) || 0,
                                 );
                                 // Optional: if you had a description field
                                 // form.setValue(`lineItems.${idx}.description`, selectedItem.description || "");
@@ -537,41 +486,7 @@ export default function InvoiceForm({
                   </div>
                 );
               })}
-              {/* Confirmation modal for removing existing items */}
-              <CustomModal
-                open={confirmOpen}
-                onOpenChange={(open) => setConfirmOpen(open)}
-                title="Remove item"
-                description="Are you sure you want to remove this item from the invoice?"
-                module={MODULES.SALES}
-              >
-                <div className="p-4">
-                  <p className="mb-4">
-                    This will remove the item from the invoice. This action can
-                    be undone by adding the item again.
-                  </p>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setConfirmOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        if (confirmIndex !== null) {
-                          handleRemove(confirmIndex);
-                        }
-                        setConfirmIndex(null);
-                        setConfirmOpen(false);
-                      }}
-                      variant="destructive"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </div>
-              </CustomModal>
+
             </div>
             {/* Subtotal, Tax, Total */}
             <div className="mt-2 flex flex-col gap-1 text-sm bg-white rounded-xl p-3">
@@ -638,7 +553,11 @@ export default function InvoiceForm({
             <Button variant="outline" type="button">
               Cancel{" "}
             </Button>{" "}
-            {(isEditMode && (invoice as any).status === "Draft") ||
+            {isLockedForEditing ? (
+              <div className="text-sm text-gray-500">
+                This invoice cannot be edited because it is not in Draft status.
+              </div>
+            ) : (isEditMode && (invoice as any).status === "Draft") ||
               (!isEditMode && (
                 <Button
                   type="submit"
@@ -652,25 +571,41 @@ export default function InvoiceForm({
                 >
                   {createInvoice.isPending || updateInvoice.isPending
                     ? "Please wait..."
-                    : "Save as Draft"}
+                    : isEditMode
+                      ? "Update as Draft"
+                      : "Save as Draft"}
                 </Button>
               ))}
-            <Button
-              type="submit"
-              disabled={createInvoice.isPending || updateInvoice.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                setInvoiceStatus("Sent");
-                form.handleSubmit((v) => onSubmit(v, "Sent"))();
-              }}
-            >
-              {" "}
-              {createInvoice.isPending || updateInvoice.isPending
-                ? "Please wait..."
-                : isEditMode
-                  ? "Update Invoice"
-                  : "Create Invoice"}{" "}
-            </Button>{" "}
+            {!isEditMode && (
+              <Button
+                type="submit"
+                disabled={createInvoice.isPending || updateInvoice.isPending}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setInvoiceStatus("Sent");
+                  form.handleSubmit((v) => onSubmit(v, "Sent"))();
+                }}
+              >
+                {" "}
+                {createInvoice.isPending || updateInvoice.isPending
+                  ? "Please wait..."
+                  : "Create & Send Invoice"}{" "}
+              </Button>
+            )}
+            {isEditMode && (invoice as any).status === "Draft" && (
+              <Button
+                type="submit"
+                disabled={createInvoice.isPending || updateInvoice.isPending}
+                onClick={(e) => {
+                  e.preventDefault();
+                  form.handleSubmit((v) => onSubmit(v))();
+                }}
+              >
+                {createInvoice.isPending || updateInvoice.isPending
+                  ? "Please wait..."
+                  : "Update Invoice"}{" "}
+              </Button>
+            )}{" "}
           </div>{" "}
         </form>{" "}
       </Form>{" "}

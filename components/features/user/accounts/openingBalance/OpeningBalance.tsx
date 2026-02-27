@@ -15,6 +15,8 @@ export default function OpeningBalance() {
 
   const accountsData = (accountsResponse as any)?.data || [];
 
+  console.log("Accounts Data:", accountsData);
+
   return (
     <div className="space-y-4">
       <OpeningBalanceHeader loading={loading} />

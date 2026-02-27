@@ -72,6 +72,12 @@ export const updateInvoice = (id: string | number, data: any) =>
 export const deleteInvoice = (id: string | number) =>
   apiClient(`sales/invoices/${id}`, { method: "DELETE" });
 
+export const updateInvoiceStatus = (id: string | number, status: string) =>
+  apiClient(`sales/invoices/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+
 export const sendInvoice = (id: string | number) =>
   apiClient(`sales/invoices/${id}/send`, { method: "POST" });
 

@@ -22,7 +22,10 @@ import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import { useRouter } from "next/navigation";
 import InvoiceForm from "./InvoiceForm";
-import { useDeleteInvoice } from "@/lib/api/hooks/useSales";
+import {
+  useDeleteInvoice,
+  useUpdateInvoiceStatus,
+} from "@/lib/api/hooks/useSales";
 import PaymentReceivedForm from "../payment-received/PaymentReceivedForm";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
@@ -31,11 +34,14 @@ export default function InvoicesActions({ row }: { row: any }) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const deleteInvoice = useDeleteInvoice();
+  const updateInvoiceStatus = useUpdateInvoiceStatus();
   const { isOpen, openModal, closeModal } = useModal();
 
   const deleteKey = MODAL.INVOICE_DELETE + "-" + row.id;
   const editKey = MODAL.INVOICE_EDIT + "-" + row.id;
   const recordPaymentKey = MODAL.PAYMENT_RECEIVED_EDIT + "-" + row.id;
+  const markSentKey = MODAL.INVOICE_MARK_SENT + "-" + row.id;
+
   const handleDeleteClick = () => {
     setDropdownOpen(false);
     setTimeout(() => openModal(deleteKey), 100);
@@ -51,11 +57,23 @@ export default function InvoicesActions({ row }: { row: any }) {
     setTimeout(() => openModal(recordPaymentKey), 100);
   };
 
-  const handleConfirm = (confirmed: boolean) => {
+  const handleMarkSentClick = () => {
+    setDropdownOpen(false);
+    setTimeout(() => openModal(markSentKey), 100);
+  };
+
+  const handleConfirmDelete = (confirmed: boolean) => {
     if (confirmed) {
       deleteInvoice.mutate(row.id);
     }
     closeModal(deleteKey);
+  };
+
+  const handleConfirmMarkSent = (confirmed: boolean) => {
+    if (confirmed) {
+      updateInvoiceStatus.mutate({ id: row.id, status: "Sent" });
+    }
+    closeModal(markSentKey);
   };
 
   return (
@@ -77,22 +95,36 @@ export default function InvoicesActions({ row }: { row: any }) {
           >
             <Eye className="size-4 mr-2" /> View
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleRecordPaymentClick();
-            }}
-          >
-            <DollarSign className="size-4 mr-2" /> Record payment
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleEditClick();
-            }}
-          >
-            <Edit3 className="size-4 mr-2" /> Edit
-          </DropdownMenuItem>
+          {row?.status !== "Paid" && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleRecordPaymentClick();
+              }}
+            >
+              <DollarSign className="size-4 mr-2" /> Record payment
+            </DropdownMenuItem>
+          )}
+          {row?.status === "Draft" && (
+            <>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleEditClick();
+                }}
+              >
+                <Edit3 className="size-4 mr-2" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleMarkSentClick();
+                }}
+              >
+                <Send className="size-4 mr-2" /> Mark as Sent
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -111,16 +143,20 @@ export default function InvoicesActions({ row }: { row: any }) {
           >
             <Download className="size-4 mr-2" /> Download PDF
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            data-variant="destructive"
-            onSelect={(e) => {
-              e.preventDefault();
-              handleDeleteClick();
-            }}
-          >
-            <Trash2 className="size-4 mr-2" /> Delete
-          </DropdownMenuItem>
+          {row?.status === "Draft" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                data-variant="destructive"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleDeleteClick();
+                }}
+              >
+                <Trash2 className="size-4 mr-2" /> Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <CustomModal
@@ -133,7 +169,7 @@ export default function InvoicesActions({ row }: { row: any }) {
       >
         <ConfirmationForm
           title={`Are you sure you want to delete invoice ${row.invoiceNumber}?`}
-          onResult={handleConfirm}
+          onResult={handleConfirmDelete}
           loading={deleteInvoice.isPending}
         />
       </CustomModal>
@@ -146,6 +182,22 @@ export default function InvoicesActions({ row }: { row: any }) {
         module={MODULES.SALES}
       >
         <InvoiceForm invoice={row} isEditMode />
+      </CustomModal>
+
+      <CustomModal
+        title={`Mark Invoice as Sent`}
+        description={`Are you sure you want to mark invoice ${row?.invoiceNumber} as sent?`}
+        open={isOpen(markSentKey)}
+        onOpenChange={(open) =>
+          open ? openModal(markSentKey) : closeModal(markSentKey)
+        }
+        module={MODULES.SALES}
+      >
+        <ConfirmationForm
+          title={`Mark invoice ${row.invoiceNumber} as sent?`}
+          onResult={handleConfirmMarkSent}
+          loading={updateInvoiceStatus.isPending}
+        />
       </CustomModal>
 
       <CustomModal

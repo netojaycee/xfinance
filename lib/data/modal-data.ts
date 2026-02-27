@@ -11,6 +11,7 @@ export const MODAL = {
   INVOICE_CREATE: "invoice-create",
   INVOICE_EDIT: "invoice-edit",
   INVOICE_DELETE: "invoice-delete",
+  INVOICE_MARK_SENT: "invoice-mark-sent",
   RECEIPT_CREATE: "receipt-create",
   RECEIPT_EDIT: "receipt-edit",
   RECEIPT_DELETE: "receipt-delete",

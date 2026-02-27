@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,10 +27,10 @@ import { Plus, Trash2, Calendar, Loader2 } from "lucide-react";
 import { useSetOpeningBalances } from "@/lib/api/hooks/useAccounts";
 import { Account } from "@/lib/api/hooks/types/accountsTypes";
 
-// Zod schema for Opening Balance
-const openingBalanceAccountSchema = z.object({
+// Zod schema for Opening Balance Line
+const openingBalanceLineSchema = z.object({
+  openingBalanceId: z.string().optional(),
   accountId: z.string().min(1, "Account is required"),
-  accountType: z.string(),
   debit: z.coerce.number().default(0),
   credit: z.coerce.number().default(0),
 });
@@ -38,47 +38,65 @@ const openingBalanceAccountSchema = z.object({
 const openingBalanceSchema = z.object({
   openingDate: z.string().min(1, "Opening balance date is required"),
   accounts: z
-    .array(openingBalanceAccountSchema)
+    .array(openingBalanceLineSchema)
     .min(1, "At least one account is required"),
 });
 
 type OpeningBalanceFormData = z.infer<typeof openingBalanceSchema>;
 
+interface OpeningBalance {
+  id: string;
+  accountId: string;
+  debit: number;
+  credit: number;
+}
+
 interface OpeningBalanceFormProps {
   accounts?: Account[];
+  existingBalances?: OpeningBalance[];
+  openingDate?: string;
   onSuccess?: () => void;
 }
 
-// Mock data for accounts
-const mockAccounts = [
-  { id: "1", name: "Cash and Cash Equivalents", type: "Asset" },
-  { id: "2", name: "Accounts Receivable", type: "Asset" },
-  { id: "3", name: "Accounts Payable", type: "Liability" },
-  { id: "4", name: "Revenue - Product Sales", type: "Revenue" },
-  { id: "5", name: "Cost of Goods Sold", type: "Expense" },
-];
-
 export default function OpeningBalanceForm({
   accounts = [],
+  existingBalances = [],
+  openingDate: initialOpeningDate,
   onSuccess,
 }: OpeningBalanceFormProps) {
-  const { entity, user } = useSessionStore();
   const setOpeningBalances = useSetOpeningBalances();
 
   const form = useForm<OpeningBalanceFormData>({
     resolver: zodResolver(openingBalanceSchema) as any,
     defaultValues: {
-      openingDate: new Date().toISOString().split("T")[0],
-      accounts: [{ accountId: "", accountType: "", debit: 0, credit: 0 }],
+      openingDate: initialOpeningDate || new Date().toISOString().split("T")[0],
+      accounts: [{ accountId: "", debit: 0, credit: 0 }],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: "accounts",
   });
 
-  // Watch for account changes to update account type
+  // Load existing balances when component mounts or existingBalances changes
+  useEffect(() => {
+    if (existingBalances.length > 0) {
+      // Map existing balances, storing the id as openingBalanceId
+      const mapped = existingBalances.map((balance: any) => ({
+        openingBalanceId: balance.id,
+        accountId: balance.accountId,
+        debit: balance.debit || 0,
+        credit: balance.credit || 0,
+      }));
+      replace(mapped as any[]);
+    } else {
+      // Reset to single empty row if no existing balances
+      replace([{ accountId: "", debit: 0, credit: 0 }] as any[]);
+    }
+  }, [existingBalances, replace]);
+
+  // Watch for account changes to calculate totals
   const watchAccounts = form.watch("accounts");
   const totalDebits = watchAccounts.reduce(
     (sum, acc) => sum + (acc.debit || 0),
@@ -92,16 +110,23 @@ export default function OpeningBalanceForm({
 
   const onSubmit = async (values: OpeningBalanceFormData) => {
     try {
-      const payload = {
-        entityId: entity.entityId || "",
-        lines: values.accounts.map((account) => ({
+      // Map accounts, including id for existing balances
+      const accounts = values.accounts.map((account: any) => {
+        const out: any = {
           accountId: account.accountId,
           debit: Math.round((account.debit || 0) * 100),
           credit: Math.round((account.credit || 0) * 100),
-        })),
+        };
+        if (account.openingBalanceId) out.id = account.openingBalanceId;
+        return out;
+      });
+
+      const payload = {
+        openingDate: values.openingDate,
+        accounts,
       };
 
-      await setOpeningBalances.mutateAsync(payload);
+      await setOpeningBalances.mutateAsync(payload as any);
     } catch (error) {
       // error handled below
     }
@@ -109,7 +134,6 @@ export default function OpeningBalanceForm({
 
   useEffect(() => {
     if (setOpeningBalances.isSuccess) {
-      toast.success("Opening balances saved successfully");
       if (onSuccess) onSuccess();
     }
     if (setOpeningBalances.isError) {
@@ -121,18 +145,16 @@ export default function OpeningBalanceForm({
   }, [setOpeningBalances.isSuccess, setOpeningBalances.isError]);
 
   const handleAddAccount = () => {
-    append({ accountId: "", accountType: "", debit: 0, credit: 0 });
-  };
-
-  const getAccountType = (accountId: string) => {
-    const account = mockAccounts.find((acc) => acc.id === accountId);
-    return account?.type || "";
+    append({ accountId: "", debit: 0, credit: 0 });
   };
 
   const handleAccountChange = (index: number, accountId: string) => {
-    const accountType = getAccountType(accountId);
     form.setValue(`accounts.${index}.accountId`, accountId);
-    form.setValue(`accounts.${index}.accountType`, accountType);
+  };
+
+  const getAccountType = (accountId: string) => {
+    const account = accounts.find((acc) => acc.id === accountId);
+    return (account as any)?.subCategory?.category?.type?.name || "—";
   };
 
   return (
@@ -226,17 +248,17 @@ export default function OpeningBalanceForm({
                               }
                             >
                               <FormControl>
-                                <SelectTrigger className="w-full rounded-lg border-gray-300">
+                                <SelectTrigger className="w-full rounded-lg border-gray-300 truncate">
                                   <SelectValue placeholder="Select account" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
-                                {mockAccounts.map((account) => (
+                              <SelectContent className="">
+                                {accounts.map((account) => (
                                   <SelectItem
                                     key={account.id}
                                     value={account.id}
                                   >
-                                    {account.name}
+                                    {account.name}-{account.code}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -253,7 +275,7 @@ export default function OpeningBalanceForm({
                         Account Type
                       </FormLabel>
                       <div className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700">
-                        {watchAccounts[index]?.accountType || "—"}
+                        {getAccountType(watchAccounts[index]?.accountId || "")}
                       </div>
                     </div>
 

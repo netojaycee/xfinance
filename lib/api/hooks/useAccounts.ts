@@ -81,12 +81,12 @@ export const useUpdateAccount = (
 };
 
 export const useSetOpeningBalances = (
-  options?: UseMutationOptions<any, Error, { entityId: string; lines: any[] }>,
+  options?: UseMutationOptions<any, Error, { lines: any[] }>,
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ entityId, lines }) => accountsService.setOpeningBalances(entityId, { lines }),
+    mutationFn: ({ lines }) => accountsService.setOpeningBalances( { lines }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
       toast.success("Opening balances set successfully");

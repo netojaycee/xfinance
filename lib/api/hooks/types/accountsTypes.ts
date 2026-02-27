@@ -39,17 +39,22 @@ export interface Account {
   id: string;
   name: string;
   code: string;
-  category: AccountCategoryEnum;
-  subCategory: AccountSubCategoryEnum | string;
   description: string;
-  type: string;
   balance: number;
-  credit: number;
-  debit: number;
-  date: string;
   entityId: string;
+  subCategoryId: string;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
+  subCategory?: AccountSubCategory;
+  typeName?: string;
+  categoryName?: string;
+  subCategoryName?: string;
+  // Legacy fields for backward compatibility
+  category?: AccountCategoryEnum;
+  type?: string;
+  credit?: number;
+  debit?: number;
+  date?: string;
 }
 
 // Account Type (system-wide)
@@ -84,6 +89,7 @@ export interface AccountSubCategory {
   categoryId: string;
   createdAt: string;
   updatedAt: string;
+  category?: AccountCategory;
   accounts?: Account[];
 }
 

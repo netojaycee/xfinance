@@ -321,6 +321,32 @@ export const useDeleteInvoice = (
   });
 };
 
+export const useUpdateInvoiceStatus = (
+  options?: UseMutationOptions<any, Error, { id: string; status: string }>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: ({ id, status }) =>
+      salesService.updateInvoiceStatus(id, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({
+        queryKey: ["invoices", "detail", variables.id],
+      });
+      toast.success("Invoice status updated successfully");
+      closeModal(MODAL.INVOICE_MARK_SENT + "-" + variables.id);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update invoice status",
+      );
+    },
+    ...options,
+  });
+};
+
 // ────────────────────────────────────────────────
 // Paid Invoices (list only – no CRUD)
 // ────────────────────────────────────────────────

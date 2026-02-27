@@ -147,7 +147,6 @@ export const updateAccount = async (
 };
 
 export const setOpeningBalances = async (
-  entityId: string,
   data: {
     lines: Array<{
       accountId: string;
@@ -156,7 +155,7 @@ export const setOpeningBalances = async (
     }>;
   }
 ) => {
-  return apiClient(`account/${entityId}/opening-balances`, {
+  return apiClient(`account/opening-balances`, {
     method: "POST",
     body: JSON.stringify(data),
     headers: {
