@@ -149,6 +149,61 @@ export interface JournalResponse {
   };
 }
 
+// Account Transaction Enums
+export enum AccountTransactionTypeEnum {
+  BANK = "BANK",
+  INVOICE_POSTING = "INVOICE_POSTING",
+  PAYMENT_RECEIVED_POSTING = "PAYMENT_RECEIVED_POSTING",
+  OPENING_BALANCE = "OPENING_BALANCE",
+  MANUAL_ENTRY = "MANUAL_ENTRY",
+  JOURNAL_ENTRY = "JOURNAL_ENTRY",
+  EXPENSE_POSTING = "EXPENSE_POSTING",
+  BILL_POSTING = "BILL_POSTING",
+}
+
+export enum TransactionPostingStatusEnum {
+  Pending = "Pending",
+  Processing = "Processing",
+  Success = "Success",
+  Failed = "Failed",
+}
+
+// Account Transaction Interface
+export interface AccountTransaction {
+  id: string;
+  date: string;
+  description: string;
+  reference: string;
+  type: AccountTransactionTypeEnum;
+  status: TransactionPostingStatusEnum;
+  accountId: string;
+  debitAmount: number;
+  creditAmount: number;
+  runningBalance: number;
+  entityId?: string;
+  relatedEntityId?: string;
+  relatedEntityType?: string;
+  bankAccountId?: string;
+  payee?: string;
+  method?: string;
+  metadata?: Record<string, any>;
+  account?: {
+    id: string;
+    name: string;
+    code: string;
+  };
+}
+
+export interface AccountTransactionsResponse {
+  data: AccountTransaction[];
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 // Zod Schemas
 export const createAccountSchema = z.object({
   name: z.string().min(1, "Account name is required"),

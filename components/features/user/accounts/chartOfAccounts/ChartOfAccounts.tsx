@@ -5,8 +5,10 @@ import { useAccounts } from "@/lib/api/hooks/useAccounts";
 import { chartOfAccountsColumns } from "./ChartOfAccountsColumn";
 import ChartOfAccountsHeader from "./ChartOfAccountsHeader";
 import { useDebounce } from "use-debounce";
+import { useRouter } from "next/navigation";
 
 export default function ChartOfAccounts() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [page, setPage] = React.useState(1);
@@ -28,6 +30,10 @@ export default function ChartOfAccounts() {
     setPage(1); // Reset to first page on search
   };
 
+  const handleRowClick = (account: any) => {
+    router.push(`/accounts/chart-of-accounts/${account.id}`);
+  };
+
   return (
     <div className="space-y-4">
       <ChartOfAccountsHeader loading={loading} />
@@ -38,6 +44,7 @@ export default function ChartOfAccounts() {
         data={accountsData}
         pageSize={pageSize}
         loading={loading}
+        onRowClick={handleRowClick}
         onSearchChange={handleSearchChange}
         display={{ searchComponent: true }}
         pagination={{

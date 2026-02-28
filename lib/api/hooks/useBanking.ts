@@ -116,35 +116,6 @@ export const useDeleteBankAccount = (
   });
 };
 
-// ────────────────────────────────────────────────
-// Bank Transactions
-// ────────────────────────────────────────────────
-
-export const useBankTransactions = (
-  accountId: string,
-  params?: {
-    search?: string;
-    page?: number;
-    limit?: number;
-    status?: string;
-  },
-) => {
-  return useQuery({
-    queryKey: [
-      "bankTransactions",
-      accountId,
-      params?.search,
-      params?.page,
-      params?.limit,
-      params?.status,
-    ],
-    queryFn: () => bankingService.getBankTransactions(accountId, params),
-    enabled: !!accountId,
-    staleTime: 2 * 60 * 1000,
-    refetchOnWindowFocus: true,
-  });
-};
-
 export const useReconcileBankAccount = (
   options?: UseMutationOptions<any, Error, { accountId: string; data: any }>,
 ) => {

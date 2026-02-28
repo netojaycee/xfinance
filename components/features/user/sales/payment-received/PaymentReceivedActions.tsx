@@ -37,8 +37,8 @@ export default function PaymentReceivedActions({
   const { isOpen, openModal, closeModal } = useModal();
   const deletePayment = useDeletePaymentReceived();
 
-  const deleteKey = MODAL.PAYMENT_RECEIVED_DELETE + '-' + row.id;
-  const editKey = MODAL.PAYMENT_RECEIVED_EDIT + '-' + row.id;
+  const deleteKey = MODAL.PAYMENT_RECEIVED_DELETE + "-" + row.id;
+  const editKey = MODAL.PAYMENT_RECEIVED_EDIT + "-" + row.id;
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
@@ -79,14 +79,16 @@ export default function PaymentReceivedActions({
           >
             <Eye className="size-4 mr-2" /> View Details
           </DropdownMenuItem> */}
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleEditClick();
-            }}
-          >
-            <Edit3 className="size-4 mr-2" /> Edit Payment
-          </DropdownMenuItem>
+          {row?.postingStatus === "Pending" && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleEditClick();
+              }}
+            >
+              <Edit3 className="size-4 mr-2" /> Edit Payment
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -107,6 +109,8 @@ export default function PaymentReceivedActions({
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
+                    {row?.postingStatus === "Pending" && (
+
           <DropdownMenuItem
             data-variant="destructive"
             onSelect={(e) => {
@@ -115,13 +119,15 @@ export default function PaymentReceivedActions({
             }}
           >
             <Trash2 className="size-4 mr-2" /> Delete Payment
-          </DropdownMenuItem>
+          </DropdownMenuItem>)}
         </DropdownMenuContent>
       </DropdownMenu>
       <CustomModal
         title="Confirm Deletion"
         open={isOpen(deleteKey)}
-        onOpenChange={(open) => open ? openModal(deleteKey) : closeModal(deleteKey)}
+        onOpenChange={(open) =>
+          open ? openModal(deleteKey) : closeModal(deleteKey)
+        }
         module={MODULES.SALES}
       >
         <ConfirmationForm
@@ -133,13 +139,18 @@ export default function PaymentReceivedActions({
       <CustomModal
         title={`Edit Payment: ${row.reference}`}
         open={isOpen(editKey)}
-        onOpenChange={(open) => open ? openModal(editKey) : closeModal(editKey)}
+        onOpenChange={(open) =>
+          open ? openModal(editKey) : closeModal(editKey)
+        }
         module={MODULES.SALES}
       >
         <PaymentReceivedForm
           payment={{
             ...row,
-            paidAt: typeof row.paidAt === 'string' ? new Date(row.paidAt) : row.paidAt,
+            paidAt:
+              typeof row.paidAt === "string"
+                ? new Date(row.paidAt)
+                : row.paidAt,
           }}
           isEditMode
         />

@@ -28,7 +28,7 @@ export interface PaymentReceived {
   depositTo: string;
   reference: string;
   note?: string;
-  status: "Paid" | "Partial" | "Pending";
+  postingStatus: string;
   totalAmount?: number;
   paidAmount?: number;
   outstanding?: number;

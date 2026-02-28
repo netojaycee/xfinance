@@ -1,20 +1,16 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { CustomTable } from "@/components/local/custom/custom-table";
 import { CustomTabs, Tab } from "@/components/local/custom/tabs";
-import { BankTransaction } from "./types";
+import { AccountTransaction } from "@/lib/types/accountsTypes";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { ArrowDownRight, ArrowUpRight, CreditCard } from "lucide-react";
 import { useDebounce } from "use-debounce";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  CreditCard,
-} from "lucide-react";
 
 interface BankTransactionsProps {
-  transactions: BankTransaction[];
+  transactions: AccountTransaction[];
   isLoading: boolean;
 }
 
@@ -22,30 +18,12 @@ export default function BankTransactions({
   transactions,
   isLoading,
 }: BankTransactionsProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
-
   // Filter pending transactions
   const pendingTransactions = useMemo(() => {
     return transactions.filter((t) => t.status === "Pending");
   }, [transactions]);
-
-  // Search through all transactions
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((t) =>
-      t.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      t.reference.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      t.payeePayor.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    );
-  }, [transactions, debouncedSearchTerm]);
-
-  const filteredPendingTransactions = useMemo(() => {
-    return pendingTransactions.filter((t) =>
-      t.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      t.reference.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      t.payeePayor.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    );
-  }, [pendingTransactions, debouncedSearchTerm]);
 
   const columns = [
     {
@@ -58,31 +36,21 @@ export default function BankTransactions({
       ),
     },
     {
-      key: "type",
-      title: "Type",
-      render: (value: unknown) => {
-        const type = value as string;
-        let badgeClass = "";
-        let Icon = CreditCard;
-
-        if (type === "Deposit") {
-          badgeClass = "bg-green-100 text-green-700";
-          Icon = ArrowDownRight;
-        } else if (type === "Withdrawal") {
-          badgeClass = "bg-red-100 text-red-700";
-          Icon = ArrowUpRight;
-        } else if (type === "Fee") {
-          badgeClass = "bg-orange-100 text-orange-700";
-        } else if (type === "Interest") {
-          badgeClass = "bg-blue-100 text-blue-700";
-        } else if (type === "Transfer") {
-          badgeClass = "bg-purple-100 text-purple-700";
-        }
+      key: "debitAmount",
+      title: "Transaction",
+      render: (value: unknown, row?: any) => {
+        const debitAmount = row?.debitAmount || 0;
+        const creditAmount = row?.creditAmount || 0;
+        const isDeposit = debitAmount > 0;
+        const Icon = isDeposit ? ArrowDownRight : ArrowUpRight;
 
         return (
-          <Badge className={`${badgeClass} text-xs font-medium px-2 py-1`}>
-            {type}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Icon className={`w-4 h-4 ${isDeposit ? "text-green-600" : "text-red-600"}`} />
+            <Badge className={`${isDeposit ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"} text-xs font-medium px-2 py-1`}>
+              {isDeposit ? "Deposit" : "Withdrawal"}
+            </Badge>
+          </div>
         );
       },
     },
@@ -97,31 +65,37 @@ export default function BankTransactions({
       ),
     },
     {
-      key: "payeePayor",
-      title: "Payee/Payor",
+      key: "payee",
+      title: "Payee",
       render: (value: unknown) => (
-        <span className="text-xs text-gray-600">{value as string}</span>
+        <span className="text-xs text-gray-600">{value as string || "-"}</span>
       ),
     },
     {
       key: "method",
       title: "Method",
       render: (value: unknown) => (
-        <span className="text-xs text-gray-500">{value as string}</span>
+        <span className="text-xs text-gray-500">{value as string || "-"}</span>
       ),
     },
     {
       key: "reference",
       title: "Reference",
       render: (value: unknown) => (
-        <span className="text-xs font-mono text-gray-600">{value as string}</span>
+        <span className="text-xs font-mono text-gray-600">
+          {value as string}
+        </span>
       ),
     },
     {
-      key: "amount",
+      key: "debitAmount",
       title: "Amount",
       render: (value: unknown, row?: any) => {
-        const isDeposit = row?.type === "Deposit" || row?.type === "Interest";
+        const debitAmount = row?.debitAmount || 0;
+        const creditAmount = row?.creditAmount || 0;
+        const amount = debitAmount > 0 ? debitAmount : creditAmount;
+        const isDeposit = debitAmount > 0;
+
         return (
           <span
             className={`text-xs font-semibold ${
@@ -129,7 +103,7 @@ export default function BankTransactions({
             }`}
           >
             {isDeposit ? "+" : "-"}₦
-            {(value as number).toLocaleString(undefined, {
+            {amount.toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}
           </span>
@@ -137,7 +111,7 @@ export default function BankTransactions({
       },
     },
     {
-      key: "balance",
+      key: "runningBalance",
       title: "Balance",
       render: (value: unknown) => (
         <span className="text-xs font-semibold text-gray-900">
@@ -153,12 +127,24 @@ export default function BankTransactions({
       title: "Status",
       render: (value: unknown) => {
         const status = value as string;
-        const badgeClass =
-          status === "Cleared"
-            ? "bg-green-100 text-green-700"
-            : status === "Pending"
-              ? "bg-orange-100 text-orange-700"
-              : "bg-blue-100 text-blue-700";
+        let badgeClass = "";
+        
+        switch (status) {
+          case "Success":
+            badgeClass = "bg-green-100 text-green-700";
+            break;
+          case "Processing":
+            badgeClass = "bg-blue-100 text-blue-700";
+            break;
+          case "Pending":
+            badgeClass = "bg-orange-100 text-orange-700";
+            break;
+          case "Failed":
+            badgeClass = "bg-red-100 text-red-700";
+            break;
+          default:
+            badgeClass = "bg-gray-100 text-gray-700";
+        }
 
         return (
           <Badge className={`${badgeClass} text-xs font-medium px-2 py-1`}>
@@ -175,7 +161,7 @@ export default function BankTransactions({
       title: "All Transactions",
       content: (
         <CustomTable
-          data={filteredTransactions}
+          data={transactions}
           columns={columns as any}
           tableTitle="All Transactions"
           searchPlaceholder="Search transactions..."
@@ -195,11 +181,11 @@ export default function BankTransactions({
       title: `Pending (${pendingTransactions.length})`,
       content: (
         <CustomTable
-          data={filteredPendingTransactions}
+          data={pendingTransactions}
+          onSearchChange={setSearchTerm}
           columns={columns as any}
           tableTitle="Pending Transactions"
           searchPlaceholder="Search pending transactions..."
-          onSearchChange={setSearchTerm}
           display={{
             searchComponent: true,
             statusComponent: false,

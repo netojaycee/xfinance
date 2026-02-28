@@ -123,6 +123,10 @@ export const getAccounts = async (params?: { search?: string; subCategory?: stri
   return apiClient(url, { method: "GET" });
 };
 
+export const getAccountById = async (id: string) => {
+  return apiClient(`account/${id}`, { method: "GET" });
+};
+
 export const updateAccount = async (
   id: string,
   data: {
@@ -250,4 +254,70 @@ export const deleteJournal = async (id: string) => {
 
 export const getJournalByReference = async (reference: string) => {
   return apiClient(`journal/by-reference/${reference}`, { method: "GET" });
+};
+/**
+ * Account Transactions Endpoints (Unified)
+ */
+export const getAccountTransactions = async (params?: {
+  accountId?: string;
+  bankAccountId?: string;
+  type?: "BANK" | "INVOICE_POSTING" | "PAYMENT_RECEIVED_POSTING" | "OPENING_BALANCE" | "MANUAL_ENTRY" | "JOURNAL_ENTRY" | "EXPENSE_POSTING" | "BILL_POSTING";
+  search?: string;
+  fromDate?: string;
+  toDate?: string;
+  status?: "Pending" | "Processing" | "Success" | "Failed";
+  page?: number;
+  pageSize?: number;
+}) => {
+  const queryParams = new URLSearchParams();
+  if (params?.accountId) queryParams.append("accountId", params.accountId);
+  if (params?.bankAccountId) queryParams.append("bankAccountId", params.bankAccountId);
+  if (params?.type) queryParams.append("type", params.type);
+  if (params?.search) queryParams.append("search", params.search);
+  if (params?.fromDate) queryParams.append("fromDate", params.fromDate);
+  if (params?.toDate) queryParams.append("toDate", params.toDate);
+  if (params?.status) queryParams.append("status", params.status);
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.pageSize) queryParams.append("pageSize", params.pageSize.toString());
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `account-transactions?${queryString}` : "account-transactions";
+  return apiClient(url, { method: "GET" });
+};
+
+export const getAccountTransactionById = async (id: string) => {
+  return apiClient(`account-transactions/${id}`, { method: "GET" });
+};
+
+export const getAccountTransactionsByAccountId = async (accountId: string, params?: { page?: number; pageSize?: number; status?: string; type?: string }) => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.pageSize) queryParams.append("pageSize", params.pageSize.toString());
+  if (params?.status) queryParams.append("status", params.status);
+  if (params?.type) queryParams.append("type", params.type);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `account-transactions/account/${accountId}?${queryString}` : `account-transactions/account/${accountId}`;
+  return apiClient(url, { method: "GET" });
+};
+
+export const getAccountTransactionsByBankAccountId = async (bankAccountId: string, params?: { page?: number; pageSize?: number; status?: string }) => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.pageSize) queryParams.append("pageSize", params.pageSize.toString());
+  if (params?.status) queryParams.append("status", params.status);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `account-transactions/bank/${bankAccountId}?${queryString}` : `account-transactions/bank/${bankAccountId}`;
+  return apiClient(url, { method: "GET" });
+};
+
+export const getAccountTransactionsSummary = async (params?: { bankAccountId?: string; type?: string }) => {
+  const queryParams = new URLSearchParams();
+  if (params?.bankAccountId) queryParams.append("bankAccountId", params.bankAccountId);
+  if (params?.type) queryParams.append("type", params.type);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `account-transactions/summary/stats?${queryString}` : "account-transactions/summary/stats";
+  return apiClient(url, { method: "GET" });
 };

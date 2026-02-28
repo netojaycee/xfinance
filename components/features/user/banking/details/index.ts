@@ -3,7 +3,6 @@ export { default as BankProfileHeader } from "./BankProfileHeader";
 export { default as BankStatsCard } from "./BankStatsCard";
 export { default as BankTransactions } from "./BankTransactions";
 export type {
-  BankTransaction,
   BankStats,
   BankAccountProfile,
   BankApiResponse,

@@ -40,6 +40,7 @@ import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { useEffect } from "react";
 import { useAccounts } from "@/lib/api/hooks/useAccounts";
+import { paymentMethodOptions } from "../../sales/payment-received/PaymentReceivedForm";
 
 const expenseSchema = z.object({
   date: z.date(),
@@ -382,23 +383,11 @@ export default function ExpensesForm({
                           <SelectValue placeholder="Select method" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Cash">Cash</SelectItem>
-                          <SelectItem value="Card">Card</SelectItem>
-                          <SelectItem value="Bank_Transfer">
-                            Bank Transfer
-                          </SelectItem>
-                          <SelectItem value="Mobile_Money">
-                            Mobile Money
-                          </SelectItem>
-                          <SelectItem value="Check">Check</SelectItem>
-                          <SelectItem value="Debit_Card">Debit Card</SelectItem>
-                          <SelectItem value="Credit_Card">
-                            Credit Card
-                          </SelectItem>
-                          <SelectItem value="ACH">ACH</SelectItem>
-                          <SelectItem value="Wire_Transfer">
-                            Wire Transfer
-                          </SelectItem>
+                          {paymentMethodOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </FormControl>

@@ -15,6 +15,9 @@ import {
   UpdateJournalInput,
   AccountsResponse,
   JournalResponse,
+  AccountTransactionsResponse,
+  AccountTransactionTypeEnum,
+  TransactionPostingStatusEnum,
 } from "./types/accountsTypes";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
@@ -29,6 +32,75 @@ export const useAccounts = (params?: { search?: string; page?: number; limit?: n
     queryKey: ["accounts", params?.search, params?.page, params?.limit, params?.subCategory, params?.type],
     queryFn: () => accountsService.getAccounts(params) as Promise<AccountsResponse>,
     staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useAccount = (id: string) => {
+  return useQuery({
+    queryKey: ["accounts", "detail", id],
+    queryFn: () => accountsService.getAccountById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useAccountTransactions = (params?: {
+  accountId?: string;
+  bankAccountId?: string;
+  type?: "BANK" | "INVOICE_POSTING" | "PAYMENT_RECEIVED_POSTING" | "OPENING_BALANCE" | "MANUAL_ENTRY" | "JOURNAL_ENTRY" | "EXPENSE_POSTING" | "BILL_POSTING";
+  search?: string;
+  fromDate?: string;
+  toDate?: string;
+  status?: "Pending" | "Processing" | "Success" | "Failed";
+  page?: number;
+  pageSize?: number;
+}) => {
+  return useQuery<AccountTransactionsResponse>({
+    queryKey: ["accountTransactions", params?.accountId, params?.bankAccountId, params?.type, params?.search, params?.fromDate, params?.toDate, params?.status, params?.page, params?.pageSize],
+    queryFn: () => accountsService.getAccountTransactions(params) as Promise<AccountTransactionsResponse>,
+    staleTime: 1 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useAccountTransactionsByAccountId = (
+  accountId: string,
+  params?: {
+    search?: string;
+    fromDate?: string;
+    toDate?: string;
+    status?: "Pending" | "Processing" | "Success" | "Failed";
+    page?: number;
+    pageSize?: number;
+  },
+) => {
+  return useQuery<AccountTransactionsResponse>({
+    queryKey: ["accountTransactions", "byAccountId", accountId, params?.search, params?.fromDate, params?.toDate, params?.status, params?.page, params?.pageSize],
+    queryFn: () => accountsService.getAccountTransactionsByAccountId(accountId, params) as Promise<AccountTransactionsResponse>,
+    enabled: !!accountId,
+    staleTime: 1 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useAccountTransactionsByBankAccountId = (
+  bankAccountId: string,
+  params?: {
+    search?: string;
+    fromDate?: string;
+    toDate?: string;
+    status?: "Pending" | "Processing" | "Success" | "Failed";
+    page?: number;
+    pageSize?: number;
+  },
+) => {
+  return useQuery<AccountTransactionsResponse>({
+    queryKey: ["accountTransactions", "byBankAccountId", bankAccountId, params?.search, params?.fromDate, params?.toDate, params?.status, params?.page, params?.pageSize],
+    queryFn: () => accountsService.getAccountTransactionsByBankAccountId(bankAccountId, params) as Promise<AccountTransactionsResponse>,
+    enabled: !!bankAccountId,
+    staleTime: 1 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 };

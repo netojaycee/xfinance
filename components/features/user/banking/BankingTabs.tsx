@@ -3,10 +3,18 @@ import { CustomTable } from "@/components/local/custom/custom-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import React from "react";
 import BankReconciliationCard from "./BankReconciliationCard";
-import { bankingColumns, bankingData } from "./BankingColumn";
+import { bankingColumns } from "./BankingColumn";
+import { useAccountTransactions } from "@/lib/api/hooks/useAccounts";
 
 export function BankingTabs() {
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const { data: transactionsResponse, isLoading } =
+    useAccountTransactions({
+      type: "BANK",
+      pageSize: 10,
+    });
+
+  const transactions = (transactionsResponse as any)?.data || [];
+
   return (
     <div className="flex w-full flex-col gap-6">
       <Tabs defaultValue="transactions">
@@ -15,19 +23,18 @@ export function BankingTabs() {
           <TabsTrigger value="reconciliation">Bank Reconciliation</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions">
-           <CustomTable
+          <CustomTable
             tableTitle="Recent Transactions"
             tableSubtitle="Latest bank activity"
             columns={bankingColumns}
-            data={bankingData}
+            data={transactions}
             pageSize={10}
-            loading={loading}
+            loading={isLoading}
             display={{ searchComponent: false, exportButton: true }}
           />
         </TabsContent>
         <TabsContent value="reconciliation">
-                   <BankReconciliationCard />
-
+          <BankReconciliationCard />
         </TabsContent>
       </Tabs>
     </div>

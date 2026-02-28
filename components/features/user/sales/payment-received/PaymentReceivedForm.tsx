@@ -29,10 +29,9 @@ import {
   useInvoices,
 } from "@/lib/api/hooks/useSales";
 import { useAccounts } from "@/lib/api/hooks/useAccounts";
-import { toast } from "sonner";
 import { paymentReceivedSchema, PaymentReceivedFormData } from "./utils/schema";
 
-const paymentMethodOptions = [
+export const paymentMethodOptions = [
   { label: "Bank Transfer", value: "Bank_Transfer" },
   { label: "Cash", value: "Cash" },
   { label: "Card", value: "Card" },
@@ -80,7 +79,7 @@ export default function PaymentReceivedForm({
       depositTo: payment?.depositTo || "",
       reference: payment?.reference || "",
       note: payment?.note || "",
-      status: payment?.status || "Paid",
+      // status: payment?.status || "Paid",
     },
   });
 
@@ -169,7 +168,7 @@ export default function PaymentReceivedForm({
             <h4 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
               <CreditCard className="w-5 h-5" /> Payment Details
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <FormField
                 control={form.control}
                 name="paidAt"
@@ -277,7 +276,7 @@ export default function PaymentReceivedForm({
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
@@ -305,8 +304,10 @@ export default function PaymentReceivedForm({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-              <FormField
+              /> */}
+        
+            </div>
+                  <FormField
                 control={form.control}
                 name="reference"
                 render={({ field }) => (
@@ -322,7 +323,6 @@ export default function PaymentReceivedForm({
                   </FormItem>
                 )}
               />
-            </div>
           </div>
 
           {/* --- Additional Notes --- */}

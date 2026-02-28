@@ -1,29 +1,13 @@
-import {
-  Eye,
-  Download,
-  Trash2,
-  MoreVertical,
-  Edit3,
-  FileText,
-} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { Column } from "@/components/local/custom/custom-table";
 import { PaymentReceived } from "./utils/types";
 import PaymentReceivedActions from "./PaymentReceivedActions";
 
-const statusColors: Record<string, string> = {
-  Paid: "bg-green-100 text-green-700",
-  Partial: "bg-yellow-100 text-yellow-700",
-  Pending: "bg-gray-100 text-gray-700",
-};
+// const statusColors: Record<string, string> = {
+//   Paid: "bg-green-100 text-green-700",
+//   Partial: "bg-yellow-100 text-yellow-700",
+//   Pending: "bg-gray-100 text-gray-700",
+// };
 
 const paymentMethodColors: Record<string, string> = {
   Bank_Transfer: "bg-blue-50 text-blue-700",
@@ -88,16 +72,16 @@ export const PaymentReceivedColumns: Column<PaymentReceived>[] = [
       </span>
     ),
   },
-  {
-    key: "status",
-    title: "Status",
-    className: "text-xs",
-    render: (value) => (
-      <Badge className={`${statusColors[value] || "bg-gray-100"} px-3 py-1 rounded-full text-[10px] font-medium`}>
-        {value}
-      </Badge>
-    ),
-  },
+  // {
+  //   key: "status",
+  //   title: "Status",
+  //   className: "text-xs",
+  //   render: (value) => (
+  //     <Badge className={`${statusColors[value] || "bg-gray-100"} px-3 py-1 rounded-full text-[10px] font-medium`}>
+  //       {value}
+  //     </Badge>
+  //   ),
+  // },
   {
     key: "actions",
     title: "Actions",

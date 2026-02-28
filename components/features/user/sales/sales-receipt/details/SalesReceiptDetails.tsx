@@ -11,6 +11,7 @@ interface SalesReceiptDetailsProps {
 
 export default function SalesReceiptDetails({ receipt, onClose }: SalesReceiptDetailsProps) {
     if (!receipt) return null;
+    console.log(receipt, "Sales Receipt Details Data"); // Debug log to check receipt data
 
     const getItems = () => {
         if (!receipt.items) return [];
@@ -56,6 +57,9 @@ export default function SalesReceiptDetails({ receipt, onClose }: SalesReceiptDe
                     <div>
                         <p className="text-gray-500 text-sm font-medium mb-1">Customer</p>
                         <p className="font-medium">{receipt.customer?.name || receipt.customerName || "Walk-in Customer"}</p>
+                        {receipt.customer?.email && (
+                            <p className="text-gray-600 text-sm">{receipt.customer.email}</p>
+                        )}
                     </div>
                     <div>
                         <p className="text-gray-500 text-sm font-medium mb-1">Payment Method</p>
@@ -72,7 +76,10 @@ export default function SalesReceiptDetails({ receipt, onClose }: SalesReceiptDe
                         parsedItems.map((item: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center">
                                 <div>
-                                    <p className="font-medium">{item.description || "Product"}</p>
+                                    <p className="font-medium">
+                                        {item.item?.name || item.description || "Product"}
+                                        {item.item?.sku && <span className="text-gray-500 text-xs ml-2">({item.item.sku})</span>}
+                                    </p>
                                     <p className="text-gray-500 text-sm">
                                         {item.quantity} x {item.rate != null ? `₦${Number(item.rate).toLocaleString()}` : ""}
                                     </p>
@@ -88,12 +95,25 @@ export default function SalesReceiptDetails({ receipt, onClose }: SalesReceiptDe
                 </div>
             </div>
 
-            {/* Total Section */}
-            <div className="bg-white rounded-xl p-4 flex justify-between items-center">
-                <span className="text-lg font-medium">Total Amount</span>
-                <span className="text-2xl font-bold">₦{(receipt.total || 0).toLocaleString()}</span>
+            {/* Summary Section */}
+            <div className="bg-white rounded-xl p-4 space-y-3 border border-gray-200">
+                <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-medium">₦{(receipt.subtotal || 0).toLocaleString()}</span>
+                </div>
+                {receipt.tax > 0 && (
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Tax</span>
+                        <span className="font-medium">₦{(receipt.tax || 0).toLocaleString()}</span>
+                    </div>
+                )}
+                <div className="border-t pt-3 flex justify-between items-center">
+                    <span className="text-lg font-medium">Total Amount</span>
+                    <span className="text-2xl font-bold text-green-700">₦{(receipt.total || 0).toLocaleString()}</span>
+                </div>
             </div>
 
+            
             {/* Actions Section */}
             <div className="grid grid-cols-3 gap-3 pt-4">
                 <Button variant="outline" onClick={() => window.print()}>

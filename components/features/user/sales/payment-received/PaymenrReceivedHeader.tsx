@@ -77,7 +77,7 @@ export default function PaymentReceivedHeader({
               title="Partial Payments"
               value={
                 <span className="text-xl">
-                  ₦{(stats?.totalPartiallyPaidInvoices || 0).toLocaleString()}
+                  {(stats?.totalPartiallyPaidInvoices || 0).toLocaleString()}
                 </span>
               }
               subtitle="Invoices partially paid"

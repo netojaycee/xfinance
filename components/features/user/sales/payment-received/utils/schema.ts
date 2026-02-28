@@ -8,7 +8,7 @@ export const paymentReceivedSchema = z.object({
   depositTo: z.string().min(1, "Deposit account is required"),
   reference: z.string().min(1, "Reference is required"),
   note: z.string().optional(),
-  status: z.enum(["Paid", "Partial", "Pending"]),
+  // status: z.enum(["Paid", "Partial", "Pending"]),
 });
 
 export type PaymentReceivedFormData = z.infer<typeof paymentReceivedSchema>;

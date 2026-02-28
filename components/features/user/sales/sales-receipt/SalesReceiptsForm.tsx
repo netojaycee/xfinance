@@ -29,7 +29,9 @@ import {
   useCustomers,
 } from "@/lib/api/hooks/useSales";
 import { useItems } from "@/lib/api/hooks/useProducts";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
 import { ItemSelector } from "../invoices/ItemSelector";
+import { paymentMethodOptions } from "../payment-received/PaymentReceivedForm";
 
 export const receiptSchema = z.object({
   customerId: z.string().min(1, "Customer is required"),
@@ -45,6 +47,7 @@ export const receiptSchema = z.object({
     "ACH",
     "Wire_Transfer",
   ]),
+  depositTo: z.string().min(1, "Deposit account is required"),
   lineItems: z
     .array(
       z.object({
@@ -72,11 +75,15 @@ export default function SalesReceiptsForm({
   const itemsQuery = useItems();
   const items = itemsQuery.data?.items || [];
   const itemsLoading = itemsQuery.isLoading;
+  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+    subCategory: "Cash and Cash Equivalents",
+  });
 
   const createReceipt = useCreateReceipt();
   const updateReceipt = useUpdateReceipt();
 
   const customers = data?.customers || [];
+  const cashAccounts = (accountsData?.data as any) || [];
 
   const form = useForm<ReceiptFormData>({
     resolver: zodResolver(receiptSchema),
@@ -84,6 +91,7 @@ export default function SalesReceiptsForm({
       customerId: receipt?.customerId || "",
       date: receipt?.date ? new Date(receipt.date as any) : new Date(),
       paymentMethod: receipt?.paymentMethod || "Cash",
+      depositTo: (receipt as any)?.depositTo || "",
       lineItems: receipt?.lineItems || [],
     },
   });
@@ -170,6 +178,8 @@ export default function SalesReceiptsForm({
         const payload: any = {
           items,
           total: totalAmount,
+          depositTo: values.depositTo,
+          status: "Completed",
         };
         if (removedItemIds.length > 0) payload.removeItemIds = removedItemIds;
 
@@ -186,8 +196,10 @@ export default function SalesReceiptsForm({
           customerId: values.customerId,
           date: values.date,
           paymentMethod: values.paymentMethod,
+          depositTo: values.depositTo,
           items,
           total: totalAmount,
+          status: "Completed",
         };
 
         await createReceipt.mutateAsync(payload);
@@ -267,7 +279,7 @@ export default function SalesReceiptsForm({
           </div>
           <div className="bg-yellow-50 p-4 rounded-xl pt-4">
             <h6 className="font-medium text-sm mb-2">Payment Information</h6>
-            <div className="grid grid-cols-1  gap-4 md:items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:items-center">
               <FormField
                 control={form.control}
                 name="paymentMethod"
@@ -283,23 +295,46 @@ export default function SalesReceiptsForm({
                           <SelectValue placeholder="Select payment method" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Cash">Cash</SelectItem>
-                          <SelectItem value="Card">Card</SelectItem>
-                          <SelectItem value="Bank_Transfer">
-                            Bank Transfer
-                          </SelectItem>
-                          <SelectItem value="Mobile_Money">
-                            Mobile Money
-                          </SelectItem>
-                          <SelectItem value="Check">Check</SelectItem>
-                          <SelectItem value="Debit_Card">Debit Card</SelectItem>
-                          <SelectItem value="Credit_Card">
-                            Credit Card
-                          </SelectItem>
-                          <SelectItem value="ACH">ACH</SelectItem>
-                          <SelectItem value="Wire_Transfer">
-                            Wire Transfer
-                          </SelectItem>
+                          {paymentMethodOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="depositTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Deposit To <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="w-full" disabled={accountsLoading}>
+                          <SelectValue placeholder="Select cash account" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cashAccounts.length > 0 ? (
+                            cashAccounts.map((account: any) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name} ({account.code})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-accounts" disabled>
+                              No cash accounts found
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -358,7 +393,10 @@ export default function SalesReceiptsForm({
                       name={`lineItems.${idx}.itemId`}
                       render={({ field }) => {
                         // Get all selected itemIds except the current one
-                        const selectedIds = form.watch("lineItems").map((li, i) => i !== idx ? li.itemId : null).filter(Boolean);
+                        const selectedIds = form
+                          .watch("lineItems")
+                          .map((li, i) => (i !== idx ? li.itemId : null))
+                          .filter(Boolean);
                         return (
                           <ItemSelector
                             items={items}

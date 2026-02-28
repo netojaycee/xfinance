@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useMemo } from "react";
 import BankProfileHeader from "./BankProfileHeader";
 import BankStatsCard from "./BankStatsCard";
@@ -7,11 +5,11 @@ import BankTransactions from "./BankTransactions";
 import {
   BankAccountProfile,
   BankStats,
-  BankTransaction,
   BankApiResponse,
-  TransactionsApiResponse,
 } from "./types";
-import { useBankAccount, useBankTransactions } from "@/lib/api/hooks/useBanking";
+import { useBankAccount } from "@/lib/api/hooks/useBanking";
+import { useAccountTransactionsByBankAccountId } from "@/lib/api/hooks/useAccounts";
+import { AccountTransaction } from "@/lib/api/hooks/types/accountsTypes";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,12 +23,14 @@ export default function BankAccountLedger() {
   } = useBankAccount(accountId);
 
   const {
-    data: transactionsData,
+    data: transactionsResponse,
     isLoading: transactionsLoading,
-  } = useBankTransactions(accountId);
+  } = useAccountTransactionsByBankAccountId(accountId, {
+    pageSize: 50,
+  });
 
   const accountData = fetchedAccount as BankApiResponse | undefined;
-  const transactions = (transactionsData as TransactionsApiResponse)?.transactions || [];
+  const transactions: AccountTransaction[] = (transactionsResponse as any)?.data || [];
 
   // Derive Profile Data
   const profile: BankAccountProfile = useMemo(() => {
@@ -62,12 +62,10 @@ export default function BankAccountLedger() {
   // Calculate Statistics
   const stats: BankStats = useMemo(() => {
     const deposits = transactions
-      .filter((t) => t.type === "Deposit" || t.type === "Interest")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + (t.debitAmount || 0), 0);
 
     const withdrawals = transactions
-      .filter((t) => t.type === "Withdrawal" || t.type === "Fee")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + (t.creditAmount || 0), 0);
 
     const pendingCount = transactions.filter(
       (t) => t.status === "Pending"
