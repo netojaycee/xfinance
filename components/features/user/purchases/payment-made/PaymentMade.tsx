@@ -16,6 +16,7 @@ export default function PaymentMade() {
 
   const payments = (data as any)?.payments || [];
   const total = (data as any)?.total || 0;
+  console.log("Fetched payments:", data); // Debug log to check fetched data
 
   return (
     <div className="space-y-4">

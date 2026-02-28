@@ -27,6 +27,7 @@ export const MODAL = {
   EXPENSE_CREATE: "expense-create",
   EXPENSE_EDIT: "expense-edit",
   EXPENSE_DELETE: "expense-delete",
+  EXPENSE_MARK_APPROVED: "expense-mark-approved",
 
   PAYMENT_RECEIVED_CREATE: "payment-received-create",
   PAYMENT_RECEIVED_EDIT: "payment-received-edit",
@@ -47,6 +48,11 @@ export const MODAL = {
   BILL_DELETE: "bill-delete",
   BILL_VIEW: "bill-view",
   BILL_PAYMENT: "bill-payment",
+  BILL_MARK_UNPAID: "bill-mark-unpaid",
+
+  PAYMENT_MADE_CREATE: "payment-made-create",
+  PAYMENT_MADE_EDIT: "payment-made-edit",
+  PAYMENT_MADE_DELETE: "payment-made-delete",
 
   BUDGET_CREATE: "budget-create",
   BUDGET_EDIT: "budget-edit",

@@ -36,7 +36,7 @@ const lineItemSchema = z.object({
 });
 
 const billSchema = z.object({
-  vendor: z.string().min(1, "Vendor required"),
+  vendorId: z.string().min(1, "Vendor required"),
   billDate: z.date(),
   billNumber: z.string().min(1, "Bill number required"),
   dueDate: z.date(),
@@ -55,7 +55,7 @@ const billSchema = z.object({
 type BillFormType = z.infer<typeof billSchema>;
 
 const defaultValues: BillFormType = {
-  vendor: "",
+  vendorId: "",
   billDate: new Date(),
   billNumber: "",
   dueDate: new Date(),
@@ -98,7 +98,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
     resolver: zodResolver(billSchema),
     defaultValues: {
       ...defaultValues,
-      vendor: bill?.vendor || "",
+      vendorId: bill?.vendorId || "",
       billNumber: bill?.billNumber || "",
       poNumber: bill?.poNumber || "",
       paymentTerms: bill?.paymentTerms || "Net 30",
@@ -122,7 +122,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
       }));
 
       form.reset({
-        vendor: (bill as any).vendorId || (bill.vendor as any)?.id || "",
+        vendorId: (bill as any).vendorId || (bill.vendor as any)?.id || "",
         billDate: bill.billDate ? new Date(bill.billDate) : new Date(),
         billNumber: bill.billNumber || "",
         dueDate: bill.dueDate ? new Date(bill.dueDate) : new Date(),
@@ -162,7 +162,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
   const taxAmount = ((subtotal - discount) * taxPercent) / 100;
   const total = subtotal - discount + taxAmount;
 
-  const onSubmit = async (values: BillFormType, status?: "draft" | "pending") => {
+  const onSubmit = async (values: BillFormType, status?: "draft" | "unpaid") => {
     try {
       setIsSubmitting(true);
       const billStatus = status || "draft";
@@ -181,7 +181,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
           id: bill.id,
           data: {
             billDate: values.billDate instanceof Date ? values.billDate.toISOString() : String(values.billDate),
-            vendorId: values.vendor,
+            vendorId: values.vendorId,
             dueDate: values.dueDate instanceof Date ? values.dueDate.toISOString() : String(values.dueDate),
             tax: Number(values.tax) || 0,
             discount: Number(values.discount) || 0,
@@ -195,7 +195,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
         const formData = new FormData();
         formData.append("billDate", values.billDate instanceof Date ? values.billDate.toISOString() : String(values.billDate));
         formData.append("billNumber", values.billNumber);
-        formData.append("vendorId", values.vendor);
+        formData.append("vendorId", values.vendorId);
         formData.append("dueDate", values.dueDate instanceof Date ? values.dueDate.toISOString() : String(values.dueDate));
         if (values.poNumber) formData.append("poNumber", values.poNumber);
         formData.append("paymentTerms", values.paymentTerms);
@@ -206,6 +206,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
         if (values.tax) formData.append("tax", String(Number(values.tax)));
         if (values.discount) formData.append("discount", String(Number(values.discount)));
         formData.append("items", JSON.stringify(itemsPayload));
+        formData.append("status", billStatus);
 
         // Add attachment if provided
         if (values.attachments && values.attachments[0]) {
@@ -239,7 +240,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="vendor"
+                name="vendorId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Vendor *</FormLabel>
@@ -753,7 +754,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
                 disabled={isSubmitting}
                 onClick={(e) => {
                   e.preventDefault();
-                  form.handleSubmit((v) => onSubmit(v, "pending"))();
+                  form.handleSubmit((v) => onSubmit(v, "unpaid"))();
 
                 }}
               >

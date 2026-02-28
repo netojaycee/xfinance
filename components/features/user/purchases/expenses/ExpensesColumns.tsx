@@ -48,22 +48,15 @@ export const expensesColumns: ExpenseColumn[] = [
       <span className="text-xs font-medium">{(row?.vendor as any)?.name}</span>
     ),
   },
-  {
-    key: "category",
-    title: "Category",
-    className: "text-xs",
-    render: (value: unknown) => (
-      <span className="text-xs">{value as string}</span>
-    ),
-  },
-  {
-    key: "submittedBy",
-    title: "Submitted By",
-    className: "text-xs",
-    render: (value: unknown) => (
-      <span className="text-xs">{(value as string) || "--"}</span>
-    ),
-  },
+  // {
+  //   key: "category",
+  //   title: "Category",
+  //   className: "text-xs",
+  //   render: (value: unknown) => (
+  //     <span className="text-xs">{value as string}</span>
+  //   ),
+  // },
+ 
   {
     key: "amount",
     title: "Amount",
@@ -107,3 +100,11 @@ export const expensesColumns: ExpenseColumn[] = [
     ),
   },
 ];
+ // {
+  //   key: "submittedBy",
+  //   title: "Submitted By",
+  //   className: "text-xs",
+  //   render: (value: unknown) => (
+  //     <span className="text-xs">{(value as string) || "--"}</span>
+  //   ),
+  // },

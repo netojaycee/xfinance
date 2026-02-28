@@ -15,7 +15,7 @@ import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
 import { MODULES } from "@/lib/types/enums";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
-import { useApproveExpense, useDeleteExpense } from "@/lib/api/hooks/usePurchases";
+import { useUpdateExpenseStatus, useDeleteExpense } from "@/lib/api/hooks/usePurchases";
 import ExpensesForm from "./ExpensesForm";
 
 interface ExpenseActionsProps {
@@ -26,12 +26,12 @@ export default function ExpenseActions({ expense }: ExpenseActionsProps) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const { isOpen, openModal, closeModal } = useModal();
 
-    const approveExpense = useApproveExpense();
+    const updateExpenseStatus = useUpdateExpenseStatus();
     const deleteExpense = useDeleteExpense();
 
     const deleteKey = MODAL.EXPENSE_DELETE + "-" + expense.id;
     const editKey = MODAL.EXPENSE_EDIT + "-" + expense.id;
-    const approveKey = MODAL.EXPENSE_EDIT + "-approve-" + expense.id;
+    const approveKey = MODAL.EXPENSE_MARK_APPROVED + "-" + expense.id;
 
     const handleDeleteClick = () => {
         setDropdownOpen(false);
@@ -57,13 +57,12 @@ export default function ExpenseActions({ expense }: ExpenseActionsProps) {
 
     const handleApproveConfirm = (confirmed: boolean) => {
         if (confirmed) {
-            approveExpense.mutate(expense.id);
+            updateExpenseStatus.mutate({ id: expense.id, status: "approved" });
         }
         closeModal(approveKey);
     };
 
-    const isPending = expense.status === "pending" || expense.status === "Pending";
-    const isApproved = expense.status === "approved" || expense.status === "Approved";
+    const isDraft = expense.status === "draft" || expense.status === "Draft";
 
     return (
         <>
@@ -74,34 +73,36 @@ export default function ExpenseActions({ expense }: ExpenseActionsProps) {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem
-                        onSelect={(e) => {
-                            e.preventDefault();
-                            handleEditClick();
-                        }}
-                    >
-                        <Edit className="size-4 mr-2" /> Edit
-                    </DropdownMenuItem>
-                    {isPending && !isApproved && (
-                        <DropdownMenuItem
-                            onSelect={(e) => {
-                                e.preventDefault();
-                                handleApproveClick();
-                            }}
-                        >
-                            <CheckCircle className="size-4 mr-2" /> Approve
-                        </DropdownMenuItem>
+                    {isDraft && (
+                        <>
+                            <DropdownMenuItem
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    handleEditClick();
+                                }}
+                            >
+                                <Edit className="size-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    handleApproveClick();
+                                }}
+                            >
+                                <CheckCircle className="size-4 mr-2" /> Mark as Approved
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                data-variant="destructive"
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    handleDeleteClick();
+                                }}
+                            >
+                                <Trash2 className="size-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                        </>
                     )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        data-variant="destructive"
-                        onSelect={(e) => {
-                            e.preventDefault();
-                            handleDeleteClick();
-                        }}
-                    >
-                        <Trash2 className="size-4 mr-2" /> Delete
-                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
 
@@ -133,7 +134,7 @@ export default function ExpenseActions({ expense }: ExpenseActionsProps) {
                 <ConfirmationForm
                     title={`Are you sure you want to approve this expense (${expense?.reference || expense.id})?`}
                     onResult={handleApproveConfirm}
-                    loading={approveExpense.isPending}
+                    loading={updateExpenseStatus.isPending}
                 />
             </CustomModal>
 

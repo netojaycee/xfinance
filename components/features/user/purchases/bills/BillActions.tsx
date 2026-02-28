@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Eye, Edit, Trash2, DollarSign } from "lucide-react";
+import { MoreVertical, Eye, Edit, Trash2, DollarSign, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,10 +15,10 @@ import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
 import { MODULES } from "@/lib/types/enums";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
-import { useDeleteBill } from "@/lib/api/hooks/usePurchases";
+import { useDeleteBill, useMarkBillUnpaid } from "@/lib/api/hooks/usePurchases";
 import BillsForm from "./BillsForm";
 import BillDetails from "./details/BillDetails";
-import MakeBillPayment from "./MakeBillPayment";
+import PaymentMadeForm from "../payment-made/PaymentMadeForm";
 
 interface BillActionsProps {
   bill: any;
@@ -28,11 +28,13 @@ export function BillActions({ bill }: BillActionsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isOpen, openModal, closeModal } = useModal();
   const deleteBill = useDeleteBill();
+  const markBillUnpaid = useMarkBillUnpaid();
 
   const deleteKey = MODAL.BILL_DELETE + "-" + bill.id;
   const editKey = MODAL.BILL_EDIT + "-" + bill.id;
   const viewKey = MODAL.BILL_VIEW + "-" + bill.id;
-  const paymentKey = MODAL.BILL_PAYMENT + "-" + bill.id;
+  const paymentKey = MODAL.PAYMENT_MADE_CREATE + "-" + bill.id;
+  const markUnpaidKey = MODAL.BILL_MARK_UNPAID + "-" + bill.id;
 
   const handleDeleteClick = () => {
     setDropdownOpen(false);
@@ -52,6 +54,18 @@ export function BillActions({ bill }: BillActionsProps) {
   const handlePaymentClick = () => {
     setDropdownOpen(false);
     setTimeout(() => openModal(paymentKey), 100);
+  };
+
+  const handleMarkUnpaidClick = () => {
+    setDropdownOpen(false);
+    setTimeout(() => openModal(markUnpaidKey), 100);
+  };
+
+  const handleMarkUnpaidConfirm = (confirmed: boolean) => {
+    if (confirmed) {
+      markBillUnpaid.mutate(bill.id);
+    }
+    closeModal(markUnpaidKey);
   };
 
   const handleDeleteConfirm = (confirmed: boolean) => {
@@ -78,6 +92,7 @@ export function BillActions({ bill }: BillActionsProps) {
           >
             <Eye className="size-4 mr-2" /> View Details
           </DropdownMenuItem>
+          {(bill?.status !== "draft" && bill?.status !== "paid") &&  (
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -85,25 +100,37 @@ export function BillActions({ bill }: BillActionsProps) {
             }}
           >
             <DollarSign className="size-4 mr-2" /> Make Payment
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleEditClick();
-            }}
-          >
-            <Edit className="size-4 mr-2" /> Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            data-variant="destructive"
-            onSelect={(e) => {
-              e.preventDefault();
-              handleDeleteClick();
-            }}
-          >
-            <Trash2 className="size-4 mr-2" /> Delete
-          </DropdownMenuItem>
+          </DropdownMenuItem>)}
+          {bill?.status === "draft" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleMarkUnpaidClick();
+                }}
+              >
+                <CheckCircle className="size-4 mr-2" /> Mark as Active
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleEditClick();
+                }}
+              >
+                <Edit className="size-4 mr-2" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                data-variant="destructive"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleDeleteClick();
+                }}
+              >
+                <Trash2 className="size-4 mr-2" /> Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -120,6 +147,22 @@ export function BillActions({ bill }: BillActionsProps) {
           title={`Are you sure you want to delete this bill (${bill?.billNumber || bill.id})?`}
           onResult={handleDeleteConfirm}
           loading={deleteBill.isPending}
+        />
+      </CustomModal>
+
+      {/* Mark Unpaid Confirmation Modal */}
+      <CustomModal
+        title="Mark Bill as Active"
+        open={isOpen(markUnpaidKey)}
+        onOpenChange={(open) =>
+          open ? openModal(markUnpaidKey) : closeModal(markUnpaidKey)
+        }
+        module={MODULES.PURCHASES}
+      >
+        <ConfirmationForm
+          title={`Are you sure you want to mark this bill (${bill?.billNumber || bill.id}) as active?`}
+          onResult={handleMarkUnpaidConfirm}
+          loading={markBillUnpaid.isPending}
         />
       </CustomModal>
 
@@ -147,17 +190,18 @@ export function BillActions({ bill }: BillActionsProps) {
         <BillDetails bill={bill} />
       </CustomModal>
 
-      {/* Make Payment Modal */}
+      {/* Make Payment Modal - Using PaymentMadeForm */}
       <CustomModal
-        title="Make Bill Payment"
+        title="Record Payment"
         open={isOpen(paymentKey)}
         onOpenChange={(open) =>
           open ? openModal(paymentKey) : closeModal(paymentKey)
         }
         module={MODULES.PURCHASES}
       >
-        <MakeBillPayment
-          billId={bill.id}
+        <PaymentMadeForm 
+          vendorId={bill?.vendorId} 
+          billId={bill?.id}
         />
       </CustomModal>
     </>

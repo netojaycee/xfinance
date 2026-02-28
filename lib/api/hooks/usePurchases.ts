@@ -219,6 +219,31 @@ export const useDeleteBill = (
   });
 };
 
+export const useMarkBillUnpaid = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: purchasesService.markBillUnpaid,
+    onSuccess: (_, billId) => {
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      if (billId) {
+        queryClient.invalidateQueries({
+          queryKey: ["bills", "detail", billId],
+        });
+      }
+      toast.success("Bill marked as unpaid successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to mark bill as unpaid",
+      );
+    },
+    ...options,
+  });
+};
+
 export const useCreateBillPayment = (
   options?: UseMutationOptions<any, Error, { billId: string; data: any }>,
 ) => {
@@ -252,6 +277,111 @@ export const useBillPayments = (params?: {
   return useQuery({
     queryKey: ["bill-payments", params?.page, params?.limit],
     queryFn: () => purchasesService.getBillPayments(params),
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useBillsByVendor = (vendorId: string, params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) => {
+  return useQuery({
+    queryKey: ["bills", "vendor", vendorId, params?.page, params?.limit, params?.search],
+    queryFn: () => purchasesService.getBills({ ...params, vendorId }),
+    enabled: !!vendorId,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+// ────────────────────────────────────────────────
+// Payment Made
+// ────────────────────────────────────────────────
+
+export const useCreatePaymentMade = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: purchasesService.createPaymentMade,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bill-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      toast.success("Payment recorded successfully");
+      closeModal(MODAL.PAYMENT_MADE_CREATE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to record payment",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useUpdatePaymentMade = (
+  options?: UseMutationOptions<any, Error, { id: string; data: any }>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => purchasesService.updatePaymentMade(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["bill-payments"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["payment-made", "detail", variables.id],
+        });
+      }
+      toast.success("Payment updated successfully");
+      closeModal(MODAL.PAYMENT_MADE_EDIT + "-" + variables.id);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update payment",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useDeletePaymentMade = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: purchasesService.deletePaymentMade,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["bill-payments"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["payment-made", "detail", id],
+        });
+      }
+      toast.success("Payment deleted successfully");
+      closeModal(MODAL.PAYMENT_MADE_DELETE + "-" + id);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete payment",
+      );
+    },
+    ...options,
+  });
+};
+
+export const usePaymentMade = (id: string) => {
+  return useQuery({
+    queryKey: ["payment-made", "detail", id],
+    queryFn: () => purchasesService.getPaymentMadeById(id),
+    enabled: !!id,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
@@ -355,6 +485,31 @@ export const useDeleteExpense = (
     onError: (error) => {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete expense",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useUpdateExpenseStatus = (
+  options?: UseMutationOptions<any, Error, { id: string; status: string }>,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }) => purchasesService.updateExpenseStatus(id, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["expenses", "detail", variables.id],
+        });
+      }
+      toast.success("Expense approved successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to approve expense",
       );
     },
     ...options,

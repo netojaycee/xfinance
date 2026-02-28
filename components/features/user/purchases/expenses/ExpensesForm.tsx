@@ -35,7 +35,6 @@ import {
   useUpdateExpense,
   useVendors,
 } from "@/lib/api/hooks/usePurchases";
-import { toast } from "sonner";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { useEffect } from "react";
@@ -180,7 +179,7 @@ export default function ExpensesForm({
         }
 
         await updateExpense.mutateAsync({ id: expense.id, data: updateData });
-        toast.success("Expense updated successfully");
+        // toast.success("Expense updated successfully");
       } else {
         // Create new expense
         const formData = new FormData();
@@ -212,7 +211,7 @@ export default function ExpensesForm({
         formData.append("status", status || "draft");
 
         await createExpense.mutateAsync(formData);
-        toast.success("Expense created successfully");
+        // toast.success("Expense created successfully");
       }
 
       form.reset();
@@ -596,7 +595,7 @@ export default function ExpensesForm({
                 disabled={isSubmitting}
                 onClick={(e) => {
                   e.preventDefault();
-                  form.handleSubmit((v) => onSubmit(v, "pending"))();
+                  form.handleSubmit((v) => onSubmit(v, "approved"))();
                 }}
               >
                 {isSubmitting

@@ -59,12 +59,14 @@ export const getBills = async (params?: {
   limit?: number;
   category?: string;
   search?: string;
+  vendorId?: string;
 }) => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.limit) queryParams.append("limit", String(params.limit));
   if (params?.category) queryParams.append("category", params.category);
   if (params?.search) queryParams.append("search", params.search);
+  if (params?.vendorId) queryParams.append("vendorId", params.vendorId);
 
   const queryString = queryParams.toString();
   const url = queryString ? `bills?${queryString}` : "bills";
@@ -91,6 +93,9 @@ export const createBillPayment = async (
 export const deleteBill = async (id: string | number) =>
   apiClient(`bills/${id}`, { method: "DELETE" });
 
+export const markBillUnpaid = async (id: string | number) =>
+  apiClient(`bills/${id}/mark-unpaid`, { method: "PATCH" });
+
 export const updateBill = async (id: string | number, data: FormData) =>
   apiClient(`bills/${id}`, {
     method: "PATCH",
@@ -108,8 +113,8 @@ export const getBillPayments = async (params?: {
   const queryString = queryParams.toString();
   // Note: API endpoint uses /bills/:id/payments but id is not used, so we use 'all'
   const url = queryString
-    ? `bills/all/payments?${queryString}`
-    : "bills/all/payments";
+    ? `purchases/payment-made?${queryString}`
+    : "purchases/payment-made";
 
   return apiClient(url, {
     method: "GET",
@@ -161,8 +166,36 @@ export const updateExpense = async (id: string | number, data: any) =>
 export const deleteExpense = async (id: string | number) =>
   apiClient(`purchases/expenses/${id}`, { method: "DELETE" });
 
+export const updateExpenseStatus = async (id: string | number, status: string) =>
+  apiClient(`purchases/expenses/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+
 export const approveExpense = async (id: string | number) =>
   apiClient(`purchases/expenses/${id}/approve`, {
     method: "PATCH",
     body: JSON.stringify({ status: "approved" }),
   });
+
+// =============== PAYMENT MADE ===============
+
+export const createPaymentMade = async (data: any) =>
+  apiClient("purchases/payment-made", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const getPaymentMadeById = async (id: string | number) =>
+  apiClient(`purchases/payment-made/${id}`, {
+    method: "GET",
+  });
+
+export const updatePaymentMade = async (id: string | number, data: any) =>
+  apiClient(`purchases/payment-made/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const deletePaymentMade = async (id: string | number) =>
+  apiClient(`purchases/payment-made/${id}`, { method: "DELETE" });

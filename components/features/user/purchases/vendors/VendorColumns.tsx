@@ -61,7 +61,7 @@ export const vendorColumns: VendorColumn[] = [
     ),
   },
   {
-    key: "outstanding",
+    key: "outstandingAmount",
     title: "Outstanding",
     className: "text-xs",
     render: (value: unknown) => (
