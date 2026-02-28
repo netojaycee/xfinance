@@ -154,7 +154,7 @@ export default function ExpensesForm({
 
   const onSubmit = async (
     values: ExpenseFormType,
-    status?: "draft" | "pending",
+    status?: "draft" | "approved",
   ) => {
     try {
       setIsSubmitting(true);

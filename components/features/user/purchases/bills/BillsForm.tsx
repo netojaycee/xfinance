@@ -122,7 +122,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
       }));
 
       form.reset({
-        vendorId: (bill as any).vendorId || (bill.vendor as any)?.id || "",
+        vendorId: (bill as any).vendorId || ((bill as any).vendor as any)?.id || "",
         billDate: bill.billDate ? new Date(bill.billDate) : new Date(),
         billNumber: bill.billNumber || "",
         dueDate: bill.dueDate ? new Date(bill.dueDate) : new Date(),

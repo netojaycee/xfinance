@@ -38,7 +38,7 @@ const paymentSchema = z.object({
   vendorId: z.string().min(1, "Vendor is required"),
   billId: z.string().min(1, "Bill is required"),
   paymentDate: z.date(),
-  amount: z.coerce.number().min(0.01, "Amount is required"),
+  amount: z.number().min(0.01, "Amount is required"),
   paymentMethod: z.string().min(1, "Payment method is required"),
   accountId: z.string().min(1, "From account is required"),
   reference: z.string().optional(),
@@ -94,7 +94,7 @@ export default function PaymentMadeForm({
   });
 
   const vendors = (vendorsData as any)?.vendors || [];
-  const bills = (billsData?.bills as any) || [];
+  const bills = (billsData as any)?.bills || [];
   const cashAccounts = (accountsData?.data as any) || [];
 
   // Update bill details when bill is selected

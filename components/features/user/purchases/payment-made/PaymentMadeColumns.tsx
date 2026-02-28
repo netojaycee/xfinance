@@ -46,7 +46,7 @@ export const paymentMadeColumns: PaymentColumn[] = [
     title: "Vendor",
     className: "text-xs",
     render: (value: unknown, row?: PaymentRow) => (
-      <span className="text-xs font-medium">{row?.vendor?.name}</span>
+      <span className="text-xs font-medium">{(row?.vendor as any)?.name}</span>
     ),
   },
   {
@@ -54,7 +54,7 @@ export const paymentMadeColumns: PaymentColumn[] = [
     title: "Bill",
     className: "text-xs",
     render: (value: unknown, row?: PaymentRow) => (
-      <span className="text-xs">{row?.bill?.billNumber || '-'}</span>
+      <span className="text-xs">{((row?.bill as any)?.billNumber) || '-'}</span>
     ),
   },
   {

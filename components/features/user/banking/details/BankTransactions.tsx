@@ -3,14 +3,13 @@
 import React, { useMemo } from "react";
 import { CustomTable } from "@/components/local/custom/custom-table";
 import { CustomTabs, Tab } from "@/components/local/custom/tabs";
-import { AccountTransaction } from "@/lib/types/accountsTypes";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ArrowDownRight, ArrowUpRight, CreditCard } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
 interface BankTransactionsProps {
-  transactions: AccountTransaction[];
+  transactions: any[];
   isLoading: boolean;
 }
 

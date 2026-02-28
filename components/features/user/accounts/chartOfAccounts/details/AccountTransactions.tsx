@@ -4,10 +4,9 @@ import React, { useMemo, useState } from "react";
 import { CustomTable } from "@/components/local/custom/custom-table";
 import { columns } from "./AccountsDetailsColumn";
 import { useDebounce } from "use-debounce";
-import { AccountTransaction } from "@/lib/types/accountsTypes";
 
 interface AccountTransactionsProps {
-  transactions: AccountTransaction[];
+  transactions: any[];
   isLoading: boolean;
 }
 
