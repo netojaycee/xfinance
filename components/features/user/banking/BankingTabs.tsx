@@ -13,7 +13,9 @@ export function BankingTabs() {
       pageSize: 10,
     });
 
+
   const transactions = (transactionsResponse as any)?.data || [];
+  // console.log(transactionsResponse)
 
   return (
     <div className="flex w-full flex-col gap-6">
