@@ -57,7 +57,7 @@
     "@tanstack/eslint-plugin-query": "^4.32.5",
     "@tanstack/react-query-devtools": "^5.91.1",
     "baseline-browser-mapping": "^2.10.0",
-    "eslint": "^10.0.2",
+    "eslint": "^8.57.1",
     "eslint-config-next": "^0.2.4"
   }
 }
