@@ -16,7 +16,7 @@ interface AccountsReceivableAgingProps {
   loading?: boolean;
 }
 
-const formatCurrency = (amt: number) => `₦${(amt / 100).toLocaleString()}`;
+const formatCurrency = (amt: number) => `₦${(amt).toLocaleString()}`;
 
 export function AccountsReceivableAging({
   data,

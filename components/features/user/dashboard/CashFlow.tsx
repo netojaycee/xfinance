@@ -50,8 +50,8 @@ export function CashFlow({
 }: CashFlowProps) {
   const chartData = data?.map((item) => ({
     month: item.month,
-    inflow: item.inflow / 100,
-    outflow: item.outflow / 100,
+    inflow: item.inflow,
+    outflow: item.outflow,
   })) ?? [];
 
   if (loading) {

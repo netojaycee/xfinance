@@ -141,3 +141,15 @@ export const useReconcileBankAccount = (
     ...options,
   });
 };
+// ────────────────────────────────────────────────
+// Banking Statistics
+// ────────────────────────────────────────────────
+
+export const useBankingStats = () => {
+  return useQuery({
+    queryKey: ["bankingStats"],
+    queryFn: () => bankingService.getBankingStats(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};

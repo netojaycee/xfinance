@@ -17,7 +17,7 @@ interface RecentTransactionsProps {
 }
 
 const formatCurrency = (amount: number) => {
-  return `₦${(amount / 100).toLocaleString()}`;
+  return `₦${(amount).toLocaleString()}`;
 };
 
 export function RecentTransactions({ data, loading }: RecentTransactionsProps) {

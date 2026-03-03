@@ -8,15 +8,15 @@ import { MODAL } from "@/lib/data/modal-data";
 import { CustomModal } from "@/components/local/custom/modal";
 import BankForm from "./BankForm";
 import { MODULES } from "@/lib/types/enums";
+import { useBankingStats } from "@/lib/api/hooks/useBanking";
 
 export default function Banking() {
-  const [data, setData] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState<boolean>(false);
   const { isOpen, closeModal } = useModal();
+  const { data, isLoading } = useBankingStats();
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <BankingHeader data={data} loading={loading} />
+      <BankingHeader data={data} loading={isLoading} />
       <BankAccountsCard />
       <BankingTabs />
 

@@ -86,19 +86,19 @@ export default function UserDashboard() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">0-30 Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["0-30"] / 100).toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">₦{(data.payableAging["0-30"] ).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">31-60 Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["31-60"] / 100).toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">₦{(data.payableAging["31-60"] ).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">61-90 Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["61-90"] / 100).toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">₦{(data.payableAging["61-90"] ).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">90+ Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["90+"] / 100).toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">₦{(data.payableAging["90+"] ).toLocaleString()}</span>
               </div>
             </div>
           )}

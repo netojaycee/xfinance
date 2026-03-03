@@ -83,3 +83,25 @@ export const reconcileBankAccount = async (
     method: "POST",
     body: JSON.stringify(data),
   });
+// ────────────────────────────────────────────────
+// Banking Statistics
+// ────────────────────────────────────────────────
+
+export interface BankingStats {
+  totalBankCash: number;
+  numberOfBankAccounts: number;
+  accounts: Array<{
+    id: string;
+    accountName: string;
+    bankName: string;
+    accountType: string;
+    currency: string;
+    currentBalance: number;
+    status: string;
+  }>;
+}
+
+export const getBankingStats = async (): Promise<BankingStats> =>
+  apiClient("analytics/banking-summary", {
+    method: "GET",
+  });

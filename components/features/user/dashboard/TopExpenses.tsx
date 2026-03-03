@@ -50,7 +50,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const formatCurrency = (amount: number) => {
-  return `₦${(amount / 100).toLocaleString()}`;
+  return `₦${(amount).toLocaleString()}`;
 };
 
 export function TopExpenses({
@@ -61,7 +61,7 @@ export function TopExpenses({
 }: TopExpensesProps) {
   const chartData = data?.map((item, index) => ({
     name: item.category,
-    value: item.amount / 100,
+    value: item.amount,
     fill: colors[index % colors.length],
   })) ?? [];
 

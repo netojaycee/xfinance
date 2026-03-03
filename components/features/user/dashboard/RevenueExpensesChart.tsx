@@ -50,8 +50,8 @@ export function RevenueExpensesChart({
 }: RevenueExpensesChartProps) {
   const chartData = data?.map((item) => ({
     month: item.month,
-    revenue: item.revenue / 100,
-    expenses: item.expenses / 100,
+    revenue: item.revenue,
+    expenses: item.expenses,
   })) ?? [];
 
   if (loading) {
