@@ -150,9 +150,23 @@ export const updateAccount = async (
   });
 };
 
+export const getOpeningBalances = async (params?: { search?: string; page?: number; limit?: number }) => {
+  const queryParams = new URLSearchParams();
+  if (params?.search) queryParams.append("search", params.search);
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  
+  return apiClient(`account/opening-balances?${queryParams.toString()}`, {
+    method: "GET",
+  });
+};
+
 export const setOpeningBalances = async (
   data: {
-    lines: Array<{
+    date: string;
+    fiscalYear: string;
+    note?: string;
+    items: Array<{
       accountId: string;
       debit?: number;
       credit?: number;
@@ -193,15 +207,18 @@ export const createBudget = async (data: {
 
 /**
  * Journal Endpoints
+/**
  */
 export const createJournal = async (data: {
   description: string;
   date: string;
   entityId: string;
+  status?: "Draft" | "Active";
   lines: Array<{
-    account: string;
+    accountId: string;
     debit?: number;
     credit?: number;
+    description?: string;
   }>;
 }) => {
   return apiClient("journal", {
@@ -226,6 +243,17 @@ export const getJournalById = async (id: string) => {
   return apiClient(`journal/${id}`, { method: "GET" });
 };
 
+export const getJournalLines = async (params?: { search?: string; page?: number; limit?: number }) => {
+  const queryParams = new URLSearchParams();
+  if (params?.search) queryParams.append("search", params.search);
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `journal/lines?${queryString}` : "journal/lines";
+  return apiClient(url, { method: "GET" });
+};
+
 export const updateJournal = async (
   id: string,
   data: {
@@ -233,9 +261,10 @@ export const updateJournal = async (
     date?: string;
     reference?: string;
     lines?: Array<{
-      account: string;
+      accountId: string;
       debit?: number;
       credit?: number;
+      description?: string;
     }>;
   }
 ) => {
@@ -250,6 +279,10 @@ export const updateJournal = async (
 
 export const deleteJournal = async (id: string) => {
   return apiClient(`journal/${id}`, { method: "DELETE" });
+};
+
+export const postJournal = async (id: string) => {
+  return apiClient(`journal/${id}/activate`, { method: "POST" });
 };
 
 export const getJournalByReference = async (reference: string) => {

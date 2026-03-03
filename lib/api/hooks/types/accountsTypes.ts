@@ -112,6 +112,7 @@ export interface JournalLine {
   account: string;
   debit?: number;
   credit?: number;
+  description?: string;
 }
 
 // Journal Interface
@@ -242,11 +243,13 @@ export const createJournalSchema = z.object({
   description: z.string().min(1, "Description is required"),
   date: z.string().min(1, "Date is required"),
   entityId: z.string().min(1, "Entity ID is required"),
+  status: z.enum(["Draft", "Active"]).optional(),
   lines: z.array(
     z.object({
-      account: z.string().min(1, "Account is required"),
+      accountId: z.string().min(1, "Account ID is required"),
       debit: z.number().optional(),
       credit: z.number().optional(),
+      description: z.string().optional(),
     })
   ),
 });
@@ -259,9 +262,10 @@ export const updateJournalSchema = z.object({
   reference: z.string().optional(),
   lines: z.array(
     z.object({
-      account: z.string(),
+      accountId: z.string(),
       debit: z.number().optional(),
       credit: z.number().optional(),
+      description: z.string().optional(),
     })
   ).optional(),
 });

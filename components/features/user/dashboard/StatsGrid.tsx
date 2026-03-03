@@ -8,39 +8,56 @@ import {
 } from "lucide-react";
 import React from "react";
 import StatCard from "./StatCard";
+import { KPIs } from "@/lib/api/services/analyticsService";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const stats = [
-  {
-    title: "Revenue (MTD)",
-    icon: <Banknote className="h-5 w-5" />,
-    value: "₦845.2k",
-    percentage: 12.5,
-    isPositive: true,
-  },
-  {
-    title: "Bank Balance",
-    icon: <Landmark className="h-5 w-5" />,
-    value: "₦2.5M",
-    percentage: 5.3,
-    isPositive: true,
-  },
-  {
-    title: "Current Liabilities",
-    icon: <TrendingDown className="h-5 w-5" />,
-    value: "₦482.5k",
-    percentage: 2.1,
-    isPositive: false,
-  },
-  {
-    title: "Active Customers",
-    icon: <Users className="h-5 w-5" />,
-    value: "127",
-    percentage: 8.5,
-    isPositive: true,
-  },
-];
+interface StatsGridProps {
+  data?: KPIs;
+  loading?: boolean;
+}
 
-export default function StatsGrid() {
+export default function StatsGrid({ data, loading }: StatsGridProps) {
+  const stats = [
+    {
+      title: "Revenue (MTD)",
+      icon: <Banknote className="h-5 w-5" />,
+      value: data?.revenue?.mtd ? `₦${(data.revenue.mtd / 100).toLocaleString()}` : "₦0",
+      percentage: data?.revenue?.changePercent ?? 0,
+      isPositive: (data?.revenue?.changePercent ?? 0) >= 0,
+    },
+    {
+      title: "Bank Balance",
+      icon: <Landmark className="h-5 w-5" />,
+      value: data?.bankBalance?.total ? `₦${(data.bankBalance.total / 100).toLocaleString()}` : "₦0",
+      percentage: data?.bankBalance?.changePercent ?? 0,
+      isPositive: (data?.bankBalance?.changePercent ?? 0) >= 0,
+    },
+    {
+      title: "Current Liabilities",
+      icon: <TrendingDown className="h-5 w-5" />,
+      value: data?.liabilities?.total ? `₦${(data.liabilities.total / 100).toLocaleString()}` : "₦0",
+      percentage: Math.abs(data?.liabilities?.changePercent ?? 0),
+      isPositive: (data?.liabilities?.changePercent ?? 0) <= 0,
+    },
+    {
+      title: "Active Customers",
+      icon: <Users className="h-5 w-5" />,
+      value: data?.activeCustomers?.count?.toString() ?? "0",
+      percentage: data?.activeCustomers?.changePercent ?? 0,
+      isPositive: (data?.activeCustomers?.changePercent ?? 0) >= 0,
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
@@ -56,3 +73,4 @@ export default function StatsGrid() {
     </div>
   );
 }
+         

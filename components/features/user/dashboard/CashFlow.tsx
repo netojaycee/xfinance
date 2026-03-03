@@ -1,7 +1,6 @@
 "use client";
 
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
-
+import { Line, LineChart, CartesianGrid, XAxis, Tooltip, Legend } from "recharts";
 import {
   Select,
   SelectContent,
@@ -22,96 +21,100 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { CashFlowData, FilterOption } from "@/lib/api/services/analyticsService";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export const description = "A line chart with dots";
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
+interface CashFlowProps {
+  data?: CashFlowData[];
+  filter?: FilterOption;
+  onFilterChange?: (filter: FilterOption) => void;
+  loading?: boolean;
+}
 
 const chartConfig = {
-  desktop: {
-    label: "Inflow",
-    color: "var(--chart-1)",
+  inflow: {
+    label: "Cash Inflow",
+    color: "#3B82F6",
   },
-  mobile: {
-    label: "Outflow",
-    color: "var(--chart-2)",
+  outflow: {
+    label: "Cash Outflow",
+    color: "#EF4444",
   },
 } satisfies ChartConfig;
 
-export function CashFlow() {
+export function CashFlow({
+  data,
+  filter = "LAST_12_MONTHS",
+  onFilterChange,
+  loading,
+}: CashFlowProps) {
+  const chartData = data?.map((item) => ({
+    month: item.month,
+    inflow: item.inflow / 100,
+    outflow: item.outflow / 100,
+  })) ?? [];
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cash Flow</CardTitle>
+          <CardDescription>Inflow vs outflow</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-96 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle>Cash Flow</CardTitle>
-          <CardDescription>Inflow vs Outflow (in thousands)</CardDescription>
+          <CardDescription>Inflow vs outflow</CardDescription>
         </div>
-        <Select>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="This Year" />
+        <Select value={filter} onValueChange={onFilterChange}>
+          <SelectTrigger className="w-45">
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="this-year">This Year</SelectItem>
-            <SelectItem value="this-fiscal-year">This Fiscal Year</SelectItem>
-            <SelectItem value="previous-fiscal-year">
-              Previous Fiscal Year
-            </SelectItem>
-            <SelectItem value="last-12-months">Last 12 Months</SelectItem>
+            <SelectItem value="THIS_YEAR">This Year</SelectItem>
+            <SelectItem value="THIS_FISCAL_YEAR">This Fiscal Year</SelectItem>
+            <SelectItem value="LAST_FISCAL_YEAR">Last Fiscal Year</SelectItem>
+            <SelectItem value="LAST_12_MONTHS">Last 12 Months</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
-          >
+          <LineChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="month"
               tickLine={false}
+              tickMargin={10}
               axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={<ChartTooltipContent indicator="dashed" />}
+            />
+            <Legend />
+            <Line
+              dataKey="inflow"
+              stroke="#3B82F6"
+              strokeWidth={2}
+              dot={false}
+              name="Inflow"
             />
             <Line
-              dataKey="desktop"
-              type="natural"
-              stroke="var(--color-desktop)"
+              dataKey="outflow"
+              stroke="#EF4444"
               strokeWidth={2}
-              dot={{
-                fill: "var(--color-desktop)",
-              }}
-              activeDot={{
-                r: 6,
-              }}
-            />
-            <Line
-              dataKey="mobile"
-              type="monotone"
-              stroke="var(--color-mobile)"
-              strokeWidth={2}
-              dot={{
-                fill: "var(--color-desktop)",
-              }}
-              activeDot={{
-                r: 6,
-              }}
+              dot={false}
+              name="Outflow"
             />
           </LineChart>
         </ChartContainer>

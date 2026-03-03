@@ -79,7 +79,7 @@ export function CustomTable<T extends { [key: string]: any }>({
   const [search, setSearch] = useState("");
   
   // Use provided pagination or local pagination
-  const isServerPaginated = !!pagination;
+  const isServerPaginated = !!pagination && pagination.onPageChange !== undefined;
   const currentPage = pagination?.page || 1;
   const totalPages = pagination?.totalPages || Math.ceil(data.length / pageSize);
   const [localPage, setLocalPage] = useState(1);

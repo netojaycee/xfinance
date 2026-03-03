@@ -1,7 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-
+import { Bar, BarChart, CartesianGrid, XAxis, Tooltip, Legend } from "recharts";
 import {
   Select,
   SelectContent,
@@ -22,54 +21,69 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { MonthlyBreakdown, FilterOption } from "@/lib/api/services/analyticsService";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export const description = "A multiple bar chart";
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-  { month: "July", desktop: 186, mobile: 80 },
-  { month: "August", desktop: 305, mobile: 200 },
-  { month: "September", desktop: 237, mobile: 120 },
-  { month: "October", desktop: 73, mobile: 190 },
-  { month: "November", desktop: 209, mobile: 130 },
-  { month: "December", desktop: 214, mobile: 140 },
-];
+interface RevenueExpensesChartProps {
+  data?: MonthlyBreakdown[];
+  filter?: FilterOption;
+  onFilterChange?: (filter: FilterOption) => void;
+  loading?: boolean;
+}
 
 const chartConfig = {
-  desktop: {
+  revenue: {
     label: "Revenue",
-    color: "var(--chart-1)",
+    color: "#10B981",
   },
-  mobile: {
+  expenses: {
     label: "Expenses",
-    color: "var(--chart-2)",
+    color: "#F97316",
   },
 } satisfies ChartConfig;
 
-export function RevenueExpensesChart() {
+export function RevenueExpensesChart({
+  data,
+  filter = "THIS_YEAR",
+  onFilterChange,
+  loading,
+}: RevenueExpensesChartProps) {
+  const chartData = data?.map((item) => ({
+    month: item.month,
+    revenue: item.revenue / 100,
+    expenses: item.expenses / 100,
+  })) ?? [];
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue & Expenses</CardTitle>
+          <CardDescription>Monthly breakdown</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-96 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle>Revenue & Expenses</CardTitle>
-          <CardDescription>Monthly breakdown (in thousands)</CardDescription>
+          <CardDescription>Monthly breakdown</CardDescription>
         </div>
-        <Select>
+        <Select value={filter} onValueChange={onFilterChange}>
           <SelectTrigger className="w-45">
-            <SelectValue placeholder="This Year" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="this-year">This Year</SelectItem>
-            <SelectItem value="this-fiscal-year">This Fiscal Year</SelectItem>
-            <SelectItem value="previous-fiscal-year">
-              Previous Fiscal Year
-            </SelectItem>
-            <SelectItem value="last-12-months">Last 12 Months</SelectItem>
+            <SelectItem value="THIS_YEAR">This Year</SelectItem>
+            <SelectItem value="THIS_FISCAL_YEAR">This Fiscal Year</SelectItem>
+            <SelectItem value="LAST_FISCAL_YEAR">Last Fiscal Year</SelectItem>
+            <SelectItem value="LAST_12_MONTHS">Last 12 Months</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -82,14 +96,14 @@ export function RevenueExpensesChart() {
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
             />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-            <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+            <Legend />
+            <Bar dataKey="revenue" fill="#10B981" radius={4} name="Revenue" />
+            <Bar dataKey="expenses" fill="#F97316" radius={4} name="Expenses" />
           </BarChart>
         </ChartContainer>
       </CardContent>

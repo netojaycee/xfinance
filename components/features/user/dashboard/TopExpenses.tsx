@@ -1,7 +1,6 @@
 "use client";
 
 import { Pie, PieChart } from "recharts";
-
 import {
   Card,
   CardContent,
@@ -23,64 +22,79 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TopExpense, FilterOption } from "@/lib/api/services/analyticsService";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const chartData = [
-    { name: "Salaries", value: 180000, fill: "#3b82f6" },
-    { name: "Rent", value: 85000, fill: "#8b5cf6" },
-    { name: "Utilities", value: 42000, fill: "#ec4899" },
-    { name: "Marketing", value: 68000, fill: "#f97316" },
-    { name: "Other", value: 95000, fill: "#9ca3af" },
+interface TopExpensesProps {
+  data?: TopExpense[];
+  filter?: FilterOption;
+  onFilterChange?: (filter: FilterOption) => void;
+  loading?: boolean;
+}
+
+const colors = [
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#f97316",
+  "#9ca3af",
+  "#10b981",
+  "#f59e0b",
+  "#6366f1",
 ];
 
 const chartConfig = {
   value: {
-    label: "Expenses",
-  },
-  salaries: {
-    label: "Salaries",
-    color: "#3b82f6",
-  },
-  rent: {
-    label: "Rent",
-    color: "#8b5cf6",
-  },
-  utilities: {
-    label: "Utilities",
-    color: "#ec4899",
-  },
-  marketing: {
-    label: "Marketing",
-    color: "#f97316",
-  },
-  other: {
-    label: "Other",
-    color: "#9ca3af",
+    label: "Amount",
   },
 } satisfies ChartConfig;
 
 const formatCurrency = (amount: number) => {
-  return `₦${(amount / 1000).toFixed(0)}K`;
+  return `₦${(amount / 100).toLocaleString()}`;
 };
 
-export function TopExpenses() {
+export function TopExpenses({
+  data,
+  filter = "THIS_YEAR",
+  onFilterChange,
+  loading,
+}: TopExpensesProps) {
+  const chartData = data?.map((item, index) => ({
+    name: item.category,
+    value: item.amount / 100,
+    fill: colors[index % colors.length],
+  })) ?? [];
+
+  if (loading) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader>
+          <CardTitle>Top Expenses</CardTitle>
+          <CardDescription>Expense breakdown</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-80 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle>Top Expenses</CardTitle>
-          <CardDescription>January - June 2024</CardDescription>
+          <CardDescription>Top expenses by category</CardDescription>
         </div>
-        <Select>
+        <Select value={filter} onValueChange={onFilterChange}>
           <SelectTrigger className="w-45">
-            <SelectValue placeholder="This Year" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="this-year">This Year</SelectItem>
-            <SelectItem value="this-fiscal-year">This Fiscal Year</SelectItem>
-            <SelectItem value="previous-fiscal-year">
-              Previous Fiscal Year
-            </SelectItem>
-            <SelectItem value="last-12-months">Last 12 Months</SelectItem>
+            <SelectItem value="THIS_YEAR">This Year</SelectItem>
+            <SelectItem value="THIS_FISCAL_YEAR">This Fiscal Year</SelectItem>
+            <SelectItem value="LAST_FISCAL_YEAR">Last Fiscal Year</SelectItem>
+            <SelectItem value="LAST_12_MONTHS">Last 12 Months</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -119,7 +133,7 @@ export function TopExpenses() {
                 <span className="text-gray-600">{item.name}</span>
               </div>
               <span className="font-medium">
-                {formatCurrency(item.value)}
+                {formatCurrency(item.value * 100)}
               </span>
             </div>
           ))}

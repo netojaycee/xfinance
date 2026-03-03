@@ -19,6 +19,7 @@ export const MODAL = {
   JOURNAL_CREATE: "journal-create",
   JOURNAL_EDIT: "journal-edit",
   JOURNAL_DELETE: "journal-delete",
+  JOURNAL_POST: "journal-post",
 
   VENDOR_CREATE: "vendor-create",
   VENDOR_EDIT: "vendor-edit",

@@ -153,14 +153,15 @@ export const useUpdateAccount = (
 };
 
 export const useSetOpeningBalances = (
-  options?: UseMutationOptions<any, Error, { lines: any[] }>,
+  options?: UseMutationOptions<any, Error, { date: string; fiscalYear: string; note?: string; items: any[] }>,
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ lines }) => accountsService.setOpeningBalances( { lines }),
+    mutationFn: (payload) => accountsService.setOpeningBalances(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["openingBalances"] });
       toast.success("Opening balances set successfully");
     },
     onError: (error) => {
@@ -169,6 +170,15 @@ export const useSetOpeningBalances = (
       );
     },
     ...options,
+  });
+};
+
+export const useOpeningBalances = (params?: { search?: string; page?: number; limit?: number }) => {
+  return useQuery<any>({
+    queryKey: ["openingBalances", params?.search, params?.page, params?.limit],
+    queryFn: () => accountsService.getOpeningBalances(params),
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -221,6 +231,15 @@ export const useJournal = (id: string) => {
   });
 };
 
+export const useJournalLines = (params?: { search?: string; page?: number; limit?: number }) => {
+  return useQuery<any>({
+    queryKey: ["journalLines", params?.search, params?.page, params?.limit],
+    queryFn: () => accountsService.getJournalLines(params),
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
 export const useJournalByReference = (reference: string) => {
   return useQuery({
     queryKey: ["journals", "reference", reference],
@@ -241,6 +260,7 @@ export const useCreateJournal = (
     mutationFn: accountsService.createJournal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["journals"] });
+      queryClient.invalidateQueries({ queryKey: ["journalLines"] });
       toast.success("Journal created successfully");
       closeModal(MODAL.JOURNAL_CREATE);
     },
@@ -297,6 +317,32 @@ export const useDeleteJournal = (
     onError: (error) => {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete journal",
+      );
+    },
+    ...options,
+  });
+};
+
+export const usePostJournal = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: accountsService.postJournal,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["journals"] });
+      queryClient.invalidateQueries({ queryKey: ["journalLines"] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ["journals", "detail", id] });
+      }
+      toast.success("Journal posted successfully");
+      closeModal(MODAL.JOURNAL_POST);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to post journal",
       );
     },
     ...options,

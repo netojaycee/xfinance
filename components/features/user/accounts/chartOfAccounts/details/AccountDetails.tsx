@@ -95,7 +95,7 @@ export default function AccountDetails() {
     );
   }
 
-  console.log(transactions, "Transactions for account"); // Debug log to check transactions data
+  console.log(transactions, transactionsResponse, "Transactions for account"); // Debug log to check transactions data
 
   return (
     <div className="space-y-4">

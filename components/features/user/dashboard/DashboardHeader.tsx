@@ -2,12 +2,27 @@
 
 import { Button } from "@/components/ui/button";
 import { Entity, EntityImpersonationPayload } from "@/lib/types";
+import { FilterOption } from "@/lib/api/services/analyticsService";
+
+interface DashboardHeaderProps {
+  entity: EntityImpersonationPayload | null;
+  filters?: {
+    monthlyFilter: FilterOption;
+    cashFlowFilter: FilterOption;
+    expensesFilter: FilterOption;
+  };
+  onFiltersChange?: (filters: {
+    monthlyFilter: FilterOption;
+    cashFlowFilter: FilterOption;
+    expensesFilter: FilterOption;
+  }) => void;
+}
 
 export default function DashboardHeader({
   entity,
-}: {
-  entity: EntityImpersonationPayload | null;
-}) {
+  filters,
+  onFiltersChange,
+}: DashboardHeaderProps) {
   return (
     <div className="flex items-start justify-between">
       <div>
