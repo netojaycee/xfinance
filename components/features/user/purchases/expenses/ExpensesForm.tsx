@@ -190,7 +190,6 @@ export default function ExpensesForm({
         formData.append("paymentMethod", values.paymentMethod);
         formData.append("paymentAccountId", values.paymentAccountId);
         formData.append("amount", Math.round(values.amount).toString());
-        if (values.tax)
           formData.append("tax", Math.round(values.tax).toString());
         if (values.description)
           formData.append("description", values.description);

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import {
   AccountsReceivableAging,
+  AccountsPayableAging,
   CashFlow,
   DashboardHeader,
   RecentTransactions,
@@ -80,29 +81,7 @@ export default function UserDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <AccountsReceivableAging data={data?.receivableAging} loading={isLoading} />
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Accounts Payable Aging</h3>
-          {data?.payableAging && (
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">0-30 Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["0-30"] ).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">31-60 Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["31-60"] ).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">61-90 Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["61-90"] ).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">90+ Days</span>
-                <span className="font-semibold text-gray-900">₦{(data.payableAging["90+"] ).toLocaleString()}</span>
-              </div>
-            </div>
-          )}
-        </div>
+        <AccountsPayableAging data={data?.payableAging} loading={isLoading} />
       </div>
     </div>
   );

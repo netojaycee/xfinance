@@ -82,14 +82,20 @@ export const sendInvoice = (id: string | number) =>
   apiClient(`sales/invoices/${id}/send`, { method: "POST" });
 
 export const downloadInvoice = async (id: string | number) => {
-  // Return blob response for PDF
-  const response = await apiClient(`sales/invoices/${id}/download`, {
+  // Fetch PDF as blob directly (bypass apiClient JSON parsing)
+  const url = `/api/sales/invoices/${id}/download`;
+  const response = await fetch(url, {
     method: "GET",
     headers: {
-        Accept: "application/pdf"
+      Accept: "application/pdf"
     }
   });
-  return response; 
+
+  if (!response.ok) {
+    throw new Error(`Failed to download invoice: ${response.statusText}`);
+  }
+
+  return await response.blob();
 };
 
 export const getInvoiceGraphs = (params: any = {}) => {

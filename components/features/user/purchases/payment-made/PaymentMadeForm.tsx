@@ -362,7 +362,8 @@ export default function PaymentMadeForm({
                             ? `Max: $${remainingAmount.toFixed(2)}`
                             : "0.00"
                         }
-                        {...field}
+                        value={field.value}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />

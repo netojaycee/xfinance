@@ -38,14 +38,12 @@ const lineItemSchema = z.object({
 const billSchema = z.object({
   vendorId: z.string().min(1, "Vendor required"),
   billDate: z.date(),
-  billNumber: z.string().min(1, "Bill number required"),
   dueDate: z.date(),
   poNumber: z.string().optional(),
   paymentTerms: z.string().min(1, "Payment terms required"),
   lineItems: z.array(lineItemSchema).min(1, "At least 1 item"),
   discount: z.number().min(0, "Min 0"),
   tax: z.number().min(0, "Min 0"),
-  category: z.string().min(1, "Category required"),
   accountsPayableId: z.string().optional(),
   subject: z.string().optional(),
   notes: z.string().optional(),
@@ -57,14 +55,12 @@ type BillFormType = z.infer<typeof billSchema>;
 const defaultValues: BillFormType = {
   vendorId: "",
   billDate: new Date(),
-  billNumber: "",
   dueDate: new Date(),
   poNumber: "",
   paymentTerms: "Net 30",
   lineItems: [{ name: "", quantity: 1, rate: 0, expenseAccountId: "" }],
   discount: 0,
   tax: 0,
-  category: "",
   accountsPayableId: "",
   subject: "",
   notes: "",
@@ -99,10 +95,8 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
     defaultValues: {
       ...defaultValues,
       vendorId: bill?.vendorId || "",
-      billNumber: bill?.billNumber || "",
       poNumber: bill?.poNumber || "",
       paymentTerms: bill?.paymentTerms || "Net 30",
-      category: bill?.category || "",
       accountsPayableId: (bill as any)?.accountsPayableId || "",
       subject: bill?.subject || "",
       notes: bill?.notes || "",
@@ -124,14 +118,12 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
       form.reset({
         vendorId: (bill as any).vendorId || ((bill as any).vendor as any)?.id || "",
         billDate: bill.billDate ? new Date(bill.billDate) : new Date(),
-        billNumber: bill.billNumber || "",
         dueDate: bill.dueDate ? new Date(bill.dueDate) : new Date(),
         poNumber: bill.poNumber || "",
         paymentTerms: bill.paymentTerms || "Net 30",
         lineItems: mappedItems.length > 0 ? mappedItems : [{ name: "", quantity: 1, rate: 0 }],
         discount: Number(bill.discount) || 0,
         tax: Number(bill.tax) || 0,
-        category: bill.category || "",
         accountsPayableId: (bill as any)?.accountsPayableId || "",
         subject: bill?.subject || "",
         notes: bill.notes || "",
@@ -194,12 +186,10 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
         // POST request for create
         const formData = new FormData();
         formData.append("billDate", values.billDate instanceof Date ? values.billDate.toISOString() : String(values.billDate));
-        formData.append("billNumber", values.billNumber);
         formData.append("vendorId", values.vendorId);
         formData.append("dueDate", values.dueDate instanceof Date ? values.dueDate.toISOString() : String(values.dueDate));
         if (values.poNumber) formData.append("poNumber", values.poNumber);
         formData.append("paymentTerms", values.paymentTerms);
-        formData.append("category", values.category);
         if (values.accountsPayableId) formData.append("accountsPayableId", values.accountsPayableId);
         if (values.subject) formData.append("subject", values.subject);
         if (values.notes) formData.append("notes", values.notes);
@@ -242,7 +232,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
                 control={form.control}
                 name="vendorId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="md:col-span-2">
                     <FormLabel>Vendor *</FormLabel>
                     <FormControl>
                       <Select
@@ -296,19 +286,6 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
                           field.onChange(new Date(e.target.value))
                         }
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="billNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bill Number *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., BILL-001" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -645,31 +622,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
                 Additional Details
               </span>
             </div>
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full bg-white">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Office Supplies">
-                          Office Supplies
-                        </SelectItem>
-                        <SelectItem value="IT & Software">
-                          IT & Software
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          
             <FormField
               control={form.control}
               name="notes"

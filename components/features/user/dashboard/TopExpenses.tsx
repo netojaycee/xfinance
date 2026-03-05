@@ -133,7 +133,7 @@ export function TopExpenses({
                 <span className="text-gray-600">{item.name}</span>
               </div>
               <span className="font-medium">
-                {formatCurrency(item.value * 100)}
+                {formatCurrency(item.value)}
               </span>
             </div>
           ))}

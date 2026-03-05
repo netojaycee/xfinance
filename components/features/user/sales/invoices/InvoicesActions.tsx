@@ -25,6 +25,8 @@ import InvoiceForm from "./InvoiceForm";
 import {
   useDeleteInvoice,
   useUpdateInvoiceStatus,
+  useDownloadInvoice,
+  useSendInvoice,
 } from "@/lib/api/hooks/useSales";
 import PaymentReceivedForm from "../payment-received/PaymentReceivedForm";
 import { useModal } from "@/components/providers/ModalProvider";
@@ -35,6 +37,8 @@ export default function InvoicesActions({ row }: { row: any }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const deleteInvoice = useDeleteInvoice();
   const updateInvoiceStatus = useUpdateInvoiceStatus();
+  const downloadInvoice = useDownloadInvoice();
+  const sendInvoice = useSendInvoice();
   const { isOpen, openModal, closeModal } = useModal();
 
   const deleteKey = MODAL.INVOICE_DELETE + "-" + row.id;
@@ -128,20 +132,20 @@ export default function InvoicesActions({ row }: { row: any }) {
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              // Send to customer logic
-              console.log("send", row.id);
+              sendInvoice.mutate(row.id);
             }}
+            disabled={sendInvoice.isPending}
           >
-            <Send className="size-4 mr-2" /> Send to customer
+            <Send className="size-4 mr-2" /> {sendInvoice.isPending ? "Sending..." : "Send to Customer"}
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              // Download PDF logic
-              console.log("download", row.id);
+              downloadInvoice.mutate(row.id);
             }}
+            disabled={downloadInvoice.isPending}
           >
-            <Download className="size-4 mr-2" /> Download PDF
+            <Download className="size-4 mr-2" /> {downloadInvoice.isPending ? "Downloading..." : "Download PDF"}
           </DropdownMenuItem>
           {row?.status === "Draft" && (
             <>

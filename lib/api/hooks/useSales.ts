@@ -280,6 +280,7 @@ export const useDownloadInvoice = (
         toast.success("Invoice download started");
     },
     onError: (error) => {
+      console.log("Download error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to download invoice");
     },
     ...options,

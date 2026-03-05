@@ -89,8 +89,8 @@ export default function ManualJournalForm({ accounts = [], onSuccess }: ManualJo
         status,
         lines: values.journalLines.map((line) => ({
           accountId: line.accountId,
-          debit: Math.round((line.debit || 0) * 100),
-          credit: Math.round((line.credit || 0) * 100),
+          debit: Math.round((line.debit || 0)),
+          credit: Math.round((line.credit || 0)),
           description: line.description || undefined,
         })),
       };

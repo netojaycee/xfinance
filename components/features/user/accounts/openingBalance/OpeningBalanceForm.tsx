@@ -291,9 +291,10 @@ export default function OpeningBalanceForm({
 
             {/* Table Header */}
             <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-100 rounded-lg font-semibold text-sm text-gray-700">
-              <div className="col-span-4">Account</div>
-              <div className="col-span-3">Account Type</div>
-              <div className="col-span-2 text-right">Amount</div>
+              <div className="col-span-3">Account</div>
+              <div className="col-span-2">Account Type</div>
+              <div className="col-span-2 text-right">Debit</div>
+              <div className="col-span-2 text-right">Credit</div>
               <div className="col-span-2"></div>
               <div className="col-span-1"></div>
             </div>
@@ -308,7 +309,7 @@ export default function OpeningBalanceForm({
                   <div key={field.id} className="space-y-2 md:space-y-0">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-end bg-gray-50 p-4 rounded-lg border border-gray-200">
                       {/* Account Select */}
-                      <div className="md:col-span-4">
+                      <div className="md:col-span-3">
                         <FormField
                           control={form.control}
                           name={`items.${index}.accountId`}
@@ -346,7 +347,7 @@ export default function OpeningBalanceForm({
                       </div>
 
                       {/* Account Type (Display Only) */}
-                      <div className="md:col-span-3">
+                      <div className="md:col-span-2">
                         <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
                           Account Type
                         </FormLabel>
@@ -355,63 +356,55 @@ export default function OpeningBalanceForm({
                         </div>
                       </div>
 
-                      {/* Debit Input - Only for Asset/Expense accounts */}
-                      {isDebit ? (
-                        <div className="md:col-span-2">
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.debit`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
-                                  Amount
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    className="rounded-lg border-gray-300 text-right bg-blue-50 border-blue-300"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      ) : (
-                        <div className="md:col-span-2"></div>
-                      )}
+                      {/* Debit Input */}
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.debit`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
+                                Debit
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className="rounded-lg border-gray-300 text-right bg-blue-50 border-blue-300"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                      {/* Credit Input - Only for Liability/Equity/Revenue accounts */}
-                      {!isDebit ? (
-                        <div className="md:col-span-2">
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.credit`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
-                                  Amount
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    className="rounded-lg border-gray-300 text-right bg-blue-50 border-blue-300"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      ) : (
-                        <div className="md:col-span-2"></div>
-                      )}
+                      {/* Credit Input */}
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.credit`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs md:text-sm text-gray-600 md:hidden">
+                                Credit
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className="rounded-lg border-gray-300 text-right bg-green-50 border-green-300"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
                       {/* Delete Button */}
                       <div className="md:col-span-1 flex justify-end">

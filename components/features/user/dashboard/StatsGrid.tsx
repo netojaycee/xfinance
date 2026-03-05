@@ -36,7 +36,7 @@ export default function StatsGrid({ data, loading }: StatsGridProps) {
       title: "Current Liabilities",
       icon: <TrendingDown className="h-5 w-5" />,
       value: data?.liabilities?.total ? `₦${(data.liabilities.total).toLocaleString()}` : "₦0",
-      percentage: Math.abs(data?.liabilities?.changePercent ?? 0),
+      percentage: Math.abs(Number((data?.liabilities?.changePercent ?? 0).toFixed(2))),
       isPositive: (data?.liabilities?.changePercent ?? 0) <= 0,
     },
     {

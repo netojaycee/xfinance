@@ -1,4 +1,5 @@
 export { AccountsReceivableAging } from "./AccountsReceivableAging";
+export { AccountsPayableAging } from "./AccountsPayableAging";
 export { CashFlow } from "./CashFlow";
 export { RevenueExpensesChart } from "./RevenueExpensesChart";
 export { TopExpenses } from "./TopExpenses";

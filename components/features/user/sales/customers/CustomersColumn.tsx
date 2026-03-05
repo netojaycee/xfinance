@@ -69,7 +69,7 @@ export const customerColumns: Column<Customer>[] = [
     ),
   },
   {
-    key: "outstanding",
+    key: "outstandingBalance",
     title: "Outstanding",
     className: "text-xs",
 

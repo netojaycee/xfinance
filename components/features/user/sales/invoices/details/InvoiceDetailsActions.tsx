@@ -105,7 +105,6 @@ export default function InvoiceDetailsActions({
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              setDropdownOpen(false);
               sendInvoice.mutate(invoice.id);
             }}
             disabled={sendInvoice.isPending}
@@ -115,7 +114,6 @@ export default function InvoiceDetailsActions({
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
-              setDropdownOpen(false);
               downloadInvoice.mutate(invoice.id);
             }}
             disabled={downloadInvoice.isPending}

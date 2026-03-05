@@ -2,6 +2,10 @@ import { Customers } from '@/components/features/user/sales'
 
 export default function CustomersPage() {
   return (
-    <Customers />
+    // <div className="p-4">
+    //   <h1 className="text-2xl font-bold mb-4">Customers</h1>
+      <Customers />
+    // </div>
+    // <Customers />
   )
 }
