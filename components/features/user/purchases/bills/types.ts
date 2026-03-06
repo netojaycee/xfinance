@@ -36,7 +36,7 @@ export interface Bill {
   paymentTerms: string;
   items: string[];
   total: number;
-  category: string;
+  category?: string;
   notes: string;
   attachment: BillAttachment | null;
   vendor?: Vendor;

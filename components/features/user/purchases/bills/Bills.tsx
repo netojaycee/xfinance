@@ -10,14 +10,14 @@ export default function Bills() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [categoryFilter, setCategoryFilter] = useState("All Categories");
+  // const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 
   const { data, isLoading } = useBills({
     search: debouncedSearchTerm,
     page: currentPage,
     limit: rowsPerPage,
-    category: categoryFilter === "All Categories" ? undefined : categoryFilter,
+    // category: categoryFilter === "All Categories" ? undefined : categoryFilter,
   });
 
   const bills = (data as any)?.bills || [];
@@ -46,9 +46,9 @@ export default function Bills() {
           "Professional Services",
           "Other",
         ]}
-        onStatusChange={setCategoryFilter}
+        // onStatusChange={setCategoryFilter}
         display={{
-          statusComponent: true,
+          statusComponent: false,
           filterComponent: false,
           searchComponent: true,
           methodsComponent: false,
