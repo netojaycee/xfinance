@@ -447,7 +447,7 @@ export default function SalesReceiptsForm({
                           onChange={(e) =>
                             field.onChange(Number(e.target.value))
                           }
-                          prefix="$"
+                          prefix="₦"
                           disabled={true}
                         />
                       )}

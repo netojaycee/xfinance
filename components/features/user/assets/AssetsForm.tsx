@@ -428,7 +428,7 @@ export default function AssetsForm({
                           type="number"
                           step="0.01"
                           className="pl-8 rounded-2xl"
-                          placeholder="$ 0.00"
+                          placeholder="₦ 0.00"
                           {...field}
                         />
                       </div>
@@ -465,7 +465,7 @@ export default function AssetsForm({
                           type="number"
                           step="0.01"
                           className="pl-8 rounded-2xl"
-                          placeholder="$ 0.00"
+                          placeholder="₦ 0.00"
                           {...field}
                         />
                       </div>
@@ -640,7 +640,7 @@ export default function AssetsForm({
                             type="number"
                             step="0.01"
                             className="pl-8 rounded-2xl"
-                            placeholder="$ 0.00"
+                            placeholder="₦ 0.00"
                             {...field}
                           />
                         </div>

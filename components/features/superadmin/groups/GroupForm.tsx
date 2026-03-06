@@ -469,10 +469,10 @@ export function GroupForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="starter">
-                            Starter - $99/month
+                            Starter - ₦99/month
                           </SelectItem>
                           <SelectItem value="professional">
-                            Professional - $299/month
+                            Professional - ₦299/month
                           </SelectItem>
                           <SelectItem value="enterprise">
                             Enterprise - Custom pricing

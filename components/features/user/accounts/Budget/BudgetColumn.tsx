@@ -15,7 +15,7 @@ export const budgetColumns: Column<any>[] = [
     className: "text-xs text-right",
     render: (value) => (
       <span className="text-gray-900 font-medium">
-        {value ? `$${parseFloat(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00"}
+        {value ? `₦${parseFloat(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "₦0.00"}
       </span>
     ),
   },
@@ -25,7 +25,7 @@ export const budgetColumns: Column<any>[] = [
     className: "text-xs text-right",
     render: (value) => (
       <span className="text-gray-900 font-medium">
-        {value ? `$${parseFloat(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00"}
+        {value ? `₦${parseFloat(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "₦0.00"}
       </span>
     ),
   },
@@ -38,7 +38,7 @@ export const budgetColumns: Column<any>[] = [
       const isPositive = numValue > 0;
       return (
         <span className={`font-medium ${isPositive ? "text-green-600" : "text-red-600"}`}>
-          {isPositive ? "+" : ""}{numValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {isPositive ? "+" : ""}₦{numValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       );
     },

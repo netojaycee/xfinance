@@ -12,7 +12,7 @@ function PlansTab() {
       description: 'Perfect for small businesses',
       price: 49,
       subscribers: 420,
-      mrr: '$20,580',
+      mrr: '₦20,580',
       features: [
         { name: 'Up to 5 users', included: true },
         { name: 'Basic accounting features', included: true },
@@ -29,7 +29,7 @@ function PlansTab() {
       description: 'For growing businesses',
       price: 299,
       subscribers: 315,
-      mrr: '$94,185',
+      mrr: '₦94,185',
       features: [
         { name: 'Up to 25 users', included: true },
         { name: 'All accounting features', included: true },
@@ -47,7 +47,7 @@ function PlansTab() {
       description: 'For large organizations',
       price: 899,
       subscribers: 112,
-      mrr: '$100,688',
+      mrr: '₦100,688',
       features: [
         { name: 'Unlimited users', included: true },
         { name: 'All accounting features', included: true },

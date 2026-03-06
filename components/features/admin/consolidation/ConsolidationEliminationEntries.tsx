@@ -18,20 +18,20 @@ const mockData: EliminationEntry[] = [
     description: "Eliminate intercompany revenue",
     entity: "All",
     debit: "-",
-    credit: "$547,000",
+    credit: "₦547,000",
   },
   {
     account: "Intercompany Purchases",
     description: "Eliminate intercompany COGS",
     entity: "All",
-    debit: "$547,000",
+    debit: "₦547,000",
     credit: "-",
   },
   {
     account: "Intercompany Payables",
     description: "Eliminate intercompany payables",
     entity: "All",
-    debit: "$330,000",
+    debit: "₦330,000",
     credit: "-",
   },
   {
@@ -39,7 +39,7 @@ const mockData: EliminationEntry[] = [
     description: "Eliminate intercompany receivables",
     entity: "All",
     debit: "-",
-    credit: "$330,000",
+    credit: "₦330,000",
   },
 ];
 
@@ -62,9 +62,9 @@ const columns: Column<EliminationEntry>[] = [
 ];
 
 export default function ConsolidationEliminationEntries() {
-  const totalDebits = "$877,000";
-  const totalCredits = "$877,000";
-  const balance = "$0";
+  const totalDebits = "₦877,000";
+  const totalCredits = "₦877,000";
+  const balance = "₦0";
 
   return (
     <Card>

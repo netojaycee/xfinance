@@ -67,7 +67,7 @@ export default function CurrencyAdjustmentForm({
   const netAdjustment = adjustmentData.unrealizedGains - adjustmentData.unrealizedLosses;
   const baseCurrencySymbol = currencyOptions.find(
     (c) => c.id === form.watch("baseCurrency")
-  )?.symbol || "$";
+  )?.symbol || "₦";
 
   const onSubmit = async (values: CurrencyAdjustmentFormData) => {
     try {

@@ -24,7 +24,7 @@ export default function SummarySection({
       case "GBP":
         return "£";
       default:
-        return "$";
+        return "₦";
     }
   };
 

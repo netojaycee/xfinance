@@ -32,7 +32,7 @@ export function SubscriptionStatCards() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="Total MRR"
-        value="$284,750"
+        value="₦284,750"
         icon={<DollarSign className="h-5 w-5 text-primary" />}
       />
       <StatCard
@@ -47,7 +47,7 @@ export function SubscriptionStatCards() {
       />
       <StatCard
         title="Avg Revenue/Customer"
-        value="$336"
+        value="₦336"
         icon={<Users className="h-5 w-5 text-primary" />}
       />
     </div>

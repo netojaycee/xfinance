@@ -72,9 +72,9 @@ export const billsColumns: BillColumn[] = [
     className: "text-xs",
     render: (value: unknown) => {
       const amount = parseFloat(value as string) || 0;
-      const formatted = new Intl.NumberFormat("en-US", {
+    const formatted = new Intl.NumberFormat("en-NG", {
         style: "currency",
-        currency: "USD",
+        currency: "NGN",
       }).format(amount);
       return (
         <span className="text-xs font-semibold">{formatted}</span>

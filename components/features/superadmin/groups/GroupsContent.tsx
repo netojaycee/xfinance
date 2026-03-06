@@ -59,7 +59,7 @@ function transformGroupToRow(group: Group): GroupRow {
     plan: getPlanTier(group.subscriptionId),
     entities: 0,
     users: 0,
-    mrr: '$0/mo',
+    mrr: '₦0/mo',
     status: 'Active',
     lastActive: group.updatedAt ? new Date(group.updatedAt).toLocaleDateString() : new Date(group.createdAt).toLocaleDateString(),
     address: group.address || '',

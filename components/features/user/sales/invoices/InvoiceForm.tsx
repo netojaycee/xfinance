@@ -466,7 +466,7 @@ export default function InvoiceForm({
                             onChange={(e) =>
                               field.onChange(Number(e.target.value))
                             }
-                            prefix="$"
+                            prefix="₦"
                             disabled={true}
                           />
                         )}
@@ -497,7 +497,7 @@ export default function InvoiceForm({
                     ? "₦"
                     : form.watch("currency") === "GBP"
                       ? "£"
-                      : "$"}
+                      : "₦"}
                   {subtotal.toLocaleString()}
                 </span>
               </div>
@@ -508,7 +508,7 @@ export default function InvoiceForm({
                     ? "₦"
                     : form.watch("currency") === "GBP"
                       ? "£"
-                      : "$"}
+                      : "₦"}
                   {tax.toLocaleString()}
                 </span>
               </div>
@@ -520,7 +520,7 @@ export default function InvoiceForm({
                     ? "₦"
                     : form.watch("currency") === "GBP"
                       ? "£"
-                      : "$"}
+                      : "₦"}
                   {total.toLocaleString()}
                 </span>
               </div>

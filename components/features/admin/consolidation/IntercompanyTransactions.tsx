@@ -21,8 +21,8 @@ const mockData: IntercompanyTransaction[] = [
     fromEntity: "Hunslow Inc. (US)",
     toEntity: "Hunslow UK Ltd",
     type: "Sales",
-    amount: "$125,000",
-    variance: "$0",
+    amount: "₦125,000",
+    variance: "₦0",
     status: "Matched",
   },
   {
@@ -30,8 +30,8 @@ const mockData: IntercompanyTransaction[] = [
     fromEntity: "Hunslow UK Ltd",
     toEntity: "Hunslow GmbH (DE)",
     type: "Service Fee",
-    amount: "$45,000",
-    variance: "$0",
+    amount: "₦45,000",
+    variance: "₦0",
     status: "Matched",
   },
   {
@@ -39,8 +39,8 @@ const mockData: IntercompanyTransaction[] = [
     fromEntity: "Hunslow Inc. (US)",
     toEntity: "Hunslow Asia Pte Ltd",
     type: "Loan",
-    amount: "$250,000",
-    variance: "$0",
+    amount: "₦250,000",
+    variance: "₦0",
     status: "Matched",
   },
 ];
