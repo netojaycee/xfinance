@@ -67,7 +67,7 @@ export async function proxy(request: NextRequest) {
         if (required[0].includes(":")) {
           const parts = required[0].split(":");
           submodule = parts[1]
-            .replace(/([a-z0-9])([A-Z])/g, "₦1-₦2")
+            .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
             .toLowerCase();
         }
         if (submodule) {
@@ -125,7 +125,7 @@ export async function proxy(request: NextRequest) {
             const parts = firstPermittedSubmodule.split(":");
             // Convert camelCase to kebab-case
             submodule = parts[1]
-              .replace(/([a-z0-9])([A-Z])/g, "₦1-₦2")
+              .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
               .toLowerCase();
           }
           if (submodule) {
