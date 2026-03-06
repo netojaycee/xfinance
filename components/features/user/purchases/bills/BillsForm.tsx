@@ -541,7 +541,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>
-                  $
+                  ₦
                   {subtotal.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                   })}
@@ -595,7 +595,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
                   />
                   <span className="text-xs">%</span>
                   <span className="ml-2">
-                    $
+                    ₦
                     {taxAmount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                     })}
@@ -605,7 +605,7 @@ export default function BillsForm({ bill, isEditMode = false }: BillsFormProps) 
               <div className="flex justify-between font-bold text-base mt-2">
                 <span>Total</span>
                 <span className="text-blue-700 text-xl">
-                  $
+                  ₦
                   {total.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                   })}
