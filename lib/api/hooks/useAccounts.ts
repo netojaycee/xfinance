@@ -85,25 +85,7 @@ export const useAccountTransactionsByAccountId = (
   });
 };
 
-export const useAccountTransactionsByBankAccountId = (
-  bankAccountId: string,
-  params?: {
-    search?: string;
-    fromDate?: string;
-    toDate?: string;
-    status?: "Pending" | "Processing" | "Success" | "Failed";
-    page?: number;
-    pageSize?: number;
-  },
-) => {
-  return useQuery<AccountTransactionsResponse>({
-    queryKey: ["accountTransactions", "byBankAccountId", bankAccountId, params?.search, params?.fromDate, params?.toDate, params?.status, params?.page, params?.pageSize],
-    queryFn: () => accountsService.getAccountTransactionsByBankAccountId(bankAccountId, params) as Promise<AccountTransactionsResponse>,
-    enabled: !!bankAccountId,
-    staleTime: 1 * 60 * 1000,
-    refetchOnWindowFocus: true,
-  });
-};
+
 
 export const useCreateAccount = (
   options?: UseMutationOptions<any, Error, CreateAccountInput>,

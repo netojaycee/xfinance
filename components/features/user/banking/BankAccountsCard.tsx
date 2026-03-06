@@ -7,9 +7,9 @@ export default function BankAccountsCard() {
   const router = useRouter();
   const { data: accountsData, isLoading } = useBankAccounts();
 
+  // console.log("Bank accounts data:", accountsData); // Debug log to check the structure of the data
+
   const accounts = (accountsData as any)?.data || [];
-
-
 
   const handleAccountClick = (accountId: string) => {
     router.push(`/banking/${accountId}`);
@@ -19,15 +19,21 @@ export default function BankAccountsCard() {
     <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-[#F2F3F5]">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <div className="text-xl font-semibold text-gray-900 mb-1">Bank Accounts</div>
-          <div className="text-sm text-gray-500">Connected accounts and balances</div>
+          <div className="text-xl font-semibold text-gray-900 mb-1">
+            Bank Accounts
+          </div>
+          <div className="text-sm text-gray-500">
+            Connected accounts and balances
+          </div>
         </div>
       </div>
 
       {isLoading ? (
         <div className="text-sm text-gray-500">Loading accounts...</div>
       ) : accounts.length === 0 ? (
-        <div className="text-sm text-gray-500 py-4">No bank accounts connected</div>
+        <div className="text-sm text-gray-500 py-4">
+          No bank accounts connected
+        </div>
       ) : (
         <div className="space-y-4">
           {accounts.map((acc: any) => (
@@ -60,7 +66,7 @@ export default function BankAccountsCard() {
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: acc.currency || "USD",
-                  }).format(acc.currentBalance || 0)}
+                  }).format(acc.linkedAccount?.balance || 0)}
                 </div>
                 <div className="text-xs text-gray-400">{acc.currency}</div>
               </div>

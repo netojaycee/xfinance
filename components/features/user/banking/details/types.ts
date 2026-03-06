@@ -46,6 +46,19 @@ export interface BankAccountProfile {
   openingBalance: number;
 }
 
+export interface LinkedAccount {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  entityId: string;
+  subCategoryId: string;
+  balance: number;
+  linkedType: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface BankApiResponse {
   id: string;
   accountName: string;
@@ -53,10 +66,19 @@ export interface BankApiResponse {
   accountNumber: string;
   currency: string;
   accountType: string;
-  currentBalance: number;
-  openingBalance: number;
+  routingNumber: string;
+  status: string;
+  linkedAccountId: string;
+  entityId: string;
   createdAt: string;
   updatedAt: string;
+  linkedAccount: LinkedAccount;
+  stats: {
+    totalDeposits: number;
+    totalWithdrawals: number;
+    pendingCount: number;
+    transactionsCount: number;
+  };
 }
 
 export interface TransactionsApiResponse {

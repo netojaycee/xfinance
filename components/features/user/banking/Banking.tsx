@@ -14,6 +14,8 @@ export default function Banking() {
   const { isOpen, closeModal } = useModal();
   const { data, isLoading } = useBankingStats();
 
+  console.log("Banking stats data:", data); // Debug log to check the structure of the banking stats data
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <BankingHeader data={data} loading={isLoading} />

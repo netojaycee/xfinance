@@ -15,7 +15,7 @@ export function BankingTabs() {
 
 
   const transactions = (transactionsResponse as any)?.data || [];
-  // console.log(transactionsResponse)
+  console.log(transactionsResponse, "Transactions response"); // Debug log to check the structure of the transactions data
 
   return (
     <div className="flex w-full flex-col gap-6">

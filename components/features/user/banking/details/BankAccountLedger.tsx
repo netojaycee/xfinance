@@ -2,13 +2,11 @@ import React, { useEffect, useMemo } from "react";
 import BankProfileHeader from "./BankProfileHeader";
 import BankStatsCard from "./BankStatsCard";
 import BankTransactions from "./BankTransactions";
-import {
-  BankAccountProfile,
-  BankStats,
-  BankApiResponse,
-} from "./types";
+import { BankAccountProfile, BankStats, BankApiResponse } from "./types";
 import { useBankAccount } from "@/lib/api/hooks/useBanking";
-import { useAccountTransactionsByBankAccountId } from "@/lib/api/hooks/useAccounts";
+import {
+  useAccountTransactionsByAccountId,
+} from "@/lib/api/hooks/useAccounts";
 import { AccountTransaction } from "@/lib/api/hooks/types/accountsTypes";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,21 +15,21 @@ export default function BankAccountLedger() {
   const params = useParams();
   const accountId = params?.id ? params.id.toString() : "";
 
-  const {
-    data: fetchedAccount,
-    isLoading: accountLoading,
-  } = useBankAccount(accountId);
-
-  const {
-    data: transactionsResponse,
-    isLoading: transactionsLoading,
-  } = useAccountTransactionsByBankAccountId(accountId, {
-    pageSize: 50,
-  });
+  const { data: fetchedAccount, isLoading: accountLoading } =
+    useBankAccount(accountId);
 
   const accountData = fetchedAccount as BankApiResponse | undefined;
-  const transactions: AccountTransaction[] = (transactionsResponse as any)?.data || [];
+  // console.log("Fetched bank account data:", accountData); // Debug log to check the structure of the fetched account data
+  const { data: transactionsResponse, isLoading: transactionsLoading } =
+    useAccountTransactionsByAccountId(
+      (fetchedAccount as any)?.linkedAccountId || "",
+      {
+        pageSize: 50,
+      },
+    );
 
+  const transactions: AccountTransaction[] =
+    (transactionsResponse as any)?.data || [];
   // Derive Profile Data
   const profile: BankAccountProfile = useMemo(() => {
     if (!accountData) {
@@ -54,31 +52,31 @@ export default function BankAccountLedger() {
       accountNumber: accountData.accountNumber,
       currency: accountData.currency,
       accountType: accountData.accountType,
-      currentBalance: accountData.currentBalance,
-      openingBalance: accountData.openingBalance,
+      currentBalance: accountData.linkedAccount?.balance || 0,
+      openingBalance: 0,
     };
   }, [accountData]);
 
   // Calculate Statistics
   const stats: BankStats = useMemo(() => {
-    const deposits = transactions
-      .reduce((sum, t) => sum + (t.debitAmount || 0), 0);
-
-    const withdrawals = transactions
-      .reduce((sum, t) => sum + (t.creditAmount || 0), 0);
-
-    const pendingCount = transactions.filter(
-      (t) => t.status === "Pending"
-    ).length;
+    if (!accountData?.stats) {
+      return {
+        currentBalance: profile.currentBalance,
+        totalDeposits: 0,
+        totalWithdrawals: 0,
+        pendingCount: 0,
+        totalTransactions: 0,
+      };
+    }
 
     return {
       currentBalance: profile.currentBalance,
-      totalDeposits: deposits,
-      totalWithdrawals: withdrawals,
-      pendingCount: pendingCount,
-      totalTransactions: transactions.length,
+      totalDeposits: accountData.stats.totalDeposits,
+      totalWithdrawals: accountData.stats.totalWithdrawals,
+      pendingCount: accountData.stats.pendingCount,
+      totalTransactions: accountData.stats.transactionsCount,
     };
-  }, [transactions, profile.currentBalance]);
+  }, [accountData?.stats, profile.currentBalance]);
 
   if (accountLoading) {
     return (

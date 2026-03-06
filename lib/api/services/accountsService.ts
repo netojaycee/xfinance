@@ -334,16 +334,7 @@ export const getAccountTransactionsByAccountId = async (accountId: string, param
   return apiClient(url, { method: "GET" });
 };
 
-export const getAccountTransactionsByBankAccountId = async (bankAccountId: string, params?: { page?: number; pageSize?: number; status?: string }) => {
-  const queryParams = new URLSearchParams();
-  if (params?.page) queryParams.append("page", params.page.toString());
-  if (params?.pageSize) queryParams.append("pageSize", params.pageSize.toString());
-  if (params?.status) queryParams.append("status", params.status);
 
-  const queryString = queryParams.toString();
-  const url = queryString ? `account-transactions/bank/${bankAccountId}?${queryString}` : `account-transactions/bank/${bankAccountId}`;
-  return apiClient(url, { method: "GET" });
-};
 
 export const getAccountTransactionsSummary = async (params?: { bankAccountId?: string; type?: string }) => {
   const queryParams = new URLSearchParams();
