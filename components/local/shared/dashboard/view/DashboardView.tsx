@@ -1,9 +1,9 @@
 "use client";
-import React, { Fragment, Suspense, useEffect, useState } from "react";
-import { AlertError } from "../../../custom/alert/Error"; // Adjust path as needed
+import React, { Fragment, Suspense } from "react";
+import { AlertError } from "../../../custom/alert/Error";
 import Loader from "@/app/loading";
-import { ENUM_ROLE } from "@/lib/types/enums";
 import { useSessionStore } from "@/lib/store/session";
+import { ENUM_ROLE } from "@/lib/types/enums";
 
 type userNode = {
   superadmin: React.ReactNode;
@@ -11,61 +11,32 @@ type userNode = {
   user: React.ReactNode;
 };
 
-type STATUS = "loading" | "completed" | "error";
-
 const DashboardView = ({ type }: { type: userNode }) => {
-  const [status, setStatus] = useState<STATUS>("loading");
-  const [role, setRole] = useState<ENUM_ROLE | null>(null);
-  const { user, group, entity, loading } = useSessionStore();
+  const loading = useSessionStore((state) => state.loading);
+  const user = useSessionStore((state) => state.user);
+  const role = useSessionStore((state) => state.getEffectiveRole());
+  const isImpersonating = useSessionStore((state) => state.isImpersonating());
 
-  useEffect(() => {
-    // We should only determine the role once the session loading is complete
-    if (loading) {
-      setStatus("loading");
-      return;
-    }
+  if (loading) {
+    return <Loader />;
+  }
 
-    // If there's no user after loading, it's an unauthenticated state.
-    if (!user) {
-      setStatus("error");
-      return;
-    }
+  if (!user || !role || !Object.values(ENUM_ROLE).includes(role)) {
+    return <NotLoggedIn message="You are not authorized to view this page." />;
+  }
 
-    let determinedRole: ENUM_ROLE = user.systemRole;
+  const view = type[role as keyof userNode];
 
-    // Logic from prompt:
-    // 1. Superadmin viewing as a group becomes an admin view.
-    if (user.systemRole === ENUM_ROLE.SUPERADMIN && group?.groupId) {
-      determinedRole = ENUM_ROLE.ADMIN;
-    }
-
-    // 2. Any user viewing as an entity becomes a user view. This has higher precedence.
-    if ((user.systemRole === ENUM_ROLE.SUPERADMIN || user.systemRole === ENUM_ROLE.ADMIN) && entity?.entityId) {
-      determinedRole = ENUM_ROLE.USER;
-    }
-
-    // Final check to ensure the determined role is a valid, expected role.
-    if (Object.values(ENUM_ROLE).includes(determinedRole)) {
-      setRole(determinedRole);
-      // setRole(ENUM_ROLE.USER);
-      setStatus("completed");
-    } else {
-      // This case handles if the role is somehow invalid or not one of the three.
-      setStatus("error");
-    }
-  }, [user, group, entity, loading]);
-
-  // Select the view based on role
-  const view = role && type[role as keyof userNode];
+  if (!view) {
+    return <NotLoggedIn message="You are not authorized to view this page." />;
+  }
 
   return (
     <Fragment>
       <Suspense fallback={<Loader />}>
-        {status === "loading" && <Loader />}
-        {status === "completed" && view && <main className="">{view}</main>}
-        {status === "error" && (
-          <NotLoggedIn message="You are not authorized to view this page." />
-        )}
+        <main className="" data-impersonating={isImpersonating ? "true" : "false"}>
+          {view}
+        </main>
       </Suspense>
     </Fragment>
   );

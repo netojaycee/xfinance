@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getAppSession } from "./lib/utils/cookies";
-import { routePermissions } from "./lib/utils/permission-map";
-import { ENUM_ROLE } from "./lib/types/enums";
+import {
+  getWhoamiServer,
+  getAllowedRoutesFromMenus,
+  isPathAllowed,
+} from "./lib/server/auth";
 
 // Define which paths should be protected by this middleware
 const protectedPaths = [
@@ -19,6 +22,10 @@ const protectedPaths = [
   "/settings",
 ];
 
+// Paths that don't require specific module permissions
+// (just auth cookie validation is enough)
+const permissionExemptPaths = ["/dashboard"];
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -31,117 +38,54 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  const isPublic = pathname.startsWith("/auth") || pathname === "/";
   // Check if the requested path is one of the protected routes
-  //   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
-  const isProtected = protectedPaths.some((path) => {
-    // Only /dashboard should be exact, others should match subpaths
-    if (path === "/dashboard") return pathname === path;
-    return pathname === path || pathname.startsWith(path + "/");
-  });
+  // const isProtected = protectedPaths.some((path) => {
+  // Only /dashboard should be exact, others should match subpaths
+  // if (path === "/dashboard") return pathname === path;
+  // return pathname === path || pathname.startsWith(path + "/");
+  // });
+  const isProtected = !isPublic; // All non-auth paths are protected, we will check permissions inside
+
   if (isProtected) {
     // Get user session data from the cookies
     const { user } = await getAppSession();
 
-    // 1. If no user is found, redirect to the login page with a redirect query
+    // 1. If no user is found, redirect to the login page
     if (!user) {
       const loginUrl = new URL("/auth/login", request.url);
-      // loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    // 2. Superadmins and Admins have unrestricted access to all user-level pages
-    if (
-      user.systemRole === ENUM_ROLE.SUPERADMIN ||
-      user.systemRole === ENUM_ROLE.ADMIN
-    ) {
-      // If on a module root (e.g., /sales), redirect to first submodule
-      const pathSegment = pathname.split("/")[1];
-      const required = routePermissions.get(pathSegment);
-      if (
-        pathname === `/${pathSegment}` &&
-        Array.isArray(required) &&
-        required.length > 0
-      ) {
-        // Map permission to submodule route (e.g., 'sales:customers:view' => 'customers')
-        let submodule = "";
-        if (required[0].includes(":")) {
-          const parts = required[0].split(":");
-          submodule = parts[1]
-            .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-            .toLowerCase();
-            // ₦
-        }
-        if (submodule) {
-          const redirectUrl = new URL(
-            `/${pathSegment}/${submodule}`,
-            request.url,
-          );
-          return NextResponse.redirect(redirectUrl);
-        }
-      }
-      return NextResponse.next();
-    }
+    // 2. Check if path is exempt from permission checking
+    const isExempt = permissionExemptPaths.some((exemptPath) => {
+      if (exemptPath === "/dashboard") return pathname === exemptPath;
+      return pathname === exemptPath || pathname.startsWith(exemptPath + "/");
+    });
 
-    // 3. For regular users, check their permissions for the entire section
-    if (user.systemRole === ENUM_ROLE.USER) {
-      const pathSegment = pathname.split("/")[1]; // e.g., 'sales'
-      const required = routePermissions.get(pathSegment);
-      const userPermissions = user.permissions || [];
+    // 3. For non-exempt paths, validate against menu routes
+    if (!isExempt) {
+      // Fetch whoami to get allowed routes
+      const whoami = await getWhoamiServer();
 
-      // If the route is in our permission map, we need to validate access
-      if (required) {
-        let hasPermission = false;
-        let firstPermittedSubmodule = null;
+      if (whoami && whoami.menus) {
+        // Extract all allowed routes from menus
+        const allowedRoutes = getAllowedRoutesFromMenus(whoami.menus);
 
-        // If required is a string, treat as single permission
-        if (typeof required === "string") {
-          hasPermission = userPermissions.includes(required);
-        } else if (Array.isArray(required)) {
-          // Find the first permission the user has
-          for (const perm of required) {
-            if (userPermissions.includes(perm)) {
-              hasPermission = true;
-              firstPermittedSubmodule = perm;
-              break;
-            }
-          }
-        }
-
-        // If the user has NO permissions for this entire section, redirect them.
-        if (!hasPermission) {
+        // Check if user has permission to access this path
+        if (!isPathAllowed(allowedRoutes, pathname)) {
+          // User doesn't have permission - redirect to dashboard
           const dashboardUrl = new URL("/dashboard", request.url);
           return NextResponse.redirect(dashboardUrl);
         }
-
-        // If user is on the module root (e.g., /sales), redirect to first permitted submodule
-        if (
-          pathname === `/${pathSegment}` &&
-          Array.isArray(required) &&
-          firstPermittedSubmodule
-        ) {
-          // Map permission to submodule route
-          // Example: 'sales:chartOfAccounts:view' => 'chart-of-accounts'
-          let submodule = "";
-          if (firstPermittedSubmodule.includes(":")) {
-            const parts = firstPermittedSubmodule.split(":");
-            // Convert camelCase to kebab-case
-            submodule = parts[1]
-              .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-              .toLowerCase();
-          }
-          if (submodule) {
-            const redirectUrl = new URL(
-              `/${pathSegment}/${submodule}`,
-              request.url,
-            );
-            return NextResponse.redirect(redirectUrl);
-          }
-        }
       }
     }
+
+    // 4. User is authenticated and has permission, allow access
+    return NextResponse.next();
   }
 
-  // If the path is not protected or the user has access, continue
+  // If the path is not protected, continue
   return NextResponse.next();
 }
 

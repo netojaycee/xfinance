@@ -10,7 +10,7 @@ export default function SalesLayout({
   children: React.ReactNode;
 }>) {
   const whoami = useSessionStore((state) => state.whoami);
-  const tabs = getSectionTabsFromWhoami(whoami, "products");
+  const tabs = getSectionTabsFromWhoami(whoami, "income");
 
   return (
     <>

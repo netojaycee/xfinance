@@ -1,10 +1,10 @@
 // lib/api/hooks/useAuth.ts
 
-import { useMutation, UseMutationOptions, useQuery, useQueryClient } from '@tanstack/react-query';
-import { loginUser, getProfile, impersonateEntity, stopEntityImpersonation, impersonateGroup, stopGroupImpersonation, logout } from '../services/authService';
+import { useMutation, UseMutationOptions, useQuery, UseQueryOptions, useQueryClient } from '@tanstack/react-query';
+import { loginUser, getProfile, impersonateEntity, stopEntityImpersonation, impersonateGroup, stopGroupImpersonation, logout, getWhoami } from '../services/authService';
 
 // --- Group Impersonation Hooks ---
-import { UserPayload } from '@/lib/types';
+import { UserPayload, WhoamiResponse } from '@/lib/types';
 import { LoginCredentials } from '@/lib/schema';
 
 interface ImpersonateGroupPayload {
@@ -12,8 +12,32 @@ interface ImpersonateGroupPayload {
   groupName: string;
 }
 
+interface ImpersonateGroupResponse {
+  success: boolean;
+  message: string;
+  groupId: string;
+  groupName: string;
+}
+
+interface ImpersonateEntityPayload {
+  entityId: string;
+  entityName: string;
+}
+
+interface ImpersonateEntityResponse {
+  success: boolean;
+  message: string;
+  entityId: string;
+  entityName: string;
+}
+
+interface ImpersonationResponse {
+  success: boolean;
+  message: string;
+}
+
 export const useImpersonateGroup = (
-  options?: UseMutationOptions<void, Error, ImpersonateGroupPayload>
+  options?: UseMutationOptions<ImpersonateGroupResponse, Error, ImpersonateGroupPayload>
 ) => {
   return useMutation({
     mutationFn: impersonateGroup,
@@ -22,7 +46,7 @@ export const useImpersonateGroup = (
 };
 
 export const useStopGroupImpersonation = (
-  options?: UseMutationOptions<void, Error, void>
+  options?: UseMutationOptions<ImpersonationResponse, Error, void>
 ) => {
   return useMutation({
     mutationFn: stopGroupImpersonation,
@@ -30,20 +54,34 @@ export const useStopGroupImpersonation = (
   });
 };
 
-
 export const useLogin = (options?: Omit<UseMutationOptions<UserPayload, Error, LoginCredentials>, 'mutationFn'>) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: loginUser,
     onSuccess: (data, variables, context, mutation) => {
-      // Invalidate and refetch the profile after login
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      // Invalidate whoami after login so it gets refetched
+      queryClient.invalidateQueries({ queryKey: ['whoami'] });
       options?.onSuccess?.(data, variables, context, mutation);
     },
     ...options,
   });
 };
 
+/**
+ * Hook to fetch complete user context with menus, permissions, entities, etc.
+ * Automatically handles caching with 5-minute stale time
+ * 
+ * @param options - React Query useQuery options (e.g., enabled, retry, etc.)
+ */
+export const useWhoami = (options?: Omit<UseQueryOptions<WhoamiResponse>, 'queryKey' | 'queryFn'>) => {
+  return useQuery({
+    queryKey: ['whoami'],
+    queryFn: getWhoami,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+    ...options,
+  });
+};
 
 export const useProfile = () => {
   return useQuery({
@@ -54,15 +92,9 @@ export const useProfile = () => {
   });
 };
 
-
 // --- Entity Impersonation Hooks ---
-interface ImpersonateEntityPayload {
-  entityId: string;
-  entityName: string;
-}
-
 export const useImpersonateEntity = (
-  options?: UseMutationOptions<void, Error, ImpersonateEntityPayload>
+  options?: UseMutationOptions<ImpersonateEntityResponse, Error, ImpersonateEntityPayload>
 ) => {
   return useMutation({
     mutationFn: impersonateEntity,
@@ -71,14 +103,13 @@ export const useImpersonateEntity = (
 };
 
 export const useStopEntityImpersonation = (
-  options?: UseMutationOptions<void, Error, void>
+  options?: UseMutationOptions<ImpersonationResponse, Error, void>
 ) => {
   return useMutation({
     mutationFn: stopEntityImpersonation,
     ...options,
   });
 };
-
 
 // Logout hook
 export const useLogout = (options?: UseMutationOptions<void, Error, void>) => {

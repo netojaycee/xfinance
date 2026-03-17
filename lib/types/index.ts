@@ -75,3 +75,80 @@ export type Entity = {
   yearEnd?: string | null;
   // Add related types for customer, invoice, users, receipt, vendor, expenses as needed
 };
+
+// Menu item structure from whoami response
+// Can be either a parent with children or a leaf item with a route
+export type MenuItem = {
+  id: string;
+  label: string;
+  icon?: string;
+  route?: string;
+  module?: string;
+  menu?: string;
+  actions?: string[];
+  children?: MenuItem[]; // For grouped menu items
+};
+
+// Subscription module structure
+export type SubscriptionModule = {
+  id: string;
+  key: string;
+  name: string;
+  scope: 'ADMIN' | 'USER' | 'SUPERADMIN';
+};
+
+// Subscription structure
+export type Subscription = {
+  id: string;
+  tierId: string;
+  tierName: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  modules: SubscriptionModule[];
+};
+
+// Impersonation context
+export type ImpersonationContext = {
+  isImpersonating: boolean;
+  originalGroupId?: string;
+  impersonatedGroupId?: string;
+  originalEntityId?: string;
+  impersonatedEntityId?: string;
+  impersonatedByUser?: string;
+};
+
+// Complete whoami response structure
+export type WhoamiResponse = {
+  user: UserPayload;
+  group: {
+    id: string;
+    name: string;
+    subdomain: string;
+  };
+  role: {
+    id: string;
+    name: string;
+    scope: 'ADMIN' | 'USER' | 'SUPERADMIN';
+    adminEntities: string[];
+  } | null;
+  context: {
+    userId: string;
+    groupId: string;
+    entityId?: string;
+    currentEntity?: {
+      id: string;
+      name: string;
+    };
+  };
+  availableEntities: Array<{
+    id: string;
+    name: string;
+  }>;
+  menus: MenuItem[];
+  permissions: Record<string, string[]>;
+  subscription: Subscription | null;
+  impersonation?: ImpersonationContext;
+  cacheTTL: number;
+  expiresAt: number;
+};

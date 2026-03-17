@@ -14,6 +14,12 @@ import Link from "next/link";
 export function NavMain({ items }: { items: MenuItem[] }) {
   const pathname = usePathname();
 
+  const isMenuItemActive = (item: MenuItem) => {
+    const matchUrls = item.matchUrls?.length ? item.matchUrls : [item.url];
+
+    return matchUrls.some((url) => pathname === url || pathname.startsWith(url + "/"));
+  };
+
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -22,10 +28,7 @@ export function NavMain({ items }: { items: MenuItem[] }) {
             <SidebarMenuButton
               tooltip={item.title}
               asChild
-              isActive={
-                (pathname === item.url && item.isActive) ||
-                pathname.includes(item.url)
-              }
+              isActive={Boolean(item.isActive) && isMenuItemActive(item)}
               className={
                 !item.isActive
                   ? "text-gray-400 pointer-events-none opacity-70"

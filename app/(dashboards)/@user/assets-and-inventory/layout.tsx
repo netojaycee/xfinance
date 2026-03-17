@@ -4,13 +4,13 @@ import RouteTabNav from "@/components/local/custom/route-tab-nav";
 import { useSessionStore } from "@/lib/store/session";
 import { getSectionTabsFromWhoami } from "@/lib/utils/menu-utils";
 
-export default function SalesLayout({
+export default function AssetsAndInventoryLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const whoami = useSessionStore((state) => state.whoami);
-  const tabs = getSectionTabsFromWhoami(whoami, "products");
+  const tabs = getSectionTabsFromWhoami(whoami, "assets-and-inventory");
 
   return (
     <>

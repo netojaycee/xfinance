@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import Logo from "./Logo";
 import { useLogin } from "@/lib/api/hooks/useAuth";
 
 export default function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/dashboard";
 
@@ -34,16 +36,16 @@ export default function LoginForm() {
   } = useLogin({
     onSuccess: () => {
       // On successful login, redirect the user
+      // SessionProvider will fetch whoami and store it automatically
       toast.success("Login successful!");
-      window.location.href = redirectUrl;
+      router.push(redirectUrl);
     },
     onError: (error) => {
       toast.error(`Login failed: ${error.message}`);
-      // toast.error("heello", { description: error.message });
       console.log("Login error:", error);
     },
   });
-  // const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginCredentials>({
@@ -64,7 +66,7 @@ export default function LoginForm() {
       <div className="hidden md:flex flex-col bg-primary rounded-2xl h-full w-1/2 text-white relative">
         <div className="flex justify-center h-full items-center">
           <Image
-            src="/Onboarding.png"
+            src="/images/logo.png"
             alt="XPortal illustration"
             width={500}
             height={300}
@@ -153,24 +155,6 @@ export default function LoginForm() {
 
             {/* Remember Me and Forgot Password */}
             <div className="flex items-center justify-end w-full">
-              {/* <FormField
-                control={form.control}
-                name='remember_me'
-                render={({ field }) => (
-                  <FormItem className='flex items-center space-x-2'>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className='border-primary data-[state=checked]:bg-primary'
-                      />
-                    </FormControl>
-                    <FormLabel className='text-sm text-gray-700'>
-                      Remember me
-                    </FormLabel>
-                  </FormItem>
-                )}
-              /> */}
               <Link href="#" className="text-sm text-primary hover:underline">
                 Forgot password?
               </Link>

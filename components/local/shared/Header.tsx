@@ -27,17 +27,28 @@ import CustomBreadcrumb from "../custom/custom-breadcrumb";
 
 export default function Header({
   user,
-  group,
-  entity,
+  activeContext,
   loading,
   role,
 }: {
   user?: any;
-  group?: any;
-  entity?: any;
+  activeContext?: {
+    realRole?: ENUM_ROLE;
+    effectiveRole: ENUM_ROLE;
+    isImpersonating: boolean;
+    groupName?: string;
+    entityName?: string;
+  };
   loading?: boolean;
   role: ENUM_ROLE;
 }) {
+  const contextLabel =
+    activeContext?.effectiveRole === ENUM_ROLE.USER
+      ? activeContext?.entityName || activeContext?.groupName || "Entity"
+      : activeContext?.effectiveRole === ENUM_ROLE.ADMIN
+        ? activeContext?.groupName || "Group"
+        : "SuperAdmin";
+
   return (
     <header className="h-16 flex items-center justify-between bg-white border-b gap-2 shadow-none sticky px-2 top-0 z-10">
       {/* Left Section */}
@@ -48,8 +59,7 @@ export default function Header({
         <SidebarTrigger />
         <CustomBreadcrumb
           role={role}
-          group={group}
-          entity={entity}
+          activeContext={activeContext}
           loading={loading}
         />
       </div>
@@ -91,8 +101,8 @@ export default function Header({
                 {user && (
                   <AvatarImage
                     src={
-                      user?.image?.url
-                        ? user.image.url
+                      user?.image?.secureUrl
+                        ? user.image.secureUrl
                         : `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(
                             `${user?.firstName} ${user?.lastName}` || "user",
                           )}`
@@ -104,6 +114,9 @@ export default function Header({
               <div className="hidden md:flex md:flex-col md:items-start">
                 <span className="font-lato text-sm font-semibold">
                   {user?.firstName || "Anonymous"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {contextLabel}
                 </span>
               </div>
               <ChevronDown className="ml-auto hidden size-4 text-muted-foreground md:block" />

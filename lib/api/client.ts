@@ -1,5 +1,7 @@
 // lib/api/client.ts
 
+import { getClientImpersonationHeaders } from "@/lib/utils/impersonation";
+
 // Define the standardized success and error response structures
 interface ApiResponse<T> {
   statusCode: number;
@@ -27,8 +29,17 @@ interface ApiErrorResponse {
 // }
 
 /**
+ * Get impersonation headers from storage if they exist
+ * These headers are used to impersonate a group or entity
+ */
+const getImpersonationHeaders = (): Record<string, string> => {
+  return getClientImpersonationHeaders();
+};
+
+/**
  * A generic API client for making requests to the backend.
  * It handles standardized success and error responses.
+ * Automatically includes impersonation headers if active.
  *
  * @param endpoint The API endpoint to call (e.g., 'auth/login').
  * @param options The standard `fetch` options (method, body, etc.).
@@ -47,10 +58,14 @@ export const apiClient = async <T>(
   // Check if body is FormData (for file uploads)
   const isFormData = options.body instanceof FormData;
 
+  // Get impersonation headers
+  const impersonationHeaders = getImpersonationHeaders();
+
   const defaultOptions: RequestInit = {
     headers: {
       // Only set Content-Type for JSON, not for FormData (browser handles it)
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...impersonationHeaders,
       ...options.headers,
     },
     credentials: 'include', // Always send cookies

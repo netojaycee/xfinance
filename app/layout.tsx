@@ -3,7 +3,6 @@ import { Nunito, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Toaster } from "sonner";
-import SessionProvider from "@/components/providers/SessionProvider";
 import { ModalProvider } from "@/components/providers/ModalProvider";
 
 const nunito = Nunito({
@@ -34,11 +33,9 @@ export default function RootLayout({
         className={`${nunito.variable} ${geistMono.variable} antialiased font-sans`}
       >
         <QueryProvider>
-          <SessionProvider>
-            <ModalProvider>
-              <main className="bg-[#f8fafc] min-h-screen">{children}</main>
-            </ModalProvider>
-          </SessionProvider>
+          <ModalProvider>
+            <main className="bg-[#f8fafc] min-h-screen">{children}</main>
+          </ModalProvider>
         </QueryProvider>
         <Toaster richColors closeButton />
       </body>

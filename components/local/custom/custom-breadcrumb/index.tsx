@@ -16,21 +16,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight } from "lucide-react";
 
 interface CustomBreadcrumbProps {
-  group?: { groupName?: string };
-  entity?: { entityName?: string };
+  activeContext?: {
+    realRole?: ENUM_ROLE;
+    effectiveRole: ENUM_ROLE;
+    isImpersonating: boolean;
+    groupName?: string;
+    entityName?: string;
+  };
   loading?: boolean;
   role: ENUM_ROLE;
 }
 
-const capitalize = (s: string) => {
+const toTitleCase = (s: string) => {
   if (!s) return "";
-  return s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, " ");
+  return s
+    .replace(/-/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 export default function CustomBreadcrumb({
   role,
-  group,
-  entity,
+  activeContext,
   loading,
 }: CustomBreadcrumbProps) {
   const pathname = usePathname();
@@ -41,13 +50,13 @@ export default function CustomBreadcrumb({
     if (loading) {
       return <Skeleton className="h-5 w-28" />;
     }
-    switch (role) {
+    switch (activeContext?.effectiveRole ?? role) {
       case ENUM_ROLE.SUPERADMIN:
         return "SuperAdmin";
       case ENUM_ROLE.ADMIN:
-        return group?.groupName || "Group";
+        return activeContext?.groupName || "Group";
       case ENUM_ROLE.USER:
-        return entity?.entityName || "Entity";
+        return activeContext?.entityName || activeContext?.groupName || "Entity";
       default:
         return "Dashboard";
     }
@@ -96,11 +105,11 @@ export default function CustomBreadcrumb({
                 </BreadcrumbSeparator>
                 <BreadcrumbItem className={itemClass}>
                   {isLast ? (
-                    <BreadcrumbPage className="font-semibold text-gray-800 truncate max-w-35">{capitalize(segment)}</BreadcrumbPage>
+                    <BreadcrumbPage className="font-semibold text-gray-800 truncate max-w-35">{toTitleCase(segment)}</BreadcrumbPage>
                   ) : (
                     <BreadcrumbLink asChild>
                       <Link href={href}>
-                        <span className="inline-block max-w-30 truncate">{capitalize(segment)}</span>
+                        <span className="inline-block max-w-30 truncate">{toTitleCase(segment)}</span>
                       </Link>
                     </BreadcrumbLink>
                   )}

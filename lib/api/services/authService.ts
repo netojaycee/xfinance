@@ -1,6 +1,6 @@
 // lib/api/services/authService.ts
 import { apiClient } from "../client";
-import { UserPayload } from "@/lib/types";
+import { UserPayload, WhoamiResponse } from "@/lib/types";
 import { LoginCredentials } from "@/lib/schema";
 
 export const loginUser = (
@@ -12,19 +12,13 @@ export const loginUser = (
   });
 };
 
-export const impersonateGroup = (payload: {
-  groupId: string;
-  groupName: string;
-}): Promise<void> => {
-  return apiClient<void>("auth/impersonate/group", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-};
-
-export const stopGroupImpersonation = (): Promise<void> => {
-  return apiClient<void>("auth/impersonate/group", {
-    method: "DELETE",
+/**
+ * Get complete user context with menu, permissions, entities, and subscription
+ * Called after login and on app startup
+ */
+export const getWhoami = (): Promise<WhoamiResponse> => {
+  return apiClient<WhoamiResponse>("auth/whoami", {
+    method: "GET",
   });
 };
 
@@ -34,19 +28,35 @@ export const getProfile = (): Promise<UserPayload> => {
   });
 };
 
-// --- Entity Impersonation Endpoints ---
-export const impersonateEntity = (payload: {
-  entityId: string;
-  entityName: string;
-}): Promise<void> => {
-  return apiClient<void>("auth/impersonate/entity", {
+export const impersonateGroup = (payload: {
+  groupId: string;
+  groupName: string;
+}): Promise<{ success: boolean; message: string; groupId: string; groupName: string }> => {
+  return apiClient<{ success: boolean; message: string; groupId: string; groupName: string }>("auth/impersonate/group", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 };
 
-export const stopEntityImpersonation = (): Promise<void> => {
-  return apiClient<void>("auth/impersonate/entity", {
+export const stopGroupImpersonation = (): Promise<{ success: boolean; message: string }> => {
+  return apiClient<{ success: boolean; message: string }>("auth/impersonate/group", {
+    method: "DELETE",
+  });
+};
+
+// --- Entity Impersonation Endpoints ---
+export const impersonateEntity = (payload: {
+  entityId: string;
+  entityName: string;
+}): Promise<{ success: boolean; message: string; entityId: string; entityName: string }> => {
+  return apiClient<{ success: boolean; message: string; entityId: string; entityName: string }>("auth/impersonate/entity", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const stopEntityImpersonation = (): Promise<{ success: boolean; message: string }> => {
+  return apiClient<{ success: boolean; message: string }>("auth/impersonate/entity", {
     method: "DELETE",
   });
 };

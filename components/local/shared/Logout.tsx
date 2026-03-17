@@ -4,14 +4,17 @@ import { LogOut } from "lucide-react";
 import { useLogout } from "@/lib/api/hooks/useAuth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useSessionStore } from "@/lib/store/session";
 
 export default function Logout() {
   const router = useRouter();
   const logout = useLogout();
+  const clearSession = useSessionStore((state) => state.clearSession);
 
   const handleLogout = async () => {
     try {
       await logout.mutateAsync();
+      clearSession();
       router.push("/auth/login");
     } catch (err) {
       console.error("Logout error:", err);

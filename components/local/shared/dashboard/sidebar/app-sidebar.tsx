@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { NavMain } from "./nav-main";
 import { GroupSwitcher } from "./group-switcher";
@@ -18,8 +19,8 @@ import Logo from "../../Logo";
 import GroupEntitySwitcher from "./group-entity-switcher";
 import { EntitySwitcher } from "./entity-switcher";
 import { toast } from "sonner";
-import { useEntities } from "@/lib/api/hooks/useEntity";
 import { useStopEntityImpersonation } from "@/lib/api/hooks/useAuth";
+import { useSessionStore } from "@/lib/store/session";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   role: ENUM_ROLE;
@@ -27,33 +28,56 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
-  const [selectedTab, setSelectedTab] = React.useState<string | null>(null);
+  const router = useRouter();
+  const whoami = useSessionStore((state) => state.whoami);
+  const currentEntity = useSessionStore((state) => state.entity);
+  const clearImpersonatedEntity = useSessionStore(
+    (state) => state.clearImpersonatedEntity,
+  );
+  const availableEntities = useSessionStore((state) => state.getAvailableEntities());
+  const hasEntityOptions = availableEntities.length > 0;
+  const [selectedTab, setSelectedTab] = React.useState<"group" | "entity">(
+    currentEntity?.entityId ? "entity" : "group",
+  );
   const menuData = React.useMemo(
-    () => getSidebarMenu(user, role),
-    [user, role],
+    () => getSidebarMenu(user, role, whoami),
+    [user, role, whoami],
   );
 
-  // console.log(menuData)
+  React.useEffect(() => {
+    setSelectedTab(currentEntity?.entityId ? "entity" : "group");
+  }, [currentEntity?.entityId]);
 
-  const { data: entitiesData, isLoading: isLoadingEntities } = useEntities();
-  const entities = entitiesData?.entities || [];
-  const { mutate: stopEntityImpersonation } = useStopEntityImpersonation({
+  const { mutate: stopEntityImpersonation, isPending: isStoppingEntityImpersonation } = useStopEntityImpersonation({
     onSuccess: () => {
-      // toast.info("Switched back to group view.");
-      window.location.href = "/dashboard";
+      clearImpersonatedEntity();
+      setSelectedTab("group");
+      router.replace("/dashboard");
+      router.refresh();
     },
     onError: (error) => {
+      setSelectedTab("entity");
       toast.error(error.message || "Failed to switch view.");
     },
   });
 
   const handleTabSwitch = (tab: string) => {
-    if (selectedTab && tab !== selectedTab && tab === "group") {
-      stopEntityImpersonation();
+    if (tab === "entity") {
+      setSelectedTab("entity");
+      return;
     }
-    setSelectedTab(tab);
-    // console.log("Selected tab in parent:", tab);
+
+    if (currentEntity?.entityId) {
+      setSelectedTab("group");
+      stopEntityImpersonation();
+      return;
+    }
+
+    setSelectedTab("group");
   };
+
+  const showGroupEntitySwitcher =
+    Boolean(user) && user?.systemRole !== ENUM_ROLE.USER && role !== ENUM_ROLE.SUPERADMIN;
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -71,15 +95,19 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
       {/* <Separator className="" /> */}
       <SidebarHeader className="bg-white">
         {user && user.systemRole === ENUM_ROLE.SUPERADMIN && <GroupSwitcher />}
-        {user &&
-          user.systemRole !== ENUM_ROLE.USER &&
-          role !== ENUM_ROLE.SUPERADMIN && (
-            <GroupEntitySwitcher role={role} onTabChange={handleTabSwitch} />
-          )}
-        {role !== ENUM_ROLE.SUPERADMIN && selectedTab === "entity" && (
+        {showGroupEntitySwitcher && (
+          <GroupEntitySwitcher
+            activeTab={selectedTab}
+            showEntityTab={hasEntityOptions}
+            disabled={isStoppingEntityImpersonation}
+            onTabChange={handleTabSwitch}
+          />
+        )}
+        {showGroupEntitySwitcher && selectedTab === "entity" && hasEntityOptions && (
           <EntitySwitcher
-            entities={entities || []}
-            isLoading={isLoadingEntities}
+            entities={availableEntities}
+            isLoading={false}
+            autoSelectFirst={!currentEntity?.entityId}
           />
         )}
       </SidebarHeader>

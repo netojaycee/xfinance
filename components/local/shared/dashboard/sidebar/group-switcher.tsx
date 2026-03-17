@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   ChevronsUpDown,
   GalleryVerticalEnd,
@@ -35,45 +36,45 @@ import { useImpersonateGroup, useStopEntityImpersonation, useStopGroupImpersonat
 import { useGroups } from "@/lib/api/hooks/useGroup";
 
 export function GroupSwitcher() {
+  const router = useRouter();
   const { isMobile } = useSidebar();
   const [activeGroup, setActiveGroup] = React.useState<Group | null>(null);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [page, setPage] = React.useState(1);
   const [open, setOpen] = React.useState(false);
-  const { user, group } = useSessionStore();
+  const user = useSessionStore((state) => state.user);
+  const group = useSessionStore((state) => state.group);
+  const setImpersonatedGroup = useSessionStore((state) => state.setImpersonatedGroup);
+  const clearImpersonatedGroup = useSessionStore((state) => state.clearImpersonatedGroup);
+  const clearImpersonatedEntity = useSessionStore((state) => state.clearImpersonatedEntity);
 
   const { mutate: impersonate, isPending: isImpersonating } =
     useImpersonateGroup({
-      onSuccess: () => {
-        // toast.success("Switched group successfully!");
-        window.location.href = "/dashboard";
-      },
-      onError: (error) => {
-        // toast.error(error.message || "Failed to switch group.");
+      onSuccess: (data, variables) => {
+        setImpersonatedGroup(data?.groupId || variables.groupId);
+        clearImpersonatedEntity();
+        router.replace("/dashboard");
+        router.refresh();
       },
     });
 
   const { mutate: stopEntityImpersonating, isPending: isStoppingEntityImpersonation } =
     useStopEntityImpersonation({
       onSuccess: () => {
-        // toast.success("Switched to SuperAdmin view.");
-        window.location.href = "/dashboard";
-      },
-      onError: (error) => {
-        // This error will be for the entity part, but we can show a generic message
-        // toast.error(error.message || "Failed to fully switch view.");
+        clearImpersonatedEntity();
+        router.replace("/dashboard");
+        router.refresh();
       },
     });
 
   const { mutate: stopGroupImpersonating, isPending: isStoppingGroupImpersonation } =
     useStopGroupImpersonation({
       onSuccess: () => {
-        // When group impersonation stops, immediately stop entity impersonation
-        stopEntityImpersonating();
-      },
-      onError: (error) => {
-        // toast.error(error.message || "Failed to switch view.");
+        clearImpersonatedGroup();
+        clearImpersonatedEntity();
+        router.replace("/dashboard");
+        router.refresh();
       },
     });
 
@@ -107,11 +108,9 @@ export function GroupSwitcher() {
   // Switch to SuperAdmin
   const switchToSuperAdmin = () => {
     if (!group?.groupId) return;
-    stopGroupImpersonating(); // This will trigger the entity stop on success
+    stopGroupImpersonating();
     setOpen(false);
   };
-
-  console.log(groups)
 
   return (
     <SidebarMenu>

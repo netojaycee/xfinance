@@ -1,23 +1,68 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSessionStore } from '@/lib/store/session';
+import { useWhoami } from '@/lib/api/hooks/useAuth';
+import { WhoamiResponse } from '@/lib/types';
 
+interface SessionProviderProps {
+  children: React.ReactNode;
+  initialWhoami?: WhoamiResponse;
+}
+
+/**
+ * SessionProvider - Only wraps protected dashboard routes
+ * Fetches complete user context (whoami) server-side via DashboardLayout
+ * and uses it as initial data to prevent double API calls
+ * 
+ * Note: proxy.ts is the single source of truth for route access control
+ */
 export default function SessionProvider({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  const fetchSessionData = useSessionStore((state) => state.fetchSessionData);
-//   const loading = useSessionStore((state) => state.loading);
-// 
-  useEffect(() => {
-    fetchSessionData();
-  }, [fetchSessionData]);
+  initialWhoami,
+}: SessionProviderProps) {
+  const router = useRouter();
+  const setWhoami = useSessionStore((state) => state.setWhoami);
+  const clearSession = useSessionStore((state) => state.clearSession);
+  const shouldFetchClientSide = !initialWhoami;
+  const { data: whoami, isLoading, error } = useWhoami({
+    enabled: shouldFetchClientSide,
+  });
 
-//   if (loading) {
-//     return <div>Loading...</div>; // Or a spinner component
-//   }
+  // Prefer fresh server-provided whoami when available.
+  useEffect(() => {
+    if (initialWhoami) {
+      setWhoami(initialWhoami);
+      return;
+    }
+
+    if (whoami) {
+      setWhoami(whoami);
+    }
+  }, [initialWhoami, whoami, setWhoami]);
+
+  // Handle authentication errors - redirect to login
+  useEffect(() => {
+    if (error) {
+      clearSession();
+      router.push('/auth/login');
+    }
+  }, [error, clearSession, router]);
+
+  // Show loading spinner while fetching whoami (only if no initial data)
+  if (isLoading && shouldFetchClientSide) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // Don't render if there was an error (redirect will happen)
+  if (error) {
+    return null;
+  }
 
   return <>{children}</>;
 }

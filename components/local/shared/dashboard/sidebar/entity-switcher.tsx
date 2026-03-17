@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -18,52 +19,75 @@ import {
 import { useImpersonateEntity } from "@/lib/api/hooks/useAuth";
 
 interface EntitySwitcherProps {
-  entities: Entity[];
+  entities: Array<Pick<Entity, "id" | "name">>;
   isLoading: boolean;
+  autoSelectFirst?: boolean;
 }
 
-export function EntitySwitcher({ entities, isLoading }: EntitySwitcherProps) {
+export function EntitySwitcher({
+  entities,
+  isLoading,
+  autoSelectFirst = false,
+}: EntitySwitcherProps) {
+  const router = useRouter();
   const [selectedEntity, setSelectedEntity] = React.useState<
     string | undefined
   >();
-  const { entity: currentEntity } = useSessionStore();
+  const autoSelectedEntityIdRef = React.useRef<string | null>(null);
+  const currentEntity = useSessionStore((state) => state.entity);
+  const setImpersonatedEntity = useSessionStore(
+    (state) => state.setImpersonatedEntity,
+  );
 
   const { mutate: impersonateEntity, isPending: isImpersonating } =
     useImpersonateEntity({
-      onSuccess: () => {
-        // toast.success("Switched entity successfully!");
-        // window.location.reload();
-        window.location.href = "/dashboard";
-      },
-      onError: (error) => {
-        // toast.error(error.message || "Failed to switch entity.");
+      onSuccess: (data, variables) => {
+        setImpersonatedEntity(data?.entityId || variables.entityId);
+        router.replace("/dashboard");
+        router.refresh();
       },
     });
 
-  // Set initial selected entity from session or default to first in list
   React.useEffect(() => {
     if (
       currentEntity?.entityId &&
       entities.some((e) => e.id === currentEntity.entityId)
     ) {
+      autoSelectedEntityIdRef.current = null;
       setSelectedEntity(currentEntity.entityId);
-    } else if (entities.length > 0) {
-      const firstEntity = entities[0];
-      setSelectedEntity(firstEntity.id);
-      // Automatically impersonate the first entity if no entity is currently set
-      if (!currentEntity?.entityId) {
-        impersonateEntity({
-          entityId: firstEntity.id,
-          entityName: firstEntity.name,
-        });
-
-      }
+    } else {
+      setSelectedEntity(undefined);
     }
-  }, [entities, currentEntity, impersonateEntity]);
+  }, [entities, currentEntity?.entityId]);
+
+  React.useEffect(() => {
+    if (!autoSelectFirst) {
+      autoSelectedEntityIdRef.current = null;
+      return;
+    }
+
+    if (currentEntity?.entityId || entities.length === 0) {
+      return;
+    }
+
+    const firstEntity = entities[0];
+
+    if (autoSelectedEntityIdRef.current === firstEntity.id) {
+      return;
+    }
+
+    autoSelectedEntityIdRef.current = firstEntity.id;
+    setSelectedEntity(firstEntity.id);
+    impersonateEntity({
+      entityId: firstEntity.id,
+      entityName: firstEntity.name,
+    });
+  }, [autoSelectFirst, currentEntity?.entityId, entities, impersonateEntity]);
 
   const handleValueChange = (entityId: string) => {
     const entity = entities.find((e) => e.id === entityId);
-    if (entity) {
+    if (entity && entity.id !== currentEntity?.entityId) {
+      autoSelectedEntityIdRef.current = entity.id;
       setSelectedEntity(entity.id);
       impersonateEntity({ entityId: entity.id, entityName: entity.name });
     }
@@ -81,11 +105,11 @@ export function EntitySwitcher({ entities, isLoading }: EntitySwitcherProps) {
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg" className="w-full">
-          <div className="px-0 w-full">
+          <div className="w-full px-0">
             <Select
               value={selectedEntity}
               onValueChange={handleValueChange}
-              disabled={isImpersonating || entities.length === 0}
+              // disabled={isImpersonating || entities.length === 0}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select an entity..." />
@@ -98,7 +122,7 @@ export function EntitySwitcher({ entities, isLoading }: EntitySwitcherProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>{" "}
+          </div>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
