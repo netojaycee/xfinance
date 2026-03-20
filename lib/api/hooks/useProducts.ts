@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import * as productsService from "../services/productsService";
-import { Collection, Item, ItemsResponse, CollectionsResponse } from "./types/productsTypes";
+import {  StoreItemsResponse, CollectionsResponse } from "./types/productsTypes";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { toast } from "sonner";
@@ -126,9 +126,9 @@ export const useItems = (params?: {
   category?: string;
   type?: "product" | "service";
 }) => {
-  return useQuery<ItemsResponse>({
+  return useQuery<StoreItemsResponse>({
     queryKey: ["items", params?.search, params?.page, params?.limit, params?.category, params?.type],
-    queryFn: () => productsService.getItems(params) as Promise<ItemsResponse>,
+    queryFn: () => productsService.getItems(params) as Promise<StoreItemsResponse>,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
   });

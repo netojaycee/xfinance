@@ -2,7 +2,7 @@ name: Deploy Frontend (Next.js) Blue-Green
 
 on:
   push:
-    branches: [main]
+    branches: [exp]
 
 jobs:
   build:

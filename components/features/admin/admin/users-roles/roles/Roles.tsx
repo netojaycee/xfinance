@@ -13,8 +13,7 @@ import RolesActions from "./RolesActions";
 import { MODAL } from "@/lib/data/modal-data";
 import { MODULES } from "@/lib/types/enums";
 import { ChevronDown, AlertCircle } from "lucide-react";
-import { useRoles } from "@/lib/api/hooks/useRoles";
-import { deleteRole, createRole, updateRole } from "@/lib/api/services/roleService";
+import { useCreateRole, useDeleteRole, useRoles, useUpdateRole } from "@/lib/api/hooks/useRoles";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -31,11 +30,11 @@ export default function Roles() {
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [roleToDelete, setRoleToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const { isOpen: isModalOpen, openModal, closeModal } = useModal();
-  const queryClient = useQueryClient();
 
+  const createRoleMutation = useCreateRole();
+  const updateRoleMutation = useUpdateRole()
+  const deleteRoleMutation = useDeleteRole()
   const pageSize = 10;
 
   const { data: rolesData, isLoading: isLoadingRoles } = useRoles({
@@ -81,21 +80,9 @@ export default function Roles() {
     openModal(MODAL.ADMIN_ROLE_DELETE + "-" + role.id);
   };
 
-  const confirmDeleteRole = async () => {
+  const confirmDeleteRole = () => {
     if (!roleToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await deleteRole(roleToDelete.id);
-      console.log("Role deleted successfully:", roleToDelete.id);
-      queryClient.invalidateQueries({ queryKey: ["roles"] });
-      closeModal(MODAL.ADMIN_ROLE_DELETE + "-" + roleToDelete.id);
-      setRoleToDelete(null);
-    } catch (error) {
-      console.error("Failed to delete role:", error);
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteRoleMutation.mutate(roleToDelete.id);
   };
 
   // Create columns with callbacks
@@ -120,33 +107,12 @@ export default function Roles() {
   );
 
   const handleCreateRole = async (formData: any) => {
-    setIsCreating(true);
-    try {
-      await createRole(formData);
-      queryClient.invalidateQueries({ queryKey: ["roles"] });
-      closeModal(MODAL.ADMIN_ROLE_CREATE);
-    } catch (error) {
-      // TODO: Show error toast
-      console.error("Failed to create role:", error);
-    } finally {
-      setIsCreating(false);
-    }
+    createRoleMutation.mutate(formData);
   };
 
   const handleUpdateRole = async (formData: any) => {
     if (!selectedRole) return;
-    setIsUpdating(true);
-    try {
-      await updateRole(selectedRole.id, formData);
-      queryClient.invalidateQueries({ queryKey: ["roles"] });
-      closeModal(MODAL.ADMIN_ROLE_EDIT + "-" + selectedRole.id);
-      setSelectedRole(null);
-    } catch (error) {
-      // TODO: Show error toast
-      console.error("Failed to update role:", error);
-    } finally {
-      setIsUpdating(false);
-    }
+    updateRoleMutation.mutate({ roleId: selectedRole.id, payload: formData });
   };
 
   return (
@@ -207,7 +173,7 @@ export default function Roles() {
       >
         <RolesForm
           onSubmit={handleCreateRole}
-          isLoading={isCreating}
+          isLoading={createRoleMutation.isPending}
           onClose={() => closeModal(MODAL.ADMIN_ROLE_CREATE)}
         />
       </CustomModal>
@@ -228,7 +194,7 @@ export default function Roles() {
           <RolesForm
             role={selectedRole}
             onSubmit={handleUpdateRole}
-            isLoading={isUpdating}
+            isLoading={updateRoleMutation.isPending}
             onClose={() => closeModal(MODAL.ADMIN_ROLE_EDIT + "-" + selectedRole.id)}
           />
         </CustomModal>

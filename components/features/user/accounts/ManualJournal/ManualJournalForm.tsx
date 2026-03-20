@@ -85,7 +85,7 @@ export default function ManualJournalForm({ accounts = [], onSuccess }: ManualJo
       const payload = {
         description: values.description,
         date: new Date(values.date).toISOString(),
-        entityId: entity.entityId || "",
+        entityId: entity && entity.entityId || "",
         status,
         lines: values.journalLines.map((line) => ({
           accountId: line.accountId,

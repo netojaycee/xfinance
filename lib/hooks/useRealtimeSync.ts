@@ -83,8 +83,8 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
 
   // Handle real-time events: refetch whoami data when backend sends invalidation
   const handleRealtimeEvent = useCallback(
-    (event: CustomEvent<{ type: RealtimeEventType; payload: any }>) => {
-      const { type, payload } = event.detail;
+    (event: Event) => {
+      const { type, payload } = (event as CustomEvent<{ type: RealtimeEventType; payload: any }>).detail;
 
       if (type === 'whoami-invalidated') {
         // Event payload has 'reason' explaining what changed
@@ -106,21 +106,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
             console.error('Error fetching whoami:', error);
           });
         }
-      } else if (type === 'user-role-changed') {
-        // User's role assignment changed - show toast and refetch menu/permissions
-        const newRoleName = payload.newRoleName || 'Unknown Role';
-        queryClient.invalidateQueries({ queryKey: ['whoami'] });
-        queryClient.invalidateQueries({ queryKey: ['subscription', 'current'] });
-        queryClient.invalidateQueries({ queryKey: ['subscription', 'tiers'] });
-        queryClient.invalidateQueries({ queryKey: ['superadmin', 'dashboard'] });
-        queryClient.invalidateQueries({ queryKey: ['groups', 'stats'] });
-        toast.info(`Your role has been updated to "${newRoleName}"`, {
-          description: 'Menu and permissions have been refreshed.',
-        });
-        // Refetch whoami to update menu and permissions
-        getWhoami().then(setWhoami).catch((error) => {
-          console.error('Error fetching whoami after role change:', error);
-        });
+      
       } else if (type === 'subscription-expired') {
         // Subscription expired - show modal with countdown
         queryClient.invalidateQueries({ queryKey: ['subscription', 'current'] });
@@ -157,22 +143,44 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
         getWhoami().then(setWhoami).catch((error) => {
           console.error('Error fetching whoami after permissions change:', error);
         });
-      } else if (type === 'role-changed') {
-        // Role was changed - refetch whoami and subscription
-        queryClient.invalidateQueries({ queryKey: ['whoami'] });
-        queryClient.invalidateQueries({ queryKey: ['subscription', 'current'] });
-        getWhoami().then(setWhoami).catch((error) => {
+      } else if (type === 'role-changed'){
+queryClient.invalidateQueries({ queryKey: ['whoami'] });
+ queryClient.invalidateQueries({ queryKey: ['subscription', 'current'] });
+getWhoami().then(setWhoami).catch((error) => {
           console.error('Error fetching whoami after role change:', error);
         });
       }
+       else if (type === 'user-role-changed') {
+        // Only handle if the current user's id matches the affected user
+        if (user?.id && payload?.userId && user.id === payload.userId) {
+          const newRoleName = payload.newRoleName || 'Unknown Role';
+          queryClient.invalidateQueries({ queryKey: ['whoami'] });
+          queryClient.invalidateQueries({ queryKey: ['subscription', 'current'] });
+          queryClient.invalidateQueries({ queryKey: ['subscription', 'tiers'] });
+          queryClient.invalidateQueries({ queryKey: ['superadmin', 'dashboard'] });
+          queryClient.invalidateQueries({ queryKey: ['groups', 'stats'] });
+          toast.info(`Your role has been updated to "${newRoleName}"`, {
+            description: 'Menu and permissions have been refreshed.',
+          });
+          // Refetch whoami to update menu and permissions
+          getWhoami().then(setWhoami).catch((error) => {
+            console.error('Error fetching whoami after role change:', error);
+          });
+      
+    
+        } } else {
+        // For other user role changes, just refetch whoami to update permissions
+        queryClient.invalidateQueries({ queryKey: ['whoami'] });
+        getWhoami().then(setWhoami).catch((error) => {
+          console.error('Error fetching whoami after user role change:', error);
+        });
+      }
     },
-    [setWhoami, whoami?.context?.currentEntity?.id, queryClient]
+    [queryClient, setWhoami, user?.id, whoami?.context?.currentEntity?.id]
   );
 
-  // Listen for custom realtime events
-  useEffect(() => {
-    window.addEventListener('realtime-event', handleRealtimeEvent as EventListener);
-
+     useEffect(() => {
+        window.addEventListener('realtime-event', handleRealtimeEvent as EventListener);
     return () => {
       window.removeEventListener('realtime-event', handleRealtimeEvent as EventListener);
     };

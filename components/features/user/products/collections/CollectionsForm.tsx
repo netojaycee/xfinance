@@ -27,7 +27,7 @@ import {
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
 import { ItemSelector } from "../../income/invoices/ItemSelector";
-import { ItemsResponse } from "@/lib/api/hooks/types/productsTypes";
+import { StoreItemsResponse } from "@/lib/api/hooks/types/productsTypes";
 
 type CollectionFormData = z.infer<typeof collectionSchema>;
 
@@ -47,7 +47,7 @@ export default function CollectionsForm({
   const updateCollection = useUpdateCollection();
 
   const itemsQuery = useItems() as {
-    data?: ItemsResponse;
+    data?: StoreItemsResponse;
     isLoading: boolean;
   };
   const items = itemsQuery.data?.items || [];

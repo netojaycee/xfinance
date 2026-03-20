@@ -33,7 +33,7 @@ import { useCustomers } from "@/lib/api/hooks/useSales";
 import { useItems } from "@/lib/api/hooks/useProducts";
 import { invoiceSchema } from "./utils/schema";
 import { ItemSelector } from "./ItemSelector";
-import type { ItemsResponse } from "@/lib/api/hooks/types/productsTypes";
+import type { StoreItemsResponse } from "@/lib/api/hooks/types/productsTypes";
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
@@ -57,7 +57,7 @@ export default function InvoiceForm({
   );
   const { data, isLoading: customersLoading } = useCustomers();
   const itemsQuery = useItems() as {
-    data?: ItemsResponse;
+    data?: StoreItemsResponse;
     isLoading: boolean;
   };
   const createInvoice = useCreateInvoice();

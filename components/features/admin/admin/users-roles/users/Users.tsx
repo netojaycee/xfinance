@@ -6,7 +6,7 @@ import { CustomTable } from "@/components/local/custom/custom-table";
 import UsersHeader from "../UsersHeader";
 import { usersColumns } from "../UsersColumn";
 // import { mockUsersData } from "../utils/data";
-import { useUsers } from "@/lib/api/hooks/useUsers";
+import { useCreateUser, useUsers } from "@/lib/api/hooks/useUsers";
 import { useModal } from "@/components/providers/ModalProvider";
 import { CustomModal } from "@/components/local/custom/modal";
 import UsersForm from "./UsersForm";
@@ -55,7 +55,7 @@ export default function Users() {
 
   // Placeholder for create user logic
   // Create user logic using API
-  const { mutateAsync: createUser, isLoading: isCreatingUser } = require("@/lib/api/hooks/useUsers").useCreateUser();
+  const { mutateAsync: createUser, isPending: isCreatingUser } = useCreateUser();
   const handleCreateUser = async (formData: any) => {
     setIsCreating(true);
     try {
@@ -121,7 +121,7 @@ export default function Users() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="w-full">
         <UsersHeader />
       </div>
       <CustomTable
