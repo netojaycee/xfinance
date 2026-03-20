@@ -14,14 +14,14 @@ import { IMPERSONATION_COOKIE_NAMES } from "@/lib/utils/impersonation";
  * Results are cached by Next.js (5 min revalidate)
  */
 export async function getWhoamiServer(
-  request?: Request,
+  headersObj?: Headers | import("next/headers").ReadonlyHeaders,
 ): Promise<WhoamiResponse | null> {
   try {
     // const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-     let url = "/backend/auth/whoami";
-    if (request) {
-      const protocol = request.headers.get("x-forwarded-proto") || "https";
-      const host = request.headers.get("host");
+    let url = "/backend/auth/whoami";
+    if (headersObj) {
+      const protocol = headersObj.get("x-forwarded-proto") || "https";
+      const host = headersObj.get("host");
       if (host) {
         url = `${protocol}://${host}/backend/auth/whoami`;
       }

@@ -10,9 +10,9 @@ import { headers } from "next/headers";
  * Server-side dashboard layout
  * Fetches whoami once and passes to SessionProvider as initialData
  */
-async function getDashboardWhoami(request: Request): Promise<WhoamiResponse | null> {
+async function getDashboardWhoami(headersObj: Headers | import("next/headers").ReadonlyHeaders): Promise<WhoamiResponse | null> {
   try {
-    const whoami = await getWhoamiServer(request);
+    const whoami = await getWhoamiServer(headersObj);
     if (!whoami) {
       redirect("/auth/login");
     }
@@ -28,12 +28,8 @@ export default async function DashboardLayout(props: {
   admin: React.ReactNode;
   user: React.ReactNode;
 }) {
-    const request = {
-    headers: headers(),
-  } as unknown as Request;
-
   // Fetch whoami data server-side (cached by Next.js)
-  const whoami = await getDashboardWhoami(request);
+  const whoami = await getDashboardWhoami(headers());
 
   if (!whoami) {
     redirect("/auth/login");
