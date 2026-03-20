@@ -40,7 +40,9 @@ export async function getWhoamiServer(
       headers["X-Impersonate-Entity"] = impersonatedEntityId;
     }
     
-    const response = await fetch(`${baseUrl}/api/v1/auth/whoami`, {
+    // const response = await fetch(`${baseUrl}/api/v1/auth/whoami`, {
+        const response = await fetch(`/backend/auth/whoami`, {
+
       method: "GET",
       headers,
       cache: "no-store",
