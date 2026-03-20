@@ -66,7 +66,7 @@ export async function proxy(request: NextRequest) {
     // 3. For non-exempt paths, validate against menu routes
     if (!isExempt) {
       // Fetch whoami to get allowed routes
-      const whoami = await getWhoamiServer();
+      const whoami = await getWhoamiServer(request);
 
       if (whoami && whoami.menus) {
         // Extract all allowed routes from menus

@@ -14,12 +14,25 @@ import { IMPERSONATION_COOKIE_NAMES } from "@/lib/utils/impersonation";
  * Results are cached by Next.js (5 min revalidate)
  */
 export async function getWhoamiServer(
+  request?: Request,
 ): Promise<WhoamiResponse | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    // const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+     let url = "/backend/auth/whoami";
+    if (request) {
+      const protocol = request.headers.get("x-forwarded-proto") || "https";
+      const host = request.headers.get("host");
+      if (host) {
+        url = `${protocol}://${host}/backend/auth/whoami`;
+      }
+    }
     const cookieStore = await cookies();
-    const impersonatedGroupId = cookieStore.get(IMPERSONATION_COOKIE_NAMES.group)?.value;
-    const impersonatedEntityId = cookieStore.get(IMPERSONATION_COOKIE_NAMES.entity)?.value;
+    const impersonatedGroupId = cookieStore.get(
+      IMPERSONATION_COOKIE_NAMES.group,
+    )?.value;
+    const impersonatedEntityId = cookieStore.get(
+      IMPERSONATION_COOKIE_NAMES.entity,
+    )?.value;
     const cookieHeader = cookieStore
       .getAll()
       .map(({ name, value }) => `${name}=${encodeURIComponent(value)}`)
@@ -39,10 +52,9 @@ export async function getWhoamiServer(
     if (impersonatedEntityId) {
       headers["X-Impersonate-Entity"] = impersonatedEntityId;
     }
-    
-    // const response = await fetch(`${baseUrl}/api/v1/auth/whoami`, {
-        const response = await fetch(`/backend/auth/whoami`, {
 
+    // const response = await fetch(`${baseUrl}/api/v1/auth/whoami`, {
+    const response = await fetch(url, {
       method: "GET",
       headers,
       cache: "no-store",
@@ -56,7 +68,6 @@ export async function getWhoamiServer(
       return null;
     }
 
-
     const data = await response.json();
     return data.data || data; // Handle both wrapped and unwrapped responses
   } catch (error) {
@@ -68,7 +79,7 @@ export async function getWhoamiServer(
 /**
  * Extract all allowed routes from menus
  * Routes can be direct or nested under categories with children
- * 
+ *
  * Example returns:
  * ["/dashboard", "/income/invoices", "/income/customers", "/projects"]
  */
@@ -82,7 +93,7 @@ export function getAllowedRoutesFromMenus(menus: MenuItem[]): string[] {
     }
 
     // Add children routes if they exist
-    if ('children' in menu && Array.isArray(menu.children)) {
+    if ("children" in menu && Array.isArray(menu.children)) {
       const children = menu.children as MenuItem[];
       for (const child of children) {
         if (child.route) {
@@ -98,14 +109,17 @@ export function getAllowedRoutesFromMenus(menus: MenuItem[]): string[] {
 /**
  * Check if a pathname is allowed based on menu routes
  * Handles both exact matches and recursive paths
- * 
+ *
  * Examples:
  * allowedRoutes = ["/income/invoices"]
  * pathname = "/income/invoices" → true (exact match)
  * pathname = "/income/invoices/edit/123" → true (recursive)
  * pathname = "/expense/bills" → false (not in allowed routes)
  */
-export function isPathAllowed(allowedRoutes: string[], pathname: string): boolean {
+export function isPathAllowed(
+  allowedRoutes: string[],
+  pathname: string,
+): boolean {
   return allowedRoutes.some((route) => {
     // Exact match
     if (pathname === route) return true;
@@ -122,7 +136,7 @@ export function isPathAllowed(allowedRoutes: string[], pathname: string): boolea
 export function hasModulePermission(
   whoami: WhoamiResponse | null,
   moduleKey: string | null,
-  requiredAction?: string
+  requiredAction?: string,
 ): boolean {
   if (!whoami || !moduleKey) return false;
 
