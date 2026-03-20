@@ -13,9 +13,7 @@ import { IMPERSONATION_COOKIE_NAMES } from "@/lib/utils/impersonation";
  * This is called from proxy and dashboard layout
  * Results are cached by Next.js (5 min revalidate)
  */
-export async function getWhoamiServer(
-  headersObj?: Headers | import("next/headers").ReadonlyHeaders,
-): Promise<WhoamiResponse | null> {
+export async function getWhoamiServer(headersObj: any): Promise<WhoamiResponse | null> {
   try {
     // const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
     let url = "/backend/auth/whoami";
@@ -26,6 +24,7 @@ export async function getWhoamiServer(
         url = `${protocol}://${host}/backend/auth/whoami`;
       }
     }
+    // console.log("Fetching whoami from URL:", url);
     const cookieStore = await cookies();
     const impersonatedGroupId = cookieStore.get(
       IMPERSONATION_COOKIE_NAMES.group,

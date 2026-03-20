@@ -72,7 +72,7 @@ export const apiClient = async <T>(
     cache: 'no-store', // Never use browser cache, always fetch fresh from server
     ...options,
   };
-
+// console.log(url, defaultOptions)
   const response = await fetch(url, defaultOptions);
 
   const responseData = await response.json();

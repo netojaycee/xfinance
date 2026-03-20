@@ -28,6 +28,8 @@ const permissionExemptPaths = ["/dashboard", "/subscription"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+        // console.log(request.headers.get('host'))
+
 
   // Prevent authenticated users from accessing /auth routes
   if (pathname.startsWith("/auth")) {
@@ -99,6 +101,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|backend|images|svgs|_next/static|_next/image|favicon.ico).*)",
   ],
 };
