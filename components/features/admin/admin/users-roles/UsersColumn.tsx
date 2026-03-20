@@ -20,28 +20,10 @@ export const usersColumns: Column<User>[] = [
     render: (value) => <span className="text-sm">{value}</span>,
   },
   {
-    key: "entities",
+    key: "entityCount",
     title: "Entities",
-    render: (value: string[], row) => (
-      <div className="flex items-center gap-2">
-        <div className="flex gap-1 flex-wrap">
-          {value.slice(0, 2).map((entity) => (
-            <Badge key={entity} variant="secondary" className="text-xs">
-              {entity}
-            </Badge>
-          ))}
-          {value.length > 2 && (
-            <Badge variant="outline" className="text-xs">
-              +{value.length - 2} more
-            </Badge>
-          )}
-        </div>
-        {row.entityType && (
-          <Badge variant={row.entityType === "Group" ? "default" : "outline"}>
-            {row.entityType}
-          </Badge>
-        )}
-      </div>
+    render: (value) => (
+      <span className="text-sm font-semibold">{value}</span>
     ),
   },
   {

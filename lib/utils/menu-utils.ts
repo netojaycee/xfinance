@@ -181,21 +181,6 @@ export function getSidebarMenu(
   role: ENUM_ROLE,
   whoami: WhoamiResponse | null,
 ) {
-  if (!user) {
-    return [];
-  }
-
-  switch (role) {
-    case ENUM_ROLE.SUPERADMIN:
-      return whoami ? buildDynamicSidebarMenu(whoami) : [];
-
-    case ENUM_ROLE.ADMIN:
-      return whoami ? buildDynamicSidebarMenu(whoami) : [];
-
-    case ENUM_ROLE.USER:
-      return whoami ? buildDynamicSidebarMenu(whoami) : [];
-
-    default:
-      return [];
-  }
+  if (!user) return [];
+  return whoami ? buildDynamicSidebarMenu(whoami) : [];
 }

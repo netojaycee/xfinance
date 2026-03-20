@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import RolesStatCardSmall from "./RolesStatCardSmall";
-import { roleStats } from "./utils/data";
+import { useRoleStats } from "@/lib/api/hooks/useRoleStats";
 
 export default function RolesHeader() {
   const { openModal } = useModal();
@@ -10,6 +10,8 @@ export default function RolesHeader() {
   const handleCreateRole = () => {
     openModal(MODAL.ADMIN_ROLE_CREATE);
   };
+
+  const { data: stats, isLoading } = useRoleStats();
 
   return (
     <div className="space-y-4">
@@ -33,17 +35,17 @@ export default function RolesHeader() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <RolesStatCardSmall
           title="System Roles"
-          value={roleStats.system}
+          value={isLoading ? '...' : stats?.systemRoles ?? 0}
           subtitle="Predefined roles"
         />
         <RolesStatCardSmall
           title="Custom Roles"
-          value={roleStats.custom}
+          value={isLoading ? '...' : stats?.customRoles ?? 0}
           subtitle="User-created roles"
         />
         <RolesStatCardSmall
           title="Total Roles"
-          value={roleStats.total}
+          value={isLoading ? '...' : stats?.totalRoles ?? 0}
           subtitle="All roles"
         />
       </div>

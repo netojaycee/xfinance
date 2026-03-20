@@ -26,6 +26,7 @@ import { User } from "../utils/types";
 import { useRoles } from "@/lib/api/hooks/useRoles";
 import { useEntities } from "@/lib/api/hooks/useEntity";
 import { useState } from "react";
+import { useCreateUser } from "@/lib/api/hooks/useUsers";
 
 interface UsersFormProps {
   user?: User;
@@ -86,24 +87,29 @@ export default function UsersForm({
     },
   });
 
+  // Use create user mutation
+  const { mutateAsync: createUser } = useCreateUser();
+
   // Handle submit for single user
-  const handleSingleSubmit = (data: any) => {
+  const handleSingleSubmit = async (data: any) => {
     const payload = {
       ...data,
       scope,
-      entity: scope === "ENTITY" ? selectedEntity || "" : "",
+      entity: scope === "ENTITY" ? selectedEntity || undefined : undefined,
     };
-    onSubmit(payload);
+    await createUser(payload);
+    onSubmit && onSubmit(payload);
   };
 
   // Handle submit for bulk users
-  const handleBulkSubmit = (data: any) => {
+  const handleBulkSubmit = async (data: any) => {
     const payload = {
       ...data,
       scope,
-      entity: scope === "ENTITY" ? selectedEntity || "" : "",
+      entity: scope === "ENTITY" ? selectedEntity || undefined : undefined,
     };
-    onSubmit(payload);
+    await createUser(payload);
+    onSubmit && onSubmit(payload);
   };
 
   return (
@@ -245,40 +251,45 @@ export default function UsersForm({
                 )}
               />
             </div>
-            <FormField
-              control={singleForm.control}
-              name="requirePasswordChange"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Require Password Change</FormLabel>
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={singleForm.control}
-              name="sendWelcomeEmail"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Send Welcome Email</FormLabel>
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Section: Invitation Settings */}
+            <div className="rounded-lg bg-indigo-50/60 border border-indigo-200 p-4 mb-2 flex flex-col gap-4">
+              <div className="flex items-center gap-2 mb-2">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-indigo-500"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-2c0-2.66-5.33-4-8-4Z"/></svg>
+                <span className="font-semibold text-indigo-700">Invitation Settings</span>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4">
+                <FormField
+                  control={singleForm.control}
+                  name="requirePasswordChange"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
+                      <div>
+                        <FormLabel className="font-medium">Require Password Change</FormLabel>
+                        <div className="text-xs text-muted-foreground">User must change password on first login</div>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={singleForm.control}
+                  name="sendWelcomeEmail"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
+                      <div>
+                        <FormLabel className="font-medium">Send Welcome Email</FormLabel>
+                        <div className="text-xs text-muted-foreground">Send invitation email to user</div>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             <FormField
               control={singleForm.control}
               name="customMessage"
@@ -408,40 +419,45 @@ export default function UsersForm({
                 </FormItem>
               )}
             />
-            <FormField
-              control={bulkForm.control}
-              name="requirePasswordChange"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Require Password Change</FormLabel>
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={bulkForm.control}
-              name="sendWelcomeEmail"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Send Welcome Email</FormLabel>
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Section: Invitation Settings (Bulk) */}
+            <div className="rounded-lg bg-indigo-50/60 border border-indigo-200 p-4 mb-2 flex flex-col gap-4">
+              <div className="flex items-center gap-2 mb-2">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-indigo-500"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-2c0-2.66-5.33-4-8-4Z"/></svg>
+                <span className="font-semibold text-indigo-700">Invitation Settings</span>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4">
+                <FormField
+                  control={bulkForm.control}
+                  name="requirePasswordChange"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
+                      <div>
+                        <FormLabel className="font-medium">Require Password Change</FormLabel>
+                        <div className="text-xs text-muted-foreground">User must change password on first login</div>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={bulkForm.control}
+                  name="sendWelcomeEmail"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
+                      <div>
+                        <FormLabel className="font-medium">Send Welcome Email</FormLabel>
+                        <div className="text-xs text-muted-foreground">Send invitation email to user</div>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button
                 type="button"

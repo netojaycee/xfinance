@@ -5,11 +5,14 @@ import { useDebounce } from "use-debounce";
 import { CustomTable } from "@/components/local/custom/custom-table";
 import UsersHeader from "../UsersHeader";
 import { usersColumns } from "../UsersColumn";
-import { mockUsersData } from "../utils/data";
+// import { mockUsersData } from "../utils/data";
 import { useUsers } from "@/lib/api/hooks/useUsers";
 import { useModal } from "@/components/providers/ModalProvider";
 import { CustomModal } from "@/components/local/custom/modal";
 import UsersForm from "./UsersForm";
+import ConfirmationForm from "@/components/local/shared/ConfirmationForm";
+import UserEditForm from "./UserEditForm";
+import { useDeleteUser } from "@/lib/api/hooks/useUsers";
 import { MODAL } from "@/lib/data/modal-data";
 import { MODULES } from "@/lib/types/enums";
 
@@ -25,16 +28,25 @@ export default function Users() {
   const pageSize = 10;
   const [isCreating, setIsCreating] = useState(false);
   const { isOpen: isModalOpen, openModal, closeModal } = useModal();
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  // TODO: Replace with actual API hook
-  const { data: userData, isLoading: isLoadingUsers } = useUsers({
+  // Use actual API hook
+  const { data: userData = { data: [], pagination: { page: 1, limit: 10, total: 0, pages: 1 } }, isLoading: isLoadingUsers } = useUsers({
     search: debouncedSearchTerm,
     page,
     limit: pageSize,
   });
-console.log(userData, "users")
-  const isLoading = false;
-  const data = mockUsersData;
+  // Map API data to table format
+  const data = ((userData as any).data || []).map((user: any) => ({
+    id: user.id,
+    name: `${user.firstName} ${user.lastName}`,
+    email: user.email,
+    role: user.role?.name || user.systemRole,
+    status: user.isActive ? "Active" : "Inactive",
+    entityCount: user.entityCount || 0,
+    raw: user, // keep raw user for modals
+  }));
+  const isLoading = isLoadingUsers;
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -42,25 +54,75 @@ console.log(userData, "users")
   };
 
   // Placeholder for create user logic
+  // Create user logic using API
+  const { mutateAsync: createUser, isLoading: isCreatingUser } = require("@/lib/api/hooks/useUsers").useCreateUser();
   const handleCreateUser = async (formData: any) => {
     setIsCreating(true);
-    // TODO: Call create user API here
-    setTimeout(() => {
+    try {
+      await createUser(formData);
+    } finally {
       setIsCreating(false);
-      closeModal(MODAL.ADMIN_USER_CREATE);
-    }, 1000);
+    }
+  };
+
+  // Delete user logic
+  const { mutate: deleteUser, status: deleteStatus } = useDeleteUser();
+
+  // Render modals for each user (edit/delete)
+  const renderUserModals = () => {
+    return data.map((user: any) => (
+      <>
+        {/* Delete Modal */}
+        <CustomModal
+          key={"delete-" + user.id}
+          title="Deactivate User"
+          description={`Are you sure you want to deactivate ${user.name}?`}
+          module={MODULES.ADMIN}
+          open={isModalOpen(MODAL.ADMIN_USER_DELETE + "-" + user.id)}
+          onOpenChange={(open) =>
+            open
+              ? openModal(MODAL.ADMIN_USER_DELETE + "-" + user.id)
+              : closeModal(MODAL.ADMIN_USER_DELETE + "-" + user.id)
+          }
+        >
+          <ConfirmationForm
+            title={`Are you sure you want to deactivate ${user.name}?`}
+            loading={deleteStatus === "pending"}
+            onResult={(confirmed) => {
+              if (confirmed) {
+                deleteUser(user.id);
+              } else {
+                closeModal(MODAL.ADMIN_USER_DELETE + "-" + user.id);
+              }
+            }}
+            confirmText="Deactivate"
+            cancelText="Cancel"
+          />
+        </CustomModal>
+
+        {/* Edit Modal */}
+        <CustomModal
+          key={"edit-" + user.id}
+          title="Edit User"
+          description={`Edit details for ${user.name}`}
+          module={MODULES.ADMIN}
+          open={isModalOpen(MODAL.ADMIN_USER_EDIT + "-" + user.id)}
+          onOpenChange={(open) =>
+            open
+              ? openModal(MODAL.ADMIN_USER_EDIT + "-" + user.id)
+              : closeModal(MODAL.ADMIN_USER_EDIT + "-" + user.id)
+          }
+        >
+          <UserEditForm userId={user.id} />
+        </CustomModal>
+      </>
+    ));
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <UsersHeader />
-        <button
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded text-sm"
-          onClick={() => openModal(MODAL.ADMIN_USER_CREATE)}
-        >
-          Invite User
-        </button>
       </div>
       <CustomTable
         searchPlaceholder="Search users by name or email..."
@@ -74,9 +136,9 @@ console.log(userData, "users")
           searchComponent: true,
         }}
         pagination={{
-          page,
-          totalPages: Math.ceil(data.length / pageSize) || 1,
-          total: data.length,
+          page: (userData as any).pagination?.page || 1,
+          totalPages: (userData as any).pagination?.pages || 1,
+          total: (userData as any).pagination?.total || 0,
           onPageChange: setPage,
         }}
       />
@@ -95,6 +157,8 @@ console.log(userData, "users")
           onClose={() => closeModal(MODAL.ADMIN_USER_CREATE)}
         />
       </CustomModal>
+      {/* User-specific modals for edit/delete */}
+      {renderUserModals()}
     </div>
   );
 }
