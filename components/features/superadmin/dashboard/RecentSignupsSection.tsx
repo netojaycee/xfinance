@@ -4,6 +4,7 @@ import React from 'react';
 import { Building2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RecentSignupData } from '@/lib/api/services/analyticsService';
 
 interface RecentSignup {
   id: string;
@@ -15,7 +16,11 @@ interface RecentSignup {
   status: string;
 }
 
-const recentSignups: RecentSignup[] = [
+interface RecentSignupsSectionProps {
+  data?: RecentSignupData[];
+}
+
+const defaultRecentSignups: RecentSignup[] = [
   {
     id: '1',
     company: 'Tech Innovations Ltd',
@@ -71,14 +76,31 @@ function getStatusColor(status: string) {
   }
 }
 
-export function RecentSignupsSection() {
+export function RecentSignupsSection({ data }: RecentSignupsSectionProps) {
+  // Transform API data to display format
+  const displayData: RecentSignup[] = data 
+    ? data.map(signup => ({
+        id: signup.id,
+        company: signup.name,
+        signupDate: new Date(signup.createdAt).toLocaleDateString('en-NG'),
+        users: signup.userCount,
+        mrr: new Intl.NumberFormat('en-NG', {
+          style: 'currency',
+          currency: 'NGN',
+          notation: 'compact',
+          maximumFractionDigits: 0,
+        }).format(signup.mrr),
+        plan: signup.plan,
+        status: signup.status,
+      }))
+    : defaultRecentSignups;
   return (
     <Card className="border border-gray-200 p-6">
       <div className="space-y-4">
         <h3 className="font-semibold text-gray-900">Recent Sign-ups</h3>
 
         <div className="space-y-2">
-          {recentSignups.map((signup) => (
+          {displayData.map((signup) => (
             <div
               key={signup.id}
               className="flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"

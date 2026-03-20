@@ -31,7 +31,7 @@ import {
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { useAccounts } from "@/lib/api/hooks/useAccounts";
-import { paymentMethodOptions } from "../../sales/payment-received/PaymentReceivedForm";
+import { paymentMethodOptions } from "../../income/payment-received/PaymentReceivedForm";
 import { useEffect, useState } from "react";
 
 const paymentSchema = z.object({

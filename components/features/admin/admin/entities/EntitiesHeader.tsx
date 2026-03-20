@@ -21,7 +21,7 @@ export default function EntitiesHeader() {
       </div>
       <Button
         onClick={() => openModal(MODAL.ENTITY_CREATE)}
-        className="bg-blue-600 hover:bg-blue-700"
+        className="bg-primary hover:bg-primary/80"
       >
         <Plus className="w-4 h-4 mr-2" />
         Add Entity

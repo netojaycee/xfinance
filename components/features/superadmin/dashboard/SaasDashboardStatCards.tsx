@@ -3,6 +3,7 @@
 import React from 'react';
 import { Building2, Users, DollarSign, Briefcase, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { DashboardCard } from '@/lib/api/services/analyticsService';
 
 interface StatCardProps {
   title: string;
@@ -10,6 +11,13 @@ interface StatCardProps {
   trend: number;
   icon: React.ReactNode;
   className?: string;
+}
+
+interface CardsData {
+  totalCompanies: DashboardCard;
+  activeUsers: DashboardCard;
+  monthlyRevenue: DashboardCard;
+  churnRate: DashboardCard;
 }
 
 function StatCard({ title, value, trend, icon, className = '' }: StatCardProps) {
@@ -42,31 +50,49 @@ function StatCard({ title, value, trend, icon, className = '' }: StatCardProps) 
   );
 }
 
-export function SaasDashboardStatCards() {
+export function SaasDashboardStatCards({ data }: { data?: CardsData }) {
+  // Format revenue value
+  const formatRevenue = (value: number): string => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      notation: 'compact',
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  // Fallback to mock data if no data provided
+  const displayData = data || {
+    totalCompanies: { value: 247, growth: 12, icon: 'building' },
+    activeUsers: { value: 1800, growth: 18, icon: 'users' },
+    monthlyRevenue: { value: 2800000, growth: 22, icon: 'dollar' },
+    churnRate: { value: 2.4, growth: 0, icon: 'trending-down' },
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="Total Companies"
-        value="247"
-        trend={12}
+        value={displayData.totalCompanies.value.toLocaleString('en-NG')}
+        trend={displayData.totalCompanies.growth}
         icon={<Building2 className="h-5 w-5 text-primary" />}
       />
       <StatCard
         title="Active Users"
-        value="1.8k"
-        trend={18}
+        value={(displayData.activeUsers.value / 1000).toFixed(1) + 'k'}
+        trend={displayData.activeUsers.growth}
         icon={<Users className="h-5 w-5 text-primary" />}
       />
       <StatCard
         title="Monthly Revenue"
-        value="₦2.8M"
-        trend={22}
+        value={formatRevenue(displayData.monthlyRevenue.value)}
+        trend={displayData.monthlyRevenue.growth}
         icon={<DollarSign className="h-5 w-5 text-primary" />}
       />
       <StatCard
         title="Churn Rate"
-        value="2.4%"
-        trend={-0.5}
+        value={displayData.churnRate.value.toFixed(1) + '%'}
+        trend={displayData.churnRate.growth}
         icon={<Briefcase className="h-5 w-5 text-primary" />}
       />
     </div>

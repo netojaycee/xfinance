@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { startTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronsUpDown,
@@ -32,8 +33,9 @@ import { ENUM_ROLE } from "@/lib/types/enums";
 import { Group } from "@/lib/types";
 import { useSessionStore } from "@/lib/store/session";
 import NoData from "@/components/local/shared/NoData";
-import { useImpersonateGroup, useStopEntityImpersonation, useStopGroupImpersonation } from "@/lib/api/hooks/useAuth";
+import { useImpersonateGroup, useRefreshWhoami, useStopEntityImpersonation, useStopGroupImpersonation } from "@/lib/api/hooks/useAuth";
 import { useGroups } from "@/lib/api/hooks/useGroup";
+import { toast } from "sonner";
 
 export function GroupSwitcher() {
   const router = useRouter();
@@ -43,38 +45,87 @@ export function GroupSwitcher() {
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [page, setPage] = React.useState(1);
   const [open, setOpen] = React.useState(false);
+  const [pendingGroupId, setPendingGroupId] = React.useState<string | null>(null);
   const user = useSessionStore((state) => state.user);
   const group = useSessionStore((state) => state.group);
   const setImpersonatedGroup = useSessionStore((state) => state.setImpersonatedGroup);
   const clearImpersonatedGroup = useSessionStore((state) => state.clearImpersonatedGroup);
   const clearImpersonatedEntity = useSessionStore((state) => state.clearImpersonatedEntity);
+  const refreshWhoami = useRefreshWhoami();
 
   const { mutate: impersonate, isPending: isImpersonating } =
     useImpersonateGroup({
-      onSuccess: (data, variables) => {
+      onSuccess: async (data, variables) => {
         setImpersonatedGroup(data?.groupId || variables.groupId);
         clearImpersonatedEntity();
-        router.replace("/dashboard");
-        router.refresh();
+        try {
+          await refreshWhoami();
+          setPendingGroupId(null);
+          setOpen(false);
+          startTransition(() => {
+            router.replace("/dashboard");
+            router.refresh();
+          });
+        } catch (error) {
+          setPendingGroupId(null);
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to refresh session context.",
+          );
+        }
+      },
+      onError: (error) => {
+        setPendingGroupId(null);
+        toast.error(error.message || "Failed to switch group view.");
       },
     });
 
   const { mutate: stopEntityImpersonating, isPending: isStoppingEntityImpersonation } =
     useStopEntityImpersonation({
-      onSuccess: () => {
+      onSuccess: async () => {
         clearImpersonatedEntity();
-        router.replace("/dashboard");
-        router.refresh();
+        try {
+          await refreshWhoami();
+          startTransition(() => {
+            router.replace("/dashboard");
+            router.refresh();
+          });
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to refresh session context.",
+          );
+        }
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to switch entity view.");
       },
     });
 
   const { mutate: stopGroupImpersonating, isPending: isStoppingGroupImpersonation } =
     useStopGroupImpersonation({
-      onSuccess: () => {
+      onSuccess: async () => {
         clearImpersonatedGroup();
         clearImpersonatedEntity();
-        router.replace("/dashboard");
-        router.refresh();
+        try {
+          await refreshWhoami();
+          setOpen(false);
+          startTransition(() => {
+            router.replace("/dashboard");
+            router.refresh();
+          });
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to refresh session context.",
+          );
+        }
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to switch to SuperAdmin view.");
       },
     });
 
@@ -101,15 +152,14 @@ export function GroupSwitcher() {
   // Switch to a group (view_as: ADMIN)
   const switchToGroup = (group: Group) => {
     // console.log("Switching to group:", group);
+    setPendingGroupId(group.id);
     impersonate({ groupId: group.id, groupName: group.name });
-    setOpen(false);
   };
 
   // Switch to SuperAdmin
   const switchToSuperAdmin = () => {
     if (!group?.groupId) return;
     stopGroupImpersonating();
-    setOpen(false);
   };
 
   return (
@@ -168,7 +218,11 @@ export function GroupSwitcher() {
                     !group?.groupId
                   }
                 >
-                  <UserCog className="h-4 w-4" />
+                  {isStoppingGroupImpersonation ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserCog className="h-4 w-4" />
+                  )}
                   Switch to SuperAdmin
                 </Button>
               )}
@@ -196,10 +250,16 @@ export function GroupSwitcher() {
                     <div
                       key={group.id}
                       onClick={() => switchToGroup(group)}
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer border"
+                      className={`flex items-center gap-2 p-2 rounded-lg border ${
+                        isImpersonating
+                          ? "cursor-not-allowed opacity-50"
+                          : "hover:bg-accent cursor-pointer"
+                      }`}
                     >
                       <div className="flex size-6 items-center justify-center rounded-sm border">
-                        {group ? (
+                        {pendingGroupId === group.id && isImpersonating ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : group ? (
                           <Image
                             src={
                               group?.logo?.secureUrl

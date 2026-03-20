@@ -46,6 +46,10 @@ export type Group = {
   province: string;
   postalCode: string;
   country: string;
+    userCount: string;
+  entityCount: string;
+  mrr: string;
+
   email: string;
   phone: string;
   website?: string | null;

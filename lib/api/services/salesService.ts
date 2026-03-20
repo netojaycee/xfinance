@@ -2,11 +2,11 @@
 import {
   Customer,
   CustomersResponse,
-} from "@/components/features/user/sales/customers/utils/types";
+} from "@/components/features/user/income/customers/utils/types";
 import { apiClient } from "../client";
-import { InvoicesResponse, PaidInvoicesResponse } from "@/components/features/user/sales/invoices/utils/types";
-import { ReceiptsResponse } from "@/components/features/user/sales/sales-receipt/utils/types";
-import { PaymentReceivedResponse } from "@/components/features/user/sales/payment-received/utils/types";
+import { InvoicesResponse, PaidInvoicesResponse } from "@/components/features/user/income/invoices/utils/types";
+import { ReceiptsResponse } from "@/components/features/user/income/sales-receipt/utils/types";
+import { PaymentReceivedResponse } from "@/components/features/user/income/payment-received/utils/types";
 
 // Customers
 export const getCustomers: (params?: {

@@ -1,4 +1,4 @@
-import { Customers } from '@/components/features/user/sales'
+import { Customers } from '@/components/features/user/income'
 
 export default function CustomersPage() {
   return (

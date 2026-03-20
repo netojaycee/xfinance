@@ -48,24 +48,24 @@ export default function PurchasesForm({ onSuccess }: PurchasesFormProps) {
 
   const onSubmit = async (values: PurchasesFormData) => {
     try {
-      console.log("Purchases Form submitted:", values);
-      toast.success("Purchases settings saved successfully");
+      console.log("Expense Form submitted:", values);
+      toast.success("Expense settings saved successfully");
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error("Failed to save purchases settings");
+      toast.error("Failed to save expense settings");
     }
   };
 
   return (
     <div className="w-full space-y-6 bg-white p-6 rounded-lg shadow-sm">
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Purchases Settings</h2>
-        <p className="text-sm text-gray-600 mt-1">Configure your purchase and billing preferences</p>
+        <h2 className="text-2xl font-semibold text-gray-900">Expense Settings</h2>
+        <p className="text-sm text-gray-600 mt-1">Configure your expense and billing preferences</p>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Purchases Settings Section */}
+          {/* Expense Settings Section */}
           <div className="bg-white p-6 rounded-lg border border-gray-200 space-y-6">
             {/* Bill Number Prefix */}
             <div className="pb-6 border-b">

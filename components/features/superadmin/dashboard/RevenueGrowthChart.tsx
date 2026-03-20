@@ -11,8 +11,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { RevenueGrowthData } from '@/lib/api/services/analyticsService';
 
-const data = [
+const defaultData = [
   { month: 'Jan', revenue: 1.9 },
   { month: 'Feb', revenue: 2.1 },
   { month: 'Mar', revenue: 2.15 },
@@ -22,7 +23,19 @@ const data = [
   { month: 'Jul', revenue: 2.8 },
 ];
 
-export function RevenueGrowthChart() {
+interface RevenueGrowthChartProps {
+  data?: RevenueGrowthData[];
+}
+
+export function RevenueGrowthChart({ data }: RevenueGrowthChartProps) {
+  // Transform data from kobo to millions if provided
+  const chartData = data 
+    ? data.map(d => ({ 
+        month: d.month, 
+        revenue: d.revenue / 1000000 // Convert from number to millions
+      }))
+    : defaultData;
+
   return (
     <Card className="border border-gray-200 p-6">
       <div className="space-y-4">
@@ -32,7 +45,7 @@ export function RevenueGrowthChart() {
         </div>
 
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey="month" stroke="#6b7280" />
             <YAxis stroke="#6b7280" />

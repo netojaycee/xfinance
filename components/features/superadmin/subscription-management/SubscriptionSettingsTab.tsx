@@ -6,45 +6,77 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-
-interface SubscriptionSettings {
-  trialPeriodEnabled: boolean;
-  trialDuration: string;
-  autoRenewalEnabled: boolean;
-  prorateEnabled: boolean;
-  gracePeriod: string;
-  paymentRemindersEnabled: boolean;
-  [key: string]: string | boolean;
-}
+import { Skeleton } from '@/components/ui/skeleton';
+import { useSubscriptionSettings, useUpdateSubscriptionSettings } from '@/lib/api/hooks/useSubscription';
 
 export function SubscriptionSettingsTab() {
-  const [settings, setSettings] = React.useState<SubscriptionSettings>({
+  const { data: settings, isLoading } = useSubscriptionSettings();
+  const { mutate: updateSettings, isPending } = useUpdateSubscriptionSettings();
+  
+  const [formData, setFormData] = React.useState({
     trialPeriodEnabled: false,
-    trialDuration: '14',
+    trialDurationDays: 14,
     autoRenewalEnabled: true,
-    prorateEnabled: true,
-    gracePeriod: '3',
-    paymentRemindersEnabled: true,
+    proratePayments: true,
+    gracePeriodDays: 3,
+    paymentReminders: true,
   });
 
-  const handleToggle = (key: string) => {
-    setSettings((prev) => ({
+  // Sync form data with API data when settings load
+  React.useEffect(() => {
+    if (settings) {
+      setFormData({
+        trialPeriodEnabled: settings.trialPeriodEnabled,
+        trialDurationDays: settings.trialDurationDays,
+        autoRenewalEnabled: settings.autoRenewalEnabled,
+        proratePayments: settings.proratePayments,
+        gracePeriodDays: settings.gracePeriodDays,
+        paymentReminders: settings.paymentReminders,
+      });
+    }
+  }, [settings]);
+
+  const handleToggle = (key: 'trialPeriodEnabled' | 'autoRenewalEnabled' | 'proratePayments' | 'paymentReminders') => {
+    setFormData((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
   };
 
-  const handleInputChange = (key: string, value: string) => {
-    setSettings((prev) => ({
+  const handleInputChange = (key: 'trialDurationDays' | 'gracePeriodDays', value: number) => {
+    setFormData((prev) => ({
       ...prev,
       [key]: value,
     }));
   };
 
   const handleSave = () => {
-    console.log('Saving settings:', settings);
-    // API call would go here
+    const payload = {
+      trialPeriodEnabled: formData.trialPeriodEnabled,
+      trialDurationDays: formData.trialDurationDays,
+      autoRenewalEnabled: formData.autoRenewalEnabled,
+      proratePayments: formData.proratePayments,
+      gracePeriodDays: formData.gracePeriodDays,
+      paymentReminders: formData.paymentReminders,
+    };
+    updateSettings(payload);
   };
+
+  if (isLoading) {
+    return (
+      <Card className="border border-gray-200 p-6">
+        <div className="space-y-8">
+          <Skeleton className="h-6 w-48" />
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="space-y-3 border-b border-gray-200 pb-6">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border border-gray-200 p-6">
@@ -59,7 +91,7 @@ export function SubscriptionSettingsTab() {
               <p className="text-sm text-gray-600">Allow new customers to try before buying</p>
             </div>
             <Switch
-              checked={settings.trialPeriodEnabled}
+              checked={formData.trialPeriodEnabled}
               onCheckedChange={() => handleToggle('trialPeriodEnabled')}
             />
           </div>
@@ -73,8 +105,8 @@ export function SubscriptionSettingsTab() {
           <Input
             id="trial-duration"
             type="number"
-            value={settings.trialDuration}
-            onChange={(e) => handleInputChange('trialDuration', e.target.value)}
+            value={formData.trialDurationDays}
+            onChange={(e) => handleInputChange('trialDurationDays', parseInt(e.target.value) || 0)}
             className="w-32"
           />
         </div>
@@ -87,7 +119,7 @@ export function SubscriptionSettingsTab() {
               <p className="text-sm text-gray-600">Automatically renew subscriptions</p>
             </div>
             <Switch
-              checked={settings.autoRenewalEnabled}
+              checked={formData.autoRenewalEnabled}
               onCheckedChange={() => handleToggle('autoRenewalEnabled')}
             />
           </div>
@@ -101,8 +133,8 @@ export function SubscriptionSettingsTab() {
               <p className="text-sm text-gray-600">Prorate charges for plan changes</p>
             </div>
             <Switch
-              checked={settings.prorateEnabled}
-              onCheckedChange={() => handleToggle('prorateEnabled')}
+              checked={formData.proratePayments}
+              onCheckedChange={() => handleToggle('proratePayments')}
             />
           </div>
         </div>
@@ -116,8 +148,8 @@ export function SubscriptionSettingsTab() {
           <Input
             id="grace-period"
             type="number"
-            value={settings.gracePeriod}
-            onChange={(e) => handleInputChange('gracePeriod', e.target.value)}
+            value={formData.gracePeriodDays}
+            onChange={(e) => handleInputChange('gracePeriodDays', parseInt(e.target.value) || 0)}
             className="w-32"
           />
         </div>
@@ -130,8 +162,8 @@ export function SubscriptionSettingsTab() {
               <p className="text-sm text-gray-600">Send payment reminders before due date</p>
             </div>
             <Switch
-              checked={settings.paymentRemindersEnabled}
-              onCheckedChange={() => handleToggle('paymentRemindersEnabled')}
+              checked={formData.paymentReminders}
+              onCheckedChange={() => handleToggle('paymentReminders')}
             />
           </div>
         </div>
@@ -140,9 +172,10 @@ export function SubscriptionSettingsTab() {
         <div className="flex justify-end pt-6 border-t border-gray-200">
           <Button
             onClick={handleSave}
-            className="bg-primary hover:bg-indigo-700 text-white px-8"
+            disabled={isPending}
+            className="bg-primary hover:bg-indigo-700 text-white px-8 disabled:opacity-50"
           >
-            Save Settings
+            {isPending ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
       </div>

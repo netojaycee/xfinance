@@ -6,6 +6,7 @@ import { loginUser, getProfile, impersonateEntity, stopEntityImpersonation, impe
 // --- Group Impersonation Hooks ---
 import { UserPayload, WhoamiResponse } from '@/lib/types';
 import { LoginCredentials } from '@/lib/schema';
+import { useSessionStore } from '@/lib/store/session';
 
 interface ImpersonateGroupPayload {
   groupId: string;
@@ -77,17 +78,36 @@ export const useWhoami = (options?: Omit<UseQueryOptions<WhoamiResponse>, 'query
   return useQuery({
     queryKey: ['whoami'],
     queryFn: getWhoami,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Data is immediately stale
+    gcTime: 0, // No caching - garbage collect immediately
     refetchOnWindowFocus: true,
     ...options,
   });
+};
+
+export const useRefreshWhoami = () => {
+  const queryClient = useQueryClient();
+
+  return async () => {
+    const whoami = await queryClient.fetchQuery({
+      queryKey: ['whoami'],
+      queryFn: getWhoami,
+      staleTime: 0,
+      gcTime: 0,
+    });
+
+    useSessionStore.getState().setWhoami(whoami);
+
+    return whoami;
+  };
 };
 
 export const useProfile = () => {
   return useQuery({
     queryKey: ['profile'],
     queryFn: getProfile,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0,
+    gcTime: 0,
     refetchOnWindowFocus: true,
   });
 };

@@ -7,13 +7,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import * as salesService from "../services/salesService";
-import { CustomersResponse } from "@/components/features/user/sales/customers/utils/types";
+import { CustomersResponse } from "@/components/features/user/income/customers/utils/types";
 import {
   InvoicesResponse,
   PaidInvoicesResponse,
-} from "@/components/features/user/sales/invoices/utils/types";
-import { ReceiptsResponse } from "@/components/features/user/sales/sales-receipt/utils/types";
-import { PaymentReceivedResponse } from "@/components/features/user/sales/payment-received/utils/types";
+} from "@/components/features/user/income/invoices/utils/types";
+import { ReceiptsResponse } from "@/components/features/user/income/sales-receipt/utils/types";
+import { PaymentReceivedResponse } from "@/components/features/user/income/payment-received/utils/types";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { toast } from "sonner";

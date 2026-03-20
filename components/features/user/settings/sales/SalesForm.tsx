@@ -65,24 +65,24 @@ export default function SalesForm({ onSuccess }: SalesFormProps) {
 
   const onSubmit = async (values: SalesFormData) => {
     try {
-      console.log("Sales Form submitted:", values);
-      toast.success("Sales settings saved successfully");
+      console.log("Income Form submitted:", values);
+      toast.success("Income settings saved successfully");
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error("Failed to save sales settings");
+      toast.error("Failed to save income settings");
     }
   };
 
   return (
     <div className="w-full space-y-6 bg-white p-6 rounded-lg shadow-sm">
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Sales Settings</h2>
-        <p className="text-sm text-gray-600 mt-1">Configure your sales and invoicing preferences</p>
+        <h2 className="text-2xl font-semibold text-gray-900">Income Settings</h2>
+        <p className="text-sm text-gray-600 mt-1">Configure your income and invoicing preferences</p>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Sales Settings Section */}
+          {/* Income Settings Section */}
           <div className="bg-white p-6 rounded-lg border border-gray-200 space-y-6">
             {/* Invoice Number Prefix */}
             <div className="pb-6 border-b">

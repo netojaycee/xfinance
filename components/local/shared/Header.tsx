@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { ENUM_ROLE } from "@/lib/types/enums";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import CustomBreadcrumb from "../custom/custom-breadcrumb";
+import { useRouter } from "next/navigation";
 
 export default function Header({
   user,
@@ -42,12 +43,15 @@ export default function Header({
   loading?: boolean;
   role: ENUM_ROLE;
 }) {
+  const router = useRouter()
   const contextLabel =
     activeContext?.effectiveRole === ENUM_ROLE.USER
       ? activeContext?.entityName || activeContext?.groupName || "Entity"
       : activeContext?.effectiveRole === ENUM_ROLE.ADMIN
         ? activeContext?.groupName || "Group"
         : "SuperAdmin";
+
+  // console.log('📋 [Header] Rendering with entityName:', activeContext?.entityName);
 
   return (
     <header className="h-16 flex items-center justify-between bg-white border-b gap-2 shadow-none sticky px-2 top-0 z-10">
@@ -126,12 +130,14 @@ export default function Header({
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={() => (window.location.href = "/payment")}
-              >
-                <CreditCard className="mr-2 size-4" />
-                <span>Subscription</span>
-              </DropdownMenuItem>
+              {activeContext?.effectiveRole === ENUM_ROLE.ADMIN && (
+                <DropdownMenuItem
+                  onClick={() => router.push('/subscription')}
+                >
+                  <CreditCard className="mr-2 size-4" />
+                  <span>Subscription</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem>
                 <Pencil className="mr-2 size-4" />
                 <span>Profile</span>

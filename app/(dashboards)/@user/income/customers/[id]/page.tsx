@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import CustomerDetails from "@/components/features/user/sales/customers/details/CustomerDetails";
+import CustomerDetails from "@/components/features/user/income/customers/details/CustomerDetails";
 
 export default function CustomerDetailsPage() {
   const router = useRouter();

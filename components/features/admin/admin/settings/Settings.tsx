@@ -10,9 +10,6 @@ import {
   fiscalCalendarData,
   currencySettings,
   periodCloseData,
-  FiscalCalendarSetting,
-  CurrencySetting,
-  PeriodCloseSetting,
 } from "./SettingsColumn";
 
 export default function Settings() {

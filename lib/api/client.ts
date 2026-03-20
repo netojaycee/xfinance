@@ -69,6 +69,7 @@ export const apiClient = async <T>(
       ...options.headers,
     },
     credentials: 'include', // Always send cookies
+    cache: 'no-store', // Never use browser cache, always fetch fresh from server
     ...options,
   };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { startTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Select,
@@ -16,35 +17,45 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useImpersonateEntity } from "@/lib/api/hooks/useAuth";
+import { useImpersonateEntity, useRefreshWhoami } from "@/lib/api/hooks/useAuth";
+import { toast } from "sonner";
 
 interface EntitySwitcherProps {
   entities: Array<Pick<Entity, "id" | "name">>;
   isLoading: boolean;
-  autoSelectFirst?: boolean;
 }
 
-export function EntitySwitcher({
-  entities,
-  isLoading,
-  autoSelectFirst = false,
-}: EntitySwitcherProps) {
+export function EntitySwitcher({ entities, isLoading }: EntitySwitcherProps) {
   const router = useRouter();
   const [selectedEntity, setSelectedEntity] = React.useState<
     string | undefined
   >();
-  const autoSelectedEntityIdRef = React.useRef<string | null>(null);
   const currentEntity = useSessionStore((state) => state.entity);
   const setImpersonatedEntity = useSessionStore(
     (state) => state.setImpersonatedEntity,
   );
+  const refreshWhoami = useRefreshWhoami();
 
   const { mutate: impersonateEntity, isPending: isImpersonating } =
     useImpersonateEntity({
-      onSuccess: (data, variables) => {
+      onSuccess: async (data, variables) => {
         setImpersonatedEntity(data?.entityId || variables.entityId);
-        router.replace("/dashboard");
-        router.refresh();
+        try {
+          await refreshWhoami();
+          startTransition(() => {
+            router.replace("/dashboard");
+            router.refresh();
+          });
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to refresh session context.",
+          );
+        }
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to switch entity view.");
       },
     });
 
@@ -53,41 +64,15 @@ export function EntitySwitcher({
       currentEntity?.entityId &&
       entities.some((e) => e.id === currentEntity.entityId)
     ) {
-      autoSelectedEntityIdRef.current = null;
       setSelectedEntity(currentEntity.entityId);
     } else {
       setSelectedEntity(undefined);
     }
   }, [entities, currentEntity?.entityId]);
 
-  React.useEffect(() => {
-    if (!autoSelectFirst) {
-      autoSelectedEntityIdRef.current = null;
-      return;
-    }
-
-    if (currentEntity?.entityId || entities.length === 0) {
-      return;
-    }
-
-    const firstEntity = entities[0];
-
-    if (autoSelectedEntityIdRef.current === firstEntity.id) {
-      return;
-    }
-
-    autoSelectedEntityIdRef.current = firstEntity.id;
-    setSelectedEntity(firstEntity.id);
-    impersonateEntity({
-      entityId: firstEntity.id,
-      entityName: firstEntity.name,
-    });
-  }, [autoSelectFirst, currentEntity?.entityId, entities, impersonateEntity]);
-
   const handleValueChange = (entityId: string) => {
     const entity = entities.find((e) => e.id === entityId);
     if (entity && entity.id !== currentEntity?.entityId) {
-      autoSelectedEntityIdRef.current = entity.id;
       setSelectedEntity(entity.id);
       impersonateEntity({ entityId: entity.id, entityName: entity.name });
     }
@@ -109,7 +94,7 @@ export function EntitySwitcher({
             <Select
               value={selectedEntity}
               onValueChange={handleValueChange}
-              // disabled={isImpersonating || entities.length === 0}
+              disabled={isImpersonating || entities.length === 0}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select an entity..." />

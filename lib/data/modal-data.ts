@@ -93,4 +93,22 @@ export const MODAL = {
   BANK_EDIT: "bank-edit",
   BANK_DELETE: "bank-delete",
 
+  PROJECT_CREATE: "project-create",
+  PROJECT_EDIT: "project-edit",
+  PROJECT_DELETE: "project-delete",
+
+  // Admin modals
+  ADMIN_USER_CREATE: "admin-user-create",
+  ADMIN_USER_EDIT: "admin-user-edit",
+  ADMIN_USER_DELETE: "admin-user-delete",
+
+  ADMIN_ROLE_CREATE: "admin-role-create",
+  ADMIN_ROLE_EDIT: "admin-role-edit",
+  ADMIN_ROLE_DELETE: "admin-role-delete",
+  ADMIN_ROLE_VIEW: "admin-role-view",
+
+  SUBSCRIPTION_PLAN_CREATE: "subscription-plan-create",
+  SUBSCRIPTION_PLAN_EDIT: "subscription-plan-edit",
+  SUBSCRIPTION_PLAN_DELETE: "subscription-plan-delete",
+
 };

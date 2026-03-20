@@ -39,7 +39,7 @@ import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { useEffect } from "react";
 import { useAccounts } from "@/lib/api/hooks/useAccounts";
-import { paymentMethodOptions } from "../../sales/payment-received/PaymentReceivedForm";
+import { paymentMethodOptions } from "../../income/payment-received/PaymentReceivedForm";
 
 const expenseSchema = z.object({
   date: z.date(),

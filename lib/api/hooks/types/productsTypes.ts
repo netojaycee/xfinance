@@ -38,17 +38,17 @@ export interface CollectionsResponse {
 /**
  * Item Types
  */
-export enum ItemTypeEnum {
+export enum StoreItemTypeEnum {
   Product = "product",
   Service = "service",
 }
 
-export enum ItemStatusEnum {
+export enum StoreItemStatusEnum {
   InStock = "in_stock",
   OutOfStock = "out_of_stock",
 }
 
-export interface Item {
+export interface StoreItem {
   id: string;
   name: string;
   category: string;
@@ -61,16 +61,16 @@ export interface Item {
   taxable: boolean;
   currentStock: number;
   lowStock: number;
-  type: ItemTypeEnum;
-  status: ItemStatusEnum;
+  type: StoreItemTypeEnum;
+  status: StoreItemStatusEnum;
   unitPrice: number;
   entityId: string;
   createdAt: string;
   updatedAt?: string;
 }
 
-export interface ItemsResponse {
-  items: Item[];
+export interface StoreItemsResponse {
+  items: StoreItem[];
   total: number;
   totalInStock: number;
   totalOutOfStock: number;
@@ -135,7 +135,7 @@ export interface ItemProductFormData {
   currentStock: number;
   lowStockAlert: number;
   sellOnline?: boolean;
-  type: ItemTypeEnum;
+  type: StoreItemTypeEnum;
 }
 
 export interface ItemServiceFormData {
@@ -145,5 +145,5 @@ export interface ItemServiceFormData {
   description?: string;
   rate: number;
   taxable: boolean;
-  type: ItemTypeEnum;
+  type: StoreItemTypeEnum;
 }

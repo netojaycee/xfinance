@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { startTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { NavMain } from "./nav-main";
@@ -19,7 +20,11 @@ import Logo from "../../Logo";
 import GroupEntitySwitcher from "./group-entity-switcher";
 import { EntitySwitcher } from "./entity-switcher";
 import { toast } from "sonner";
-import { useStopEntityImpersonation } from "@/lib/api/hooks/useAuth";
+import {
+  useImpersonateEntity,
+  useRefreshWhoami,
+  useStopEntityImpersonation,
+} from "@/lib/api/hooks/useAuth";
 import { useSessionStore } from "@/lib/store/session";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -35,45 +40,95 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
     (state) => state.clearImpersonatedEntity,
   );
   const availableEntities = useSessionStore((state) => state.getAvailableEntities());
-  const hasEntityOptions = availableEntities.length > 0;
-  const [selectedTab, setSelectedTab] = React.useState<"group" | "entity">(
-    currentEntity?.entityId ? "entity" : "group",
+  const setImpersonatedEntity = useSessionStore(
+    (state) => state.setImpersonatedEntity,
   );
+  const refreshWhoami = useRefreshWhoami();
+  const hasEntityOptions = availableEntities.length > 0;
+  const [pendingView, setPendingView] = React.useState<"group" | "entity" | null>(null);
   const menuData = React.useMemo(
     () => getSidebarMenu(user, role, whoami),
     [user, role, whoami],
   );
+  const activeView = currentEntity?.entityId ? "entity" : "group";
 
-  React.useEffect(() => {
-    setSelectedTab(currentEntity?.entityId ? "entity" : "group");
-  }, [currentEntity?.entityId]);
+  const { mutate: impersonateEntity, isPending: isStartingEntityImpersonation } = useImpersonateEntity({
+    onSuccess: async (data, variables) => {
+      setImpersonatedEntity(data?.entityId || variables.entityId);
 
-  const { mutate: stopEntityImpersonation, isPending: isStoppingEntityImpersonation } = useStopEntityImpersonation({
-    onSuccess: () => {
-      clearImpersonatedEntity();
-      setSelectedTab("group");
-      router.replace("/dashboard");
-      router.refresh();
+      try {
+        await refreshWhoami();
+        setPendingView(null);
+        startTransition(() => {
+          router.replace("/dashboard");
+          router.refresh();
+        });
+      } catch (error) {
+        setPendingView(null);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to refresh session context.",
+        );
+      }
     },
     onError: (error) => {
-      setSelectedTab("entity");
+      setPendingView(null);
+      toast.error(error.message || "Failed to switch to entity view.");
+    },
+  });
+
+  const { mutate: stopEntityImpersonation, isPending: isStoppingEntityImpersonation } = useStopEntityImpersonation({
+    onSuccess: async () => {
+      clearImpersonatedEntity();
+
+      try {
+        await refreshWhoami();
+        setPendingView(null);
+        startTransition(() => {
+          router.replace("/dashboard");
+          router.refresh();
+        });
+      } catch (error) {
+        setPendingView(null);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to refresh session context.",
+        );
+      }
+    },
+    onError: (error) => {
+      setPendingView(null);
       toast.error(error.message || "Failed to switch view.");
     },
   });
 
-  const handleTabSwitch = (tab: string) => {
-    if (tab === "entity") {
-      setSelectedTab("entity");
+  const handleGroupClick = () => {
+    if (activeView === "group" || pendingView) {
       return;
     }
 
-    if (currentEntity?.entityId) {
-      setSelectedTab("group");
-      stopEntityImpersonation();
+    setPendingView("group");
+    stopEntityImpersonation();
+  };
+
+  const handleEntityClick = () => {
+    if (activeView === "entity" || pendingView || !hasEntityOptions) {
       return;
     }
 
-    setSelectedTab("group");
+    const firstEntity = availableEntities[0];
+
+    if (!firstEntity) {
+      return;
+    }
+
+    setPendingView("entity");
+    impersonateEntity({
+      entityId: firstEntity.id,
+      entityName: firstEntity.name,
+    });
   };
 
   const showGroupEntitySwitcher =
@@ -97,17 +152,17 @@ export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
         {user && user.systemRole === ENUM_ROLE.SUPERADMIN && <GroupSwitcher />}
         {showGroupEntitySwitcher && (
           <GroupEntitySwitcher
-            activeTab={selectedTab}
+            activeView={activeView}
             showEntityTab={hasEntityOptions}
-            disabled={isStoppingEntityImpersonation}
-            onTabChange={handleTabSwitch}
+            pendingView={pendingView}
+            onGroupClick={handleGroupClick}
+            onEntityClick={handleEntityClick}
           />
         )}
-        {showGroupEntitySwitcher && selectedTab === "entity" && hasEntityOptions && (
+        {showGroupEntitySwitcher && activeView === "entity" && hasEntityOptions && (
           <EntitySwitcher
             entities={availableEntities}
             isLoading={false}
-            autoSelectFirst={!currentEntity?.entityId}
           />
         )}
       </SidebarHeader>

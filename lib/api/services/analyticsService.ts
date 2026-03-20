@@ -162,3 +162,84 @@ export const getPayableAging = async (): Promise<AgingData> => {
 export const getRecentTransactions = async (): Promise<RecentTransaction[]> => {
   return apiClient("analytics/recent-transactions", { method: "GET" });
 };
+
+// ============================================
+// SUPERADMIN DASHBOARD
+// ============================================
+
+/**
+ * Card data with value, growth, and icon
+ */
+export interface DashboardCard {
+  value: number;
+  growth: number;
+  icon: string;
+  currency?: string;
+  unit?: string;
+}
+
+/**
+ * Plan distribution data point
+ */
+export interface PlanDistributionData {
+  name: string;
+  value: number;
+}
+
+/**
+ * Revenue growth data point
+ */
+export interface RevenueGrowthData {
+  month: string;
+  revenue: number;
+}
+
+/**
+ * Subscription growth data point
+ */
+export interface SubscriptionGrowthData {
+  month: string;
+  count: number;
+}
+
+/**
+ * Recent signup data point
+ */
+export interface RecentSignupData {
+  id: string;
+  name: string;
+  createdAt: string;
+  userCount: number;
+  mrr: number;
+  plan: string;
+  status: string;
+}
+
+/**
+ * Complete superadmin dashboard response
+ */
+export interface SuperadminDashboardData {
+  cards: {
+    totalCompanies: DashboardCard;
+    activeUsers: DashboardCard;
+    monthlyRevenue: DashboardCard;
+    churnRate: DashboardCard;
+  };
+  planDistribution: PlanDistributionData[];
+  revenueGrowth: RevenueGrowthData[];
+  subscriptionGrowth: SubscriptionGrowthData[];
+  recentSignups: RecentSignupData[];
+  timestamp: string;
+}
+
+/**
+ * Get complete superadmin dashboard data in a single call
+ * Includes stat cards, plan distribution, revenue/subscription growth, and recent signups
+ * Requires superadmin role
+ * Cache: 5 minutes
+ */
+export const getSuperadminDashboard = async (): Promise<SuperadminDashboardData> => {
+  return apiClient<SuperadminDashboardData>("analytics/superadmin/dashboard", {
+    method: "GET",
+  });
+};

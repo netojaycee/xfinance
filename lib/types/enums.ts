@@ -16,7 +16,9 @@ export enum MODULES {
     HR_PAYROLL = 'hr_payroll',
     REPORTS = 'reports',
     SETTINGS = 'settings',
+    PROJECTS = 'projects',
     // ADMIN MODULES
+    ADMIN = 'admin',
     BUDGET = 'budget',
     ENTITY = 'entity',
     // SUPERADMIN MODULES

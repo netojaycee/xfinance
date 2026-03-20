@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 export interface Tab {
   title: string;
@@ -12,9 +13,11 @@ export interface Tab {
 interface CustomTabsProps {
   tabs: Tab[];
   storageKey: string;
+  variant?: "button" | "route";
+  classNames?: string;
 }
 
-export function CustomTabs({ tabs, storageKey }: CustomTabsProps) {
+export function CustomTabs({ tabs, storageKey, variant = "button", classNames = "p-0" }: CustomTabsProps) {
   const [activeTab, setActiveTab] = React.useState<string | undefined>(
     undefined
   );
@@ -43,23 +46,43 @@ export function CustomTabs({ tabs, storageKey }: CustomTabsProps) {
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <div className="w-full relative ">
-        {/* <div className=" border-t-[0.3px] border-[#e2e8f0] absolute top-0 w-full"></div>
-        <div className=" border-t-[0.3px] border-[#e2e8f0] absolute bottom-0 w-full"></div> */}
-        <TabsList className={`bg-transparent shadow-none space-x-5`}>
-          {tabs.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className='font-normal relative  data-[state=active]:bg-primary data-[state=active]:shadow-none data-[state=active]:font-semibold  data-[state=active]:text-white border border-black bg-white text-black'
-            >
-              {tab.title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </div>
+      {variant === "route" ? (
+        // Route-style variant (like RouteTabNav)
+        <div className={cn("overflow-x-auto bg-white border-b border-t border-gray-400")}>
+          <div className="flex gap-2 px-4 py-0 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => handleTabChange(tab.value)}
+                className={cn(
+                  "px-4 py-2 text-sm font-normal whitespace-nowrap",
+                  activeTab === tab.value &&
+                    "border-b-2 border-primary text-primary"
+                )}
+              >
+                {tab.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        // Default button-style variant
+        <div className="w-full relative ">
+          <TabsList className={`bg-transparent shadow-none space-x-5`}>
+            {tabs.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className='font-normal relative  data-[state=active]:bg-primary data-[state=active]:shadow-none data-[state=active]:font-semibold  data-[state=active]:text-white border border-black bg-white text-black'
+              >
+                {tab.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+      )}
       {tabs.map((tab) => (
-        <TabsContent className="" key={tab.value} value={tab.value}>
+        <TabsContent className={cn(classNames, "py-4")} key={tab.value} value={tab.value}>
           {tab.content}
         </TabsContent>
       ))}

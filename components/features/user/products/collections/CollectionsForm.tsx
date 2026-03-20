@@ -26,7 +26,7 @@ import {
 } from "@/lib/api/hooks/useProducts";
 import { CustomModal } from "@/components/local/custom/modal";
 import { MODULES } from "@/lib/types/enums";
-import { ItemSelector } from "../../sales/invoices/ItemSelector";
+import { ItemSelector } from "../../income/invoices/ItemSelector";
 import { ItemsResponse } from "@/lib/api/hooks/types/productsTypes";
 
 type CollectionFormData = z.infer<typeof collectionSchema>;

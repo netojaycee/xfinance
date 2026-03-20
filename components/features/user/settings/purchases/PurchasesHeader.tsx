@@ -9,7 +9,7 @@ export default function PurchasesHeader() {
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold text-indigo-900">
-            Sales Configuration
+            Expense Configuration
           </h2>
           <p className="text-muted-foreground">
             Configure entity-level settings

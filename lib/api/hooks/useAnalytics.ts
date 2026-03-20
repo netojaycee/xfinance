@@ -10,6 +10,7 @@ import {
   TopExpense,
   AgingData,
   RecentTransaction,
+  SuperadminDashboardData,
 } from "../services/analyticsService";
 
 /**
@@ -121,6 +122,23 @@ export const useRecentTransactions = (options?: UseQueryOptions<RecentTransactio
     queryKey: ["recentTransactions"],
     queryFn: () => analyticsService.getRecentTransactions(),
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
+/**
+ * Fetch complete superadmin dashboard data
+ * Includes stat cards, plan distribution, growth charts, and recent signups
+ * Requires superadmin role
+ * Cache: 5 minutes
+ */
+export const useSuperadminDashboard = (options?: UseQueryOptions<SuperadminDashboardData>) => {
+  return useQuery<SuperadminDashboardData>({
+    queryKey: ["superadmin", "dashboard"],
+    queryFn: () => analyticsService.getSuperadminDashboard(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     ...options,
   });

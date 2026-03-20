@@ -69,7 +69,7 @@ export const useUpdateEntity = (
         });
       }
       // console.log(isOpen, "isOpen in useUpdateEntity onSuccess"); // Debug log
-      closeModal(MODAL.ENTITY_EDIT);
+      closeModal(MODAL.ENTITY_EDIT + '-' + variables.id);
       toast.success("Entity updated successfully");
     },
     onError: (error) => {

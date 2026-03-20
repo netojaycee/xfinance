@@ -18,7 +18,6 @@ interface GroupRow {
   plan: string;
   entities: number;
   users: number;
-  mrr: string;
   status: string;
   lastActive: string;
   address: string;
@@ -30,6 +29,7 @@ interface GroupRow {
   phone: string;
   website?: string | null;
   taxId: string;
+  mrr: string;
   logo?: {
     publicId: string;
     secureUrl: string;
@@ -57,9 +57,9 @@ function transformGroupToRow(group: Group): GroupRow {
     legalName: group.legalName || '',
     industry: group.industry || 'N/A',
     plan: getPlanTier(group.subscriptionId),
-    entities: 0,
-    users: 0,
-    mrr: '₦0/mo',
+    entities: Number(group.entityCount),
+    users: Number(group.userCount),
+    mrr: String(group.mrr),
     status: 'Active',
     lastActive: group.updatedAt ? new Date(group.updatedAt).toLocaleDateString() : new Date(group.createdAt).toLocaleDateString(),
     address: group.address || '',
@@ -177,6 +177,21 @@ export function GroupsContent() {
       key: "mrr",
       title: "MRR",
       className: "text-xs font-medium text-gray-900",
+      render: (value: string | number) => {
+        if (!value) return '₦0.00';
+        
+        // If it's already a formatted string, return it
+        if (typeof value === 'string' && value.includes('₦')) {
+          return value;
+        }
+        
+        // If it's a number or numeric string, format it
+        const amount = typeof value === 'string' ? parseFloat(value) : value;
+        return new Intl.NumberFormat('en-NG', {
+          style: 'currency',
+          currency: 'NGN',
+        }).format(amount);
+      },
     },
     {
       key: "status",

@@ -51,7 +51,7 @@ export default function AdminPage() {
       </div>
 
       {/* Custom Tabs */}
-      <CustomTabs tabs={tabs} storageKey="admin-active-tab" />
+      <CustomTabs tabs={tabs} storageKey="admin-active-tab" classNames="px-4" />
     </div>
   );
 }

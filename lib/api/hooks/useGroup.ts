@@ -12,7 +12,9 @@ import {
   deleteGroup,
   getGroups,
   getGroup,
+  getGroupStats,
   GroupFormData,
+  GroupStats,
   transformGroupFormToApiPayload,
 } from "../services/groupService";
 import { Group } from "@/lib/types";
@@ -121,5 +123,20 @@ export const useGroup = (id: string) => {
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
+  });
+};
+
+/**
+ * Hook to fetch platform-wide group statistics
+ * Requires superadmin role
+ * Cache: 5 minutes
+ */
+export const useGroupStats = () => {
+  return useQuery({
+    queryKey: ["groups", "stats"],
+    queryFn: getGroupStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 };

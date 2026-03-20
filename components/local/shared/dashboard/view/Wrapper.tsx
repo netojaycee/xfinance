@@ -35,6 +35,8 @@ export default function Wrapper({
   const whoami = useSessionStore((state) => state.whoami);
   const loading = useSessionStore((state) => state.loading);
 
+  // console.log('📦 [Wrapper] Rendered with entityName:', whoami?.context?.currentEntity?.name);
+
   const activeContext: ActiveContext = {
     realRole: whoami?.user?.systemRole,
     effectiveRole: role,

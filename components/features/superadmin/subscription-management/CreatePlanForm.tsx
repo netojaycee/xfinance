@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,148 +15,159 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { useModulesAll } from "@/lib/api/hooks/useModules";
+import {
+  useCreateSubscriptionTier,
+  useUpdateSubscriptionTier,
+} from "@/lib/api/hooks/useSubscription";
+import { Card } from "@/components/ui/card";
 
-const planSchema = z.object({
-  name: z.string().min(1, "Plan name is required"),
-  description: z.string().min(1, "Description is required"),
+const tierSchema = z.object({
+  name: z.string().min(1, "Tier name is required"),
+  description: z.string().optional(),
   monthlyPrice: z.string().min(1, "Monthly price is required"),
-  annualPrice: z.string().min(1, "Annual price is required"),
+  yearlyPrice: z.string().min(1, "Yearly price is required"),
   maxUsers: z.string().min(1, "Max users is required"),
   maxEntities: z.string().min(1, "Max entities is required"),
-  // Core Modules
-  coreAccounting: z.boolean(),
-  coreBanking: z.boolean(),
-  coreInvoicing: z.boolean(),
-  coreExpense: z.boolean(),
-  coreRevenue: z.boolean(),
-  coreSales: z.boolean(),
-  corePurchase: z.boolean(),
-  coreInventory: z.boolean(),
-  corePos: z.boolean(),
-  // Advanced Features
-  advBudgeting: z.boolean(),
-  advConsolidation: z.boolean(),
-  advReporting: z.boolean(),
-  advMultiCurrency: z.boolean(),
-  // Platform Features
-  apiAccess: z.boolean(),
-  customFields: z.boolean(),
-  workflows: z.boolean(),
-  approvals: z.boolean(),
+  // maxTransactionsMonth: z.string().min(1, "Max transactions/month is required"),
+  // maxStorageGB: z.string().min(1, "Max storage is required"),
+  // maxApiRatePerHour: z.string().min(1, "Max API rate is required"),
+  // apiAccess: z.boolean().default(false),
+  // webhooks: z.boolean().default(false),
+  // sso: z.boolean().default(false),
+  customBranding: z.boolean(),
+  prioritySupport: z.boolean(),
+  moduleIds: z.array(z.string()),
 });
 
-type PlanFormData = z.infer<typeof planSchema>;
+type TierFormData = z.infer<typeof tierSchema>;
 
-interface CreatePlanFormDummyProps {
-  plan?: Partial<PlanFormData> & { id?: string };
+interface CreatePlanFormProps {
+  tier?: any;
   isEditMode?: boolean;
   onSuccess?: () => void;
 }
 
 export function CreatePlanForm({
-  plan,
+  tier,
   isEditMode = false,
   onSuccess,
-}: CreatePlanFormDummyProps) {
-  const [loading, setLoading] = React.useState(false);
+}: CreatePlanFormProps) {
+  const { data: allModules, isLoading: modulesLoading } = useModulesAll();
+  const createTier = useCreateSubscriptionTier();
+  const updateTier = useUpdateSubscriptionTier();
 
-  const form = useForm<PlanFormData>({
-    resolver: zodResolver(planSchema) as any,
+  // Group modules by scope (ENTITY and GROUP only)
+  const modulesByScope = useMemo(() => {
+    if (!allModules) return { ENTITY: [], GROUP: [] };
+
+    return {
+      ENTITY: allModules.filter((m) => m.scope === "ENTITY") || [],
+      GROUP: allModules.filter((m) => m.scope === "GROUP") || [],
+    };
+  }, [allModules]);
+
+  const form = useForm<TierFormData>({
+    resolver: zodResolver(tierSchema),
     defaultValues: {
-      name: plan?.name || "",
-      description: plan?.description || "",
-      monthlyPrice: (plan?.monthlyPrice || 49).toString() as any,
-      annualPrice: (plan?.annualPrice || 499).toString() as any,
-      maxUsers: (plan?.maxUsers || 5).toString() as any,
-      maxEntities: (plan?.maxEntities || 1).toString() as any,
-      coreAccounting: plan?.coreAccounting ?? true,
-      coreBanking: plan?.coreBanking ?? true,
-      coreInvoicing: plan?.coreInvoicing ?? true,
-      coreExpense: plan?.coreExpense ?? true,
-      coreRevenue: plan?.coreRevenue ?? false,
-      coreSales: plan?.coreSales ?? false,
-      corePurchase: plan?.corePurchase ?? false,
-      coreInventory: plan?.coreInventory ?? false,
-      corePos: plan?.corePos ?? false,
-      advBudgeting: plan?.advBudgeting ?? false,
-      advConsolidation: plan?.advConsolidation ?? false,
-      advReporting: plan?.advReporting ?? false,
-      advMultiCurrency: plan?.advMultiCurrency ?? false,
-      apiAccess: plan?.apiAccess ?? false,
-      customFields: plan?.customFields ?? false,
-      workflows: plan?.workflows ?? false,
-      approvals: plan?.approvals ?? false,
+      name: tier?.name || "",
+      description: tier?.description || "",
+      monthlyPrice: (tier?.monthlyPrice || 0).toString(),
+      yearlyPrice: (tier?.yearlyPrice || 0).toString(),
+      maxUsers: (tier?.maxUsers || 5).toString(),
+      maxEntities: (tier?.maxEntities || 1).toString(),
+      // maxTransactionsMonth: (tier?.maxTransactionsMonth || 1000).toString(),
+      // maxStorageGB: (tier?.maxStorageGB || 10).toString(),
+      // maxApiRatePerHour: (tier?.maxApiRatePerHour || 100).toString(),
+      // apiAccess: tier?.apiAccess ?? false,
+      // webhooks: tier?.webhooks ?? false,
+      // sso: tier?.sso ?? false,
+      customBranding: tier?.customBranding ?? false,
+      prioritySupport: tier?.prioritySupport ?? false,
+      moduleIds: tier?.subscriptionModules?.map((m: any) => m.moduleId) || [],
     },
   });
 
   useEffect(() => {
-    if (plan) {
+    if (tier) {
+      console.log("📋 Editing tier:", tier.name);
       form.reset({
-        name: plan?.name || "",
-        description: plan?.description || "",
-        monthlyPrice: (plan?.monthlyPrice || 49).toString() as any,
-        annualPrice: (plan?.annualPrice || 499).toString() as any,
-        maxUsers: (plan?.maxUsers || 5).toString() as any,
-        maxEntities: (plan?.maxEntities || 1).toString() as any,
-        coreAccounting: plan?.coreAccounting ?? true,
-        coreBanking: plan?.coreBanking ?? true,
-        coreInvoicing: plan?.coreInvoicing ?? true,
-        coreExpense: plan?.coreExpense ?? true,
-        coreRevenue: plan?.coreRevenue ?? false,
-        coreSales: plan?.coreSales ?? false,
-        corePurchase: plan?.corePurchase ?? false,
-        coreInventory: plan?.coreInventory ?? false,
-        corePos: plan?.corePos ?? false,
-        advBudgeting: plan?.advBudgeting ?? false,
-        advConsolidation: plan?.advConsolidation ?? false,
-        advReporting: plan?.advReporting ?? false,
-        advMultiCurrency: plan?.advMultiCurrency ?? false,
-        apiAccess: plan?.apiAccess ?? false,
-        customFields: plan?.customFields ?? false,
-        workflows: plan?.workflows ?? false,
-        approvals: plan?.approvals ?? false,
-      } as PlanFormData);
+        name: tier?.name || "",
+        description: tier?.description || "",
+        monthlyPrice: (tier?.monthlyPrice || 0).toString(),
+        yearlyPrice: (tier?.yearlyPrice || 0).toString(),
+        maxUsers: (tier?.maxUsers || 5).toString(),
+        maxEntities: (tier?.maxEntities || 1).toString(),
+        // maxTransactionsMonth: (tier?.maxTransactionsMonth || 1000).toString(),
+        // maxStorageGB: (tier?.maxStorageGB || 10).toString(),
+        // maxApiRatePerHour: (tier?.maxApiRatePerHour || 100).toString(),
+        // apiAccess: tier?.apiAccess ?? false,
+        // webhooks: tier?.webhooks ?? false,
+        // sso: tier?.sso ?? false,
+        customBranding: tier?.customBranding ?? false,
+        prioritySupport: tier?.prioritySupport ?? false,
+        moduleIds: tier?.subscriptionModules?.map((m: any) => m.moduleId) || [],
+      });
     }
-  }, [plan, form]);
+  }, [tier, form]);
 
-  const onSubmit = async (values: PlanFormData) => {
+  const onSubmit = async (values: TierFormData) => {
     try {
-      setLoading(true);
-      // Convert string prices and quantities to numbers
       const payload = {
-        ...values,
-        monthlyPrice: parseFloat(values.monthlyPrice),
-        annualPrice: parseFloat(values.annualPrice),
+        name: values.name,
+        description: values.description || "",
+        monthlyPrice: parseInt(values.monthlyPrice, 10),
+        yearlyPrice: parseInt(values.yearlyPrice, 10),
         maxUsers: parseInt(values.maxUsers, 10),
         maxEntities: parseInt(values.maxEntities, 10),
+        // maxTransactionsMonth: parseInt(values.maxTransactionsMonth, 10),
+        // maxStorageGB: parseInt(values.maxStorageGB, 10),
+        // maxApiRatePerHour: parseInt(values.maxApiRatePerHour, 10),
+        // apiAccess: values.apiAccess,
+        // webhooks: values.webhooks,
+        // sso: values.sso,
+        customBranding: values.customBranding,
+        prioritySupport: values.prioritySupport,
+        moduleIds: values.moduleIds || [],
       };
-      // Simulate form submission
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(`Plan ${isEditMode ? "updated" : "created"} successfully`);
+
+      if (isEditMode && tier?.id) {
+        await updateTier.mutateAsync({
+          tierId: tier.id,
+          payload,
+        });
+      } else {
+        await createTier.mutateAsync(payload);
+      }
+
       onSuccess?.();
     } catch (error) {
-      toast.error(`Failed to ${isEditMode ? "update" : "create"} plan`);
-    } finally {
-      setLoading(false);
+      console.error("Error:", error);
     }
   };
+
+  const isLoading =
+    modulesLoading || createTier.isPending || updateTier.isPending;
 
   return (
     <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Plan Name & Description */}
-          <div className="bg-blue-50 p-4 rounded-xl">
-            <h6 className="font-medium text-sm mb-4">Plan Name</h6>
+          {/* Basic Info */}
+          <Card className="p-4  bg-blue-50 border-blue-200">
+            <h3 className="font-semibold text-blue-900 mb-0">
+              Basic Information
+            </h3>
             <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel>Tier Name *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g., Professional, Enterprise"
+                        placeholder="e.g., Starter, Professional"
                         {...field}
                       />
                     </FormControl>
@@ -170,9 +180,10 @@ export function CreatePlanForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Brief description of this plan"
+                        placeholder="Brief description of this tier"
                         {...field}
                       />
                     </FormControl>
@@ -180,72 +191,57 @@ export function CreatePlanForm({
                   </FormItem>
                 )}
               />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="monthlyPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Price (USD) *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 4999"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="yearlyPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Yearly Price (USD) *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 49999"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="bg-green-50 p-4 rounded-xl">
-            <h6 className="font-medium text-sm mb-4">Pricing</h6>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="monthlyPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">
-                      Monthly Price (USD)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="49"
-                        step="0.01"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="annualPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">
-                      Annual Price (USD)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="499"
-                        step="0.01"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+          </Card>
 
           {/* Usage Limits */}
-          <div className="bg-yellow-50 p-4 rounded-xl">
-            <h6 className="font-medium text-sm mb-4">Usage Limits</h6>
+          <Card className="p-4 bg-green-50 border-green-200">
+            <h3 className="font-semibold text-green-900 mb-0">Usage Limits</h3>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="maxUsers"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Maximum Users</FormLabel>
+                    <FormLabel>Max Users *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 5, 25 or leave empty"
-                        {...field}
-                      />
+                      <Input type="number" placeholder="e.g., 5" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -256,147 +252,242 @@ export function CreatePlanForm({
                 name="maxEntities"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Maximum Entities</FormLabel>
+                    <FormLabel>Max Entities *</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* <FormField
+                control={form.control}
+                name="maxTransactionsMonth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transactions/Month *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="e.g., 1, 3 or leave empty"
+                        placeholder="e.g., 1000"
                         {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
+              {/* <FormField
+                control={form.control}
+                name="maxStorageGB"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Storage (GB) *</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 10" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              /> */}
+              {/* <FormField
+                control={form.control}
+                name="maxApiRatePerHour"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>API Rate/Hour *</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 100" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              /> */}
             </div>
-          </div>
-
-          {/* Included Modules - Core */}
-          <div className="bg-purple-50 p-4 rounded-xl">
-            <h6 className="font-medium text-sm mb-4">Included Modules</h6>
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-gray-700">
-                  Core Modules
-                </p>
-                <div className="space-y-2">
-                  {[
-                    {
-                      field: "coreAccounting",
-                      label: "Accounting & General Ledger",
-                    },
-                    { field: "coreBanking", label: "Banking & Reconciliation" },
-                    { field: "coreInvoicing", label: "Invoicing & Billing" },
-                    { field: "coreExpense", label: "Expense Management" },
-                    { field: "coreRevenue", label: "Revenue & Procurement" },
-                    { field: "coreSales", label: "Sales Management" },
-                    { field: "corePurchase", label: "Purchase Management" },
-                    { field: "coreInventory", label: "Inventory Management" },
-                    { field: "corePos", label: "Point of Sale (POS)" },
-                  ].map(({ field, label }) => (
-                    <FormField
-                      key={field}
-                      control={form.control}
-                      name={field as keyof PlanFormData}
-                      render={({ field: fieldProps }) => (
-                        <FormItem className="flex items-center justify-between space-y-0">
-                          <FormLabel className="text-sm">{label}</FormLabel>
-                          <FormControl>
-                            <Switch
-                              checked={fieldProps.value as boolean}
-                              onCheckedChange={fieldProps.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Advanced Features */}
-          <div className="bg-indigo-50 p-4 rounded-xl">
-            <h6 className="font-medium text-sm mb-4">Advanced Features</h6>
-            <div className="space-y-2">
-              {[
-                { field: "advBudgeting", label: "Budgeting & Forecasting" },
-                {
-                  field: "advConsolidation",
-                  label: "Multi-Entity Consolidation",
-                },
-                {
-                  field: "advReporting",
-                  label: "Advanced Reporting & Analytics",
-                },
-                { field: "advMultiCurrency", label: "Multi-Currency Support" },
-              ].map(({ field, label }) => (
-                <FormField
-                  key={field}
-                  control={form.control}
-                  name={field as keyof PlanFormData}
-                  render={({ field: fieldProps }) => (
-                    <FormItem className="flex items-center justify-between space-y-0">
-                      <FormLabel className="text-sm">{label}</FormLabel>
-                      <FormControl>
-                        <Switch
-                          checked={fieldProps.value as boolean}
-                          onCheckedChange={fieldProps.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </div>
-          </div>
+          </Card>
 
           {/* Platform Features */}
-          <div className="bg-orange-50 p-4 rounded-xl">
-            <h6 className="font-medium text-sm mb-4">Platform Features</h6>
-            <div className="space-y-2">
-              {[
-                { field: "apiAccess", label: "API Access & Integrations" },
-                { field: "customFields", label: "Custom Fields & Forms" },
-                { field: "workflows", label: "Automated Workflows" },
-                { field: "approvals", label: "Approval Workflows" },
-              ].map(({ field, label }) => (
-                <FormField
-                  key={field}
-                  control={form.control}
-                  name={field as keyof PlanFormData}
-                  render={({ field: fieldProps }) => (
-                    <FormItem className="flex items-center justify-between space-y-0">
-                      <FormLabel className="text-sm">{label}</FormLabel>
-                      <FormControl>
-                        <Switch
-                          checked={fieldProps.value as boolean}
-                          onCheckedChange={fieldProps.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ))}
+          <Card className="p-4 bg-purple-50 border-purple-200">
+            <h3 className="font-semibold text-purple-900 mb-0">
+              Platform Features
+            </h3>
+            <div className="space-y-3">
+              {/* <FormField
+                control={form.control}
+                name="apiAccess"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-purple-200 p-3 bg-white">
+                    <FormLabel className="mt-0! cursor-pointer">
+                      API Access
+                    </FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              /> */}
+              {/* <FormField
+                control={form.control}
+                name="webhooks"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-purple-200 p-3 bg-white">
+                    <FormLabel className="mt-0! cursor-pointer">
+                      Webhooks
+                    </FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              /> */}
+              {/* <FormField
+                control={form.control}
+                name="sso"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-purple-200 p-3 bg-white">
+                    <FormLabel className="mt-0! cursor-pointer">
+                      SSO (Single Sign-On)
+                    </FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              /> */}
+              <FormField
+                control={form.control}
+                name="customBranding"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-purple-200 p-3 bg-white">
+                    <FormLabel className="mt-0! cursor-pointer">
+                      Custom Branding
+                    </FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="prioritySupport"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-purple-200 p-3 bg-white">
+                    <FormLabel className="mt-0! cursor-pointer">
+                      Priority Support
+                    </FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
-          </div>
+          </Card>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-2 border-t pt-6">
-            <Button variant="outline" type="button">
-              Cancel
-            </Button>
+          {/* Entity Modules */}
+          {modulesByScope.ENTITY && modulesByScope.ENTITY.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-gray-700 mb-3">
+                Entity Modules
+              </h4>
+              <div className="space-y-3">
+                {modulesByScope.ENTITY.map((module) => (
+                  <FormField
+                    key={module.id}
+                    control={form.control}
+                    name="moduleIds"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-white">
+                        <FormLabel className="mt-0! cursor-pointer">
+                          {module.displayName}
+                        </FormLabel>
+                        <FormControl>
+                          <Switch
+                            checked={field.value?.includes(module.id) || false}
+                            onCheckedChange={(checked) => {
+                              const updatedModules = checked
+                                ? [...(field.value || []), module.id]
+                                : field.value?.filter((m) => m !== module.id) ||
+                                  [];
+                              field.onChange(updatedModules);
+                            }}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Group Modules */}
+          {modulesByScope.GROUP && modulesByScope.GROUP.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-gray-700 mb-3">
+                Group Modules
+              </h4>
+              <div className="space-y-3">
+                {modulesByScope.GROUP.map((module) => (
+                  <FormField
+                    key={module.id}
+                    control={form.control}
+                    name="moduleIds"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-white">
+                        <FormLabel className="mt-0! cursor-pointer">
+                          {module.displayName}
+                        </FormLabel>
+                        <FormControl>
+                          <Switch
+                            checked={field.value?.includes(module.id) || false}
+                            onCheckedChange={(checked) => {
+                              const updatedModules = checked
+                                ? [...(field.value || []), module.id]
+                                : field.value?.filter((m) => m !== module.id) ||
+                                  [];
+                              field.onChange(updatedModules);
+                            }}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="flex gap-3 pt-4">
             <Button
               type="submit"
-              disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+              disabled={isLoading}
             >
-              {loading
-                ? "Please wait..."
-                : isEditMode
-                  ? "Update Plan"
-                  : "Create Plan"}
+              {isLoading ? (
+                <>Loading...</>
+              ) : isEditMode ? (
+                <>Update Tier</>
+              ) : (
+                <>Create Tier</>
+              )}
             </Button>
           </div>
         </form>

@@ -3,8 +3,9 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PlanDistributionData } from '@/lib/api/services/analyticsService';
 
-const data = [
+const defaultData = [
   { name: 'Starter', value: 142 },
   { name: 'Professional', value: 78 },
   { name: 'Enterprise', value: 27 },
@@ -12,7 +13,13 @@ const data = [
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981'];
 
-export function PlanDistributionChart() {
+interface PlanDistributionChartProps {
+  data?: PlanDistributionData[];
+}
+
+export function PlanDistributionChart({ data }: PlanDistributionChartProps) {
+  const chartData = data || defaultData;
+
   return (
     <Card className="border border-gray-200 p-6">
       <div className="space-y-4">
@@ -24,7 +31,7 @@ export function PlanDistributionChart() {
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
-              data={data}
+              data={chartData}
               cx="50%"
               cy="50%"
               innerRadius={80}
@@ -32,7 +39,7 @@ export function PlanDistributionChart() {
               paddingAngle={2}
               dataKey="value"
             >
-              {data.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -41,7 +48,7 @@ export function PlanDistributionChart() {
               verticalAlign="bottom"
               height={36}
               formatter={(value) => {
-                const item = data.find((d) => d.name === value);
+                const item = chartData.find((d) => d.name === value);
                 return `${item?.name} ${item?.value}`;
               }}
             />

@@ -24,7 +24,7 @@ const protectedPaths = [
 
 // Paths that don't require specific module permissions
 // (just auth cookie validation is enough)
-const permissionExemptPaths = ["/dashboard"];
+const permissionExemptPaths = ["/dashboard", "/subscription"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -59,7 +59,7 @@ export async function proxy(request: NextRequest) {
 
     // 2. Check if path is exempt from permission checking
     const isExempt = permissionExemptPaths.some((exemptPath) => {
-      if (exemptPath === "/dashboard") return pathname === exemptPath;
+      if (exemptPath === "/dashboard" || exemptPath === "/subscription") return pathname === exemptPath;
       return pathname === exemptPath || pathname.startsWith(exemptPath + "/");
     });
 

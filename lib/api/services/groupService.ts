@@ -181,3 +181,25 @@ export const getGroup = (id: string): Promise<Group> => {
     method: 'GET',
   });
 };
+
+/**
+ * Platform-wide group statistics (SUPERADMIN only)
+ */
+export interface GroupStats {
+  totalGroups: number;
+  activeGroups: number;
+  trialGroups: number;
+  suspendedGroups: number;
+  timestamp: string;
+}
+
+/**
+ * Get platform-wide group statistics.
+ * Requires superadmin role
+ * Cache: 5 minutes
+ */
+export const getGroupStats = (): Promise<GroupStats> => {
+  return apiClient<GroupStats>('groups/stats/platform', {
+    method: 'GET',
+  });
+};

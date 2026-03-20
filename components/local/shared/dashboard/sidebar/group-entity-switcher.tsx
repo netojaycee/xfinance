@@ -1,5 +1,6 @@
 "use client";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -7,37 +8,53 @@ import {
 } from "@/components/ui/sidebar";
 
 export default function GroupEntitySwitcher({
-  activeTab,
+  activeView,
   showEntityTab,
-  disabled,
-  onTabChange,
+  pendingView,
+  onGroupClick,
+  onEntityClick,
 }: {
-  activeTab: "group" | "entity";
+  activeView: "group" | "entity";
   showEntityTab: boolean;
-  disabled?: boolean;
-  onTabChange: (value: string) => void;
+  pendingView: "group" | "entity" | null;
+  onGroupClick: () => void;
+  onEntityClick: () => void;
 }) {
-  const handleTabChange = (value: string) => {
-    onTabChange(value);
-  };
+  const isGroupActive = activeView === "group";
+  const isEntityActive = activeView === "entity";
+  const isGroupPending = pendingView === "group";
+  const isEntityPending = pendingView === "entity";
+  const isBusy = pendingView !== null;
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg" className="w-full">
-          <div className="flex w-full flex-col gap-6">
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="w-full bg-[#f1f5f9]">
-                <TabsTrigger value="group" disabled={disabled}>
-                  Group
-                </TabsTrigger>
-                {showEntityTab && (
-                  <TabsTrigger value="entity" disabled={disabled}>
-                    Entity
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </Tabs>
+          <div className="flex w-full rounded-lg bg-slate-100 p-1">
+            <Button
+              type="button"
+              size="sm"
+              variant={isGroupActive ? "default" : "ghost"}
+              className="h-9 flex-1 rounded-md"
+              onClick={onGroupClick}
+              disabled={isBusy || isGroupActive}
+            >
+              {isGroupPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              Group
+            </Button>
+            {showEntityTab && (
+              <Button
+                type="button"
+                size="sm"
+                variant={isEntityActive ? "default" : "ghost"}
+                className="h-9 flex-1 rounded-md"
+                onClick={onEntityClick}
+                disabled={isBusy || isEntityActive}
+              >
+                {isEntityPending ? <Loader2 className="size-4 animate-spin" /> : null}
+                Entity
+              </Button>
+            )}
           </div>
         </SidebarMenuButton>
       </SidebarMenuItem>

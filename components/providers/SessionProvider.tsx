@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSessionStore } from '@/lib/store/session';
 import { useWhoami } from '@/lib/api/hooks/useAuth';
+import { useRealtimeSync } from '@/lib/hooks/useRealtimeSync';
+import { SubscriptionExpiredModal } from '@/components/local/custom/subscription-expired-modal';
 import { WhoamiResponse } from '@/lib/types';
 
 interface SessionProviderProps {
@@ -29,6 +31,9 @@ export default function SessionProvider({
   const { data: whoami, isLoading, error } = useWhoami({
     enabled: shouldFetchClientSide,
   });
+
+  // Initialize WebSocket for realtime updates (only when user is authenticated)
+  const { isConnected, subscriptionExpired, onSubscriptionExpiredLogout } = useRealtimeSync();
 
   // Prefer fresh server-provided whoami when available.
   useEffect(() => {
@@ -64,5 +69,15 @@ export default function SessionProvider({
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <SubscriptionExpiredModal
+        open={subscriptionExpired.isOpen}
+        expiredTier={subscriptionExpired.expiredTier}
+        expiredDate={subscriptionExpired.expiredDate}
+        onExpired={onSubscriptionExpiredLogout}
+      />
+      {children}
+    </>
+  );
 }

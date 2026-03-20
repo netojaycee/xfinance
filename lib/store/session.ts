@@ -80,6 +80,7 @@ interface SessionState {
 
   // Actions
   fetchSessionData: () => Promise<void>;
+  refetchSessionDataSilently: () => Promise<void>;
   setWhoami: (whoami: WhoamiResponse) => void;
   clearSession: () => void;
 
@@ -126,6 +127,23 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch session data";
       console.error("Error fetching session data:", errorMessage);
       set({ error: errorMessage, loading: false });
+    }
+  },
+
+  refetchSessionDataSilently: async () => {
+    try {
+      const response = await getWhoami();
+      set({
+        whoami: response,
+        user: response.user,
+        group: getImpersonatedGroup(response),
+        entity: getImpersonatedEntity(response),
+        error: null,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to refetch session data";
+      console.error("Error refetching session data:", errorMessage);
+      set({ error: errorMessage });
     }
   },
 

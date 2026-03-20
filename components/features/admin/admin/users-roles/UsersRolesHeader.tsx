@@ -18,7 +18,7 @@ export default function UsersRolesHeader({ onInviteUser }: UsersRolesHeaderProps
       </div>
       <Button
         onClick={onInviteUser}
-        className="bg-blue-600 hover:bg-blue-700"
+        className="bg-primary hover:bg-primary/80"
       >
         <UserPlus className="w-4 h-4 mr-2" />
         Invite User
