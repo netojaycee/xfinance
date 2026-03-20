@@ -53,7 +53,7 @@ export const apiClient = async <T>(
   // Clean the endpoint to prevent double slashes
   const cleanedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
   // const url = `${API_BASE_URL}/api/v1/${cleanedEndpoint}`;
-  const url = `/api/${cleanedEndpoint}`; // Use the rewrites defined in next.config.ts
+  const url = `/backend/${cleanedEndpoint}`; // Use the rewrites defined in next.config.ts
 
   // Check if body is FormData (for file uploads)
   const isFormData = options.body instanceof FormData;
