@@ -16,8 +16,8 @@ export default function Assets() {
 
 
   console.log(assetsResponse, "Fetched assets response:"); // Debug log to check fetched data
-  const assetsData = (assetsResponse as any)?.data || [];
-  const summary = (assetsResponse as any)?.summary || {
+  const assetsData = (assetsResponse as any)?.data?.assets || [];
+  const summary = (assetsResponse as any)?.data?.summary || {
     total: 0,
     inUse: 0,
     inStorage: 0,

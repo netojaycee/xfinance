@@ -26,12 +26,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight, Loader2, Settings2 } from "lucide-react";
-import { assetsSchema } from "../assets/utils/schema";
+import { assetsSchema } from "./utils/schema";
 import {
   AssetTypeEnum,
   AssetDepartmentEnum,
   DepreciationMethodEnum,
 } from "@/lib/api/hooks/types/assetsTypes";
+import { useEmployees } from "@/lib/api/hooks/useHR";
 
 type assetsFormData = z.infer<typeof assetsSchema>;
 
@@ -49,14 +50,20 @@ export default function AssetsForm({
   const createAsset = useCreateAsset();
   const updateAsset = useUpdateAsset();
 
+  // Fetch all employees for assignment
+  const { data: employeesData, isLoading: employeesLoading } = useEmployees({
+    limit: 1000,
+  });
+  const employees = (employeesData as any)?.employees || [];
+
   const form = useForm<assetsFormData>({
     resolver: zodResolver(assetsSchema),
     defaultValues: {
       assetName: assets?.assetName || "",
       assetType: assets?.assetType || "",
-      assetId: assets?.assetId || "",
+      // assetId: assets?.assetId || "",
       department: assets?.department || "",
-      assignedTo: assets?.assignedTo || "",
+      assignedId: assets?.assignedId || "",
       description: assets?.description || "",
       purchaseDate: assets?.purchaseDate || "",
       purchaseCost: assets?.purchaseCost || "",
@@ -80,9 +87,9 @@ export default function AssetsForm({
       form.reset({
         assetName: assets?.assetName || "",
         assetType: assets?.assetType || "",
-        assetId: assets?.assetId || "",
+        // assetId: assets?.assetId || "",
         department: assets?.department || "",
-        assignedTo: assets?.assignedTo || "",
+        assignedId: assets?.assignedId || "",
         description: assets?.description || "",
         purchaseDate: assets?.purchaseDate || "",
         purchaseCost: assets?.purchaseCost || "",
@@ -113,15 +120,19 @@ export default function AssetsForm({
         name: values.assetName,
         type: values.assetType as AssetTypeEnum,
         department: values.department as AssetDepartmentEnum,
-        assigned: values.assignedTo || "",
+        assignedId: values.assignedId || "",
         description: values.description,
         purchaseDate: convertToISO(values.purchaseDate),
         purchaseCost: Math.round(Number(values.purchaseCost) * 100),
         currentValue: Math.round(Number(values.currentValue) * 100 || 0),
-        expiryDate: values.warrantyExpiry ? convertToISO(values.warrantyExpiry) : "",
+        expiryDate: values.warrantyExpiry
+          ? convertToISO(values.warrantyExpiry)
+          : "",
         depreciationMethod: values.depreciationMethod as DepreciationMethodEnum,
         years: Number(values.usefulLife) || 0,
         salvageValue: Math.round(Number(values.salvageValue) * 100 || 0),
+        trackDepreciation: values.trackDepreciation,
+        activeAsset: values.activeAsset,
       };
 
       if (isEditMode && assets?.id) {
@@ -186,7 +197,7 @@ export default function AssetsForm({
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4">
                 <FormField
                   control={form.control}
                   name="assetType"
@@ -218,7 +229,7 @@ export default function AssetsForm({
                     </FormItem>
                   )}
                 />
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="assetId"
                   render={({ field }) => (
@@ -255,7 +266,7 @@ export default function AssetsForm({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -287,34 +298,42 @@ export default function AssetsForm({
                 />
                 <FormField
                   control={form.control}
-                  name="assignedTo"
+                  name="assignedId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-semibold">
                         Assigned To
                       </FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <span className="absolute inset-y-0 left-2 flex items-center text-gray-400">
-                            <svg
-                              width="18"
-                              height="18"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <circle cx="9" cy="7" r="4" />
-                              <path d="M5 17a7 7 0 0 1 8 0" />
-                            </svg>
-                          </span>
-                          <Input
-                            className="pl-8 rounded-2xl"
-                            placeholder="Employee name"
-                            {...field}
-                          />
-                        </div>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          disabled={employeesLoading}
+                        >
+                          <SelectTrigger className="w-full rounded-2xl">
+                            <SelectValue
+                              placeholder={
+                                employeesLoading
+                                  ? "Loading..."
+                                  : "Select employee"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {employees.map((emp: any) => (
+                              <SelectItem key={emp.id} value={emp.id}>
+                                <div className="flex flex-col gap-0">
+                                  <span className="text-left">
+                                    {emp.firstName} {emp.lastName}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {emp.email}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -12,7 +12,7 @@ export default function NotFound({ error, reset }: NotFoundProps) {
   const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full">
-      <Image src={'/svgs/not-found.svg'} priority width={300} height={300} alt="error" className="rounded-full" />
+      <Image src={'/svgs/not-found.webp'} priority width={300} height={300} alt="error" className="rounded-full" />
       <div className="max-w-125 flex flex-col gap-2 items-center justify-center text-center ">
         <h1 className="text-2xl font-semibold">{error?.message || 'Page not found'}</h1>
         <p className="text-gray-600">Oops, the page you are trying to access cannot be located.</p>

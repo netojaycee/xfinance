@@ -22,7 +22,7 @@ export const createAsset = async (data: {
   name: string;
   type: string;
   department: string;
-  assigned: string;
+  assignedId: string;
   description?: string;
   purchaseDate: string;
   purchaseCost: number;

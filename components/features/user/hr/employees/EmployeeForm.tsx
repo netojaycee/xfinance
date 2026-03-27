@@ -30,7 +30,7 @@ import { employeeSchema } from "./utils/schema";
 type EmployeeFormData = z.infer<typeof employeeSchema>;
 
 interface EmployeeFormProps {
-  employee?: Partial<EmployeeFormData> & { id?: string };
+  employee?: Partial<any> & { id?: string };
   isEditMode?: boolean;
   onSuccess?: () => void;
 }
@@ -52,7 +52,7 @@ export default function EmployeeForm({
       email: employee?.email || "",
       phoneNumber: employee?.phoneNumber || "",
       dateOfBirth: employee?.dateOfBirth || "",
-      employeeId: employee?.employeeId || "",
+      // employeeId: employee?.employeeId || "",
       department: employee?.department || "",
       jobTitle: employee?.jobTitle || "",
       employmentType: employee?.employmentType || "Full-time",
@@ -90,7 +90,7 @@ export default function EmployeeForm({
         email: employee?.email || "",
         phoneNumber: employee?.phoneNumber || "",
         dateOfBirth: employee?.dateOfBirth || "",
-        employeeId: employee?.employeeId || "",
+        // employeeId: employee?.employeeId || "",
         department: employee?.department || "",
         jobTitle: employee?.jobTitle || "",
         employmentType: employee?.employmentType || "Full-time",
@@ -132,7 +132,7 @@ export default function EmployeeForm({
         "dateOfBirth",
         values.dateOfBirth ? new Date(values.dateOfBirth).toISOString() : "",
       );
-      formData.append("employeeId", values.employeeId || "");
+      // formData.append("employeeId", values.employeeId || "");
       formData.append("department", values.department || "");
       formData.append("position", values.jobTitle || "");
       formData.append("employmentType", values.employmentType || "");
@@ -313,7 +313,7 @@ export default function EmployeeForm({
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="employeeId"
                 render={({ field }) => (
@@ -328,7 +328,7 @@ export default function EmployeeForm({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
             </div>
           </div>
 
@@ -739,10 +739,10 @@ export default function EmployeeForm({
             </div>
           </div>
           <div className="flex flex-wrap justify-end gap-2 border-t pt-3">
-            <Button variant={"outline"}>Cancel</Button>
-            <Button type="button" variant="secondary">
+            {/* <Button onClick={() => onSuccess?.()} variant={"outline"}>Cancel</Button> */}
+            {/* <Button type="button" variant="secondary">
               Save as Draft
-            </Button>
+            </Button> */}
             <Button
               type="submit"
               className="bg-linear-to-r from-indigo-500 to-purple-500 text-white"

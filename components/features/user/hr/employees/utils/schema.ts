@@ -9,7 +9,7 @@ export const employeeSchema = z.object({
   email: z.string().email(),
   phoneNumber: z.string().min(1, "Phone number is required"),
   dateOfBirth: z.string().optional(),
-  employeeId: z.string().optional(),
+  // employeeId: z.string().optional(),
 
   // Employment Details
   department: z.string().min(1, "Department is required"),

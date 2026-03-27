@@ -8,17 +8,16 @@ import { CustomModal } from "@/components/local/custom/modal";
 import EmployeeForm from "./EmployeeForm";
 import { MODULES } from "@/lib/types/enums";
 import { EmployeeStats } from "@/lib/api/hooks/types/hrTypes";
+import { useModal } from "@/components/providers/ModalProvider";
+import { MODAL } from "@/lib/data/modal-data";
 
 interface EmployeesHeaderProps {
   stats?: EmployeeStats;
   loading: boolean;
 }
 
-export default function EmployeesHeader({
-  stats,
-  loading,
-}: EmployeesHeaderProps) {
-  const [open, setOpen] = React.useState(false);
+export default function EmployeesHeader({ stats, loading }: EmployeesHeaderProps) {
+  const { isOpen, openModal, closeModal } = useModal();
   return (
     <div className="mb-6">
       <div className="flex items-start justify-between">
@@ -33,7 +32,7 @@ export default function EmployeesHeader({
             <Download />
             Export
           </Button>
-          <Button onClick={() => setOpen(true)} className="rounded-xl">
+          <Button onClick={() => openModal(MODAL.EMPLOYEE_CREATE)} className="rounded-xl">
             <Plus /> New Employee
           </Button>
         </div>
@@ -70,10 +69,10 @@ export default function EmployeesHeader({
         title="Add New Employee"
         description="Create a new employee record with complete details"
         module={MODULES.HR_PAYROLL}
-        open={open}
-        onOpenChange={setOpen}
+        open={isOpen(MODAL.EMPLOYEE_CREATE)}
+        onOpenChange={(open) => open ? openModal(MODAL.EMPLOYEE_CREATE) : closeModal(MODAL.EMPLOYEE_CREATE)}
       >
-        <EmployeeForm onSuccess={() => setOpen(false)} />
+        <EmployeeForm onSuccess={() => closeModal(MODAL.EMPLOYEE_CREATE)} />
       </CustomModal>
     </div>
   );

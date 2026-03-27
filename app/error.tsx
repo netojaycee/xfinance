@@ -9,7 +9,7 @@ const ErrorPage = ({ error, reset }: { error: Error & { digest?: string }; reset
   const errorMessage = process.env.NEXT_PUBLIC_ENV === 'development' ? error?.message : err;
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full">
-      <Image src={'/svgs/error.svg'} priority width={300} height={300} alt="error" className="rounded-full" />
+      <Image src={'/svgs/error.webp'} priority width={300} height={300} alt="error" className="rounded-full" />
       <div className="max-w-125 flex flex-col gap-2 items-center justify-center text-center ">
         <h1 className="text-2xl font-semibold">{errorMessage}</h1>
         <p className="text-gray-600">

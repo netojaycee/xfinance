@@ -91,7 +91,7 @@ export const createAssetSchema = z.object({
   name: z.string().min(1, "Asset name is required"),
   type: z.nativeEnum(AssetTypeEnum),
   department: z.nativeEnum(AssetDepartmentEnum),
-  assigned: z.string().min(1, "Assigned to is required"),
+  assignedId: z.string().min(1, "Assigned to is required"),
   description: z.string().optional(),
   purchaseDate: z.string().min(1, "Purchase date is required"),
   purchaseCost: z.number().min(0, "Purchase cost must be positive"),

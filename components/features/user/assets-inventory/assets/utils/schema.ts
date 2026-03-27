@@ -6,7 +6,7 @@ export const assetsSchema = z.object({
   assetType: z.string().min(1, "Asset Type is required"),
   assetId: z.string().optional(),
   department: z.string().optional(),
-  assignedTo: z.string().optional(),
+  assignedId: z.string().optional(),
   description: z.string().optional(),
   purchaseDate: z.string().min(1, "Purchase Date is required"),
   purchaseCost: z.union([z.string(), z.number()]).refine(val => val !== "", { message: "Purchase Cost is required" }),

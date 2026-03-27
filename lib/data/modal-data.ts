@@ -1,4 +1,6 @@
 export const MODAL = {
+  SUPPLY_CREATE: "supply-create",
+  SUPPLY_EDIT: "supply-edit",
   ENTITY_CREATE: "entity-create",
   ENTITY_EDIT: "entity-edit",
   ENTITY_DELETE: "entity-delete",
@@ -37,6 +39,10 @@ export const MODAL = {
   SALES_RECEIPT_EDIT: "sales-receipt-edit",
   SALES_RECEIPT_DELETE: "sales-receipt-delete",
   SALES_RECEIPT_VIEW: "sales-receipt-view",
+  EMPLOYEE_CREATE: "employee-create",
+  EMPLOYEE_EDIT: "employee-edit",
+  EMPLOYEE_DELETE: "employee-delete",
+  EMPLOYEE_VIEW: "employee-view",
   ASSET_CREATE: "asset-create",
   ASSET_EDIT: "asset-edit",
   ASSET_DELETE: "asset-delete",
@@ -63,9 +69,6 @@ export const MODAL = {
   ACCOUNT_EDIT: "account-edit",
   ACCOUNT_DELETE: "account-delete",
 
-  EMPLOYEE_CREATE: "employee-create",
-  EMPLOYEE_EDIT: "employee-edit",
-  EMPLOYEE_DELETE: "employee-delete",
 
   ITEM_CREATE: "item-create",
   ITEM_EDIT: "item-edit",
