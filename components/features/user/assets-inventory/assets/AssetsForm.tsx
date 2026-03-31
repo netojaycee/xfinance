@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect } from "react";
@@ -42,6 +43,14 @@ interface assetsFormProps {
   onSuccess?: () => void;
 }
 
+  // Helper to format ISO date to YYYY-MM-DD
+  const formatDate = (isoDate?: string) => {
+    if (!isoDate) return "";
+    const d = new Date(isoDate);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
+  };
+
 export default function AssetsForm({
   assets,
   isEditMode = false,
@@ -59,22 +68,22 @@ export default function AssetsForm({
   const form = useForm<assetsFormData>({
     resolver: zodResolver(assetsSchema),
     defaultValues: {
-      assetName: assets?.assetName || "",
-      assetType: assets?.assetType || "",
+      assetName: (assets as any)?.name || "",
+      assetType: (assets as any)?.type || "",
       // assetId: assets?.assetId || "",
       department: assets?.department || "",
       assignedId: assets?.assignedId || "",
       description: assets?.description || "",
-      purchaseDate: assets?.purchaseDate || "",
+      purchaseDate: formatDate(assets?.purchaseDate),
       purchaseCost: assets?.purchaseCost || "",
       currentValue: assets?.currentValue || "",
-      warrantyExpiry: assets?.warrantyExpiry || "",
+      warrantyExpiry: formatDate((assets as any)?.expiryDate),
       trackDepreciation:
         typeof assets?.trackDepreciation === "boolean"
           ? assets.trackDepreciation
           : false,
       depreciationMethod: assets?.depreciationMethod || "",
-      usefulLife: assets?.usefulLife || "",
+      usefulLife: (assets as any)?.years || "",
       salvageValue: assets?.salvageValue || "",
       activeAsset:
         typeof assets?.activeAsset === "boolean" ? assets.activeAsset : true,
@@ -85,22 +94,22 @@ export default function AssetsForm({
     // Reset when assets prop changes (edit mode)
     if (assets) {
       form.reset({
-        assetName: assets?.assetName || "",
-        assetType: assets?.assetType || "",
+        assetName: (assets as any)?.name || "",
+        assetType: (assets as any)?.type || "",
         // assetId: assets?.assetId || "",
         department: assets?.department || "",
         assignedId: assets?.assignedId || "",
         description: assets?.description || "",
-        purchaseDate: assets?.purchaseDate || "",
+        purchaseDate: formatDate(assets?.purchaseDate),
         purchaseCost: assets?.purchaseCost || "",
         currentValue: assets?.currentValue || "",
-        warrantyExpiry: assets?.warrantyExpiry || "",
+        warrantyExpiry: formatDate((assets as any)?.expiryDate),
         trackDepreciation:
           typeof assets?.trackDepreciation === "boolean"
             ? assets.trackDepreciation
             : false,
         depreciationMethod: assets?.depreciationMethod || "",
-        usefulLife: assets?.usefulLife || "",
+        usefulLife: (assets as any)?.years || "",
         salvageValue: assets?.salvageValue || "",
         activeAsset:
           typeof assets?.activeAsset === "boolean" ? assets.activeAsset : true,
@@ -123,14 +132,14 @@ export default function AssetsForm({
         assignedId: values.assignedId || "",
         description: values.description,
         purchaseDate: convertToISO(values.purchaseDate),
-        purchaseCost: Math.round(Number(values.purchaseCost) * 100),
-        currentValue: Math.round(Number(values.currentValue) * 100 || 0),
+        purchaseCost: Math.round(Number(values.purchaseCost)),
+        currentValue: Math.round(Number(values.currentValue) || 0),
         expiryDate: values.warrantyExpiry
           ? convertToISO(values.warrantyExpiry)
           : "",
         depreciationMethod: values.depreciationMethod as DepreciationMethodEnum,
         years: Number(values.usefulLife) || 0,
-        salvageValue: Math.round(Number(values.salvageValue) * 100 || 0),
+        salvageValue: Math.round(Number(values.salvageValue) || 0),
         trackDepreciation: values.trackDepreciation,
         activeAsset: values.activeAsset,
       };
@@ -145,24 +154,24 @@ export default function AssetsForm({
     }
   };
 
-  useEffect(() => {
-    if (createAsset.isSuccess || updateAsset.isSuccess) {
-      toast.success("Asset saved successfully");
-      if (onSuccess) onSuccess();
-    }
-    if (createAsset.isError) {
-      toast.error(createAsset.error?.message || "Failed to create asset");
-    }
-    if (updateAsset.isError) {
-      toast.error(updateAsset.error?.message || "Failed to update asset");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    createAsset.isSuccess,
-    createAsset.isError,
-    updateAsset.isSuccess,
-    updateAsset.isError,
-  ]);
+  // useEffect(() => {
+  //   if (createAsset.isSuccess || updateAsset.isSuccess) {
+  //     toast.success("Asset saved successfully");
+  //     if (onSuccess) onSuccess();
+  //   }
+  //   if (createAsset.isError) {
+  //     toast.error(createAsset.error?.message || "Failed to create asset");
+  //   }
+  //   if (updateAsset.isError) {
+  //     toast.error(updateAsset.error?.message || "Failed to update asset");
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [
+  //   createAsset.isSuccess,
+  //   createAsset.isError,
+  //   updateAsset.isSuccess,
+  //   updateAsset.isError,
+  // ]);
 
   return (
     <div className="w-full">

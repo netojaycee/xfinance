@@ -27,11 +27,12 @@ import { useRoles } from "@/lib/api/hooks/useRoles";
 import { useEntities } from "@/lib/api/hooks/useEntity";
 import { useState } from "react";
 import { useCreateUser } from "@/lib/api/hooks/useUsers";
+import { Loader2 } from "lucide-react";
 
 interface UsersFormProps {
   user?: User;
-  onSubmit: (payload: any) => void;
-  isLoading?: boolean;
+  onSubmit?: (payload: any) => void;
+  isPending?: boolean;
   onClose?: () => void;
 }
 
@@ -39,8 +40,8 @@ const STATUS_OPTIONS = ["Active", "Inactive", "Pending"] as const;
 
 export default function UsersForm({
   user,
-  onSubmit,
-  isLoading = false,
+  // onSubmit,
+  // isPending = false,
   onClose,
 }: UsersFormProps) {
   const [tab, setTab] = useState("single");
@@ -88,17 +89,18 @@ export default function UsersForm({
   });
 
   // Use create user mutation
-  const { mutateAsync: createUser } = useCreateUser();
+  const { mutateAsync: createUser, isPending } = useCreateUser();
 
   // Handle submit for single user
   const handleSingleSubmit = async (data: any) => {
     const payload = {
       ...data,
       scope,
-      entity: scope === "ENTITY" ? selectedEntity || undefined : undefined,
+
+      entityId: scope === "ENTITY" ? selectedEntity || undefined : undefined,
     };
     await createUser(payload);
-    onSubmit && onSubmit(payload);
+    // onSubmit && onSubmit(payload);
   };
 
   // Handle submit for bulk users
@@ -106,10 +108,10 @@ export default function UsersForm({
     const payload = {
       ...data,
       scope,
-      entity: scope === "ENTITY" ? selectedEntity || undefined : undefined,
+      entityId: scope === "ENTITY" ? selectedEntity || undefined : undefined,
     };
     await createUser(payload);
-    onSubmit && onSubmit(payload);
+    // onSubmit && onSubmit(payload);
   };
 
   return (
@@ -254,8 +256,21 @@ export default function UsersForm({
             {/* Section: Invitation Settings */}
             <div className="rounded-lg bg-indigo-50/60 border border-indigo-200 p-4 mb-2 flex flex-col gap-4">
               <div className="flex items-center gap-2 mb-2">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-indigo-500"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-2c0-2.66-5.33-4-8-4Z"/></svg>
-                <span className="font-semibold text-indigo-700">Invitation Settings</span>
+                <svg
+                  width="20"
+                  height="20"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  className="text-indigo-500"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-2c0-2.66-5.33-4-8-4Z"
+                  />
+                </svg>
+                <span className="font-semibold text-indigo-700">
+                  Invitation Settings
+                </span>
               </div>
               <div className="flex flex-col md:flex-row gap-4">
                 <FormField
@@ -264,11 +279,18 @@ export default function UsersForm({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
                       <div>
-                        <FormLabel className="font-medium">Require Password Change</FormLabel>
-                        <div className="text-xs text-muted-foreground">User must change password on first login</div>
+                        <FormLabel className="font-medium">
+                          Require Password Change
+                        </FormLabel>
+                        <div className="text-xs text-muted-foreground">
+                          User must change password on first login
+                        </div>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -279,11 +301,18 @@ export default function UsersForm({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
                       <div>
-                        <FormLabel className="font-medium">Send Welcome Email</FormLabel>
-                        <div className="text-xs text-muted-foreground">Send invitation email to user</div>
+                        <FormLabel className="font-medium">
+                          Send Welcome Email
+                        </FormLabel>
+                        <div className="text-xs text-muted-foreground">
+                          Send invitation email to user
+                        </div>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -318,10 +347,12 @@ export default function UsersForm({
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isPending}
                 className="flex-1 bg-indigo-600 text-white"
               >
-                {isLoading ? "Sending..." : "Send Invitation"}
+                {" "}
+                {isPending && <Loader2 className="animate-spin mr-2" />}
+                {isPending ? "Sending..." : "Send Invitation"}
               </Button>
             </div>
           </form>
@@ -422,8 +453,21 @@ export default function UsersForm({
             {/* Section: Invitation Settings (Bulk) */}
             <div className="rounded-lg bg-indigo-50/60 border border-indigo-200 p-4 mb-2 flex flex-col gap-4">
               <div className="flex items-center gap-2 mb-2">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="text-indigo-500"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-2c0-2.66-5.33-4-8-4Z"/></svg>
-                <span className="font-semibold text-indigo-700">Invitation Settings</span>
+                <svg
+                  width="20"
+                  height="20"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  className="text-indigo-500"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-2c0-2.66-5.33-4-8-4Z"
+                  />
+                </svg>
+                <span className="font-semibold text-indigo-700">
+                  Invitation Settings
+                </span>
               </div>
               <div className="flex flex-col md:flex-row gap-4">
                 <FormField
@@ -432,11 +476,18 @@ export default function UsersForm({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
                       <div>
-                        <FormLabel className="font-medium">Require Password Change</FormLabel>
-                        <div className="text-xs text-muted-foreground">User must change password on first login</div>
+                        <FormLabel className="font-medium">
+                          Require Password Change
+                        </FormLabel>
+                        <div className="text-xs text-muted-foreground">
+                          User must change password on first login
+                        </div>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -447,11 +498,18 @@ export default function UsersForm({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between w-full p-2 bg-white rounded-md border border-indigo-100">
                       <div>
-                        <FormLabel className="font-medium">Send Welcome Email</FormLabel>
-                        <div className="text-xs text-muted-foreground">Send invitation email to user</div>
+                        <FormLabel className="font-medium">
+                          Send Welcome Email
+                        </FormLabel>
+                        <div className="text-xs text-muted-foreground">
+                          Send invitation email to user
+                        </div>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -469,10 +527,11 @@ export default function UsersForm({
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isPending}
                 className="flex-1 bg-indigo-600 text-white"
               >
-                {isLoading ? "Sending..." : "Send Invitations"}
+                {isPending && <Loader2 className="animate-spin mr-2" />}
+                {isPending ? "Sending..." : "Send Invitations"}
               </Button>
             </div>
           </form>

@@ -50,6 +50,12 @@ interface CustomTableProps<T> {
     total?: number;
     onPageChange: (page: number) => void;
   };
+  // Row selection props
+  selectableRows?: boolean;
+  onSelectedRowsChange?: (selected: T[]) => void;
+  selectionActionText?: any;
+  onSelectionAction?: (selected: T[]) => void;
+  selectionKey?: string; // unique key for row selection, defaults to 'id'
 }
 
 export function CustomTable<T extends { [key: string]: any }>({
@@ -75,9 +81,19 @@ export function CustomTable<T extends { [key: string]: any }>({
   methodsOptions = [],
   loading = false,
   pagination,
+  selectableRows = false,
+  onSelectedRowsChange,
+  selectionActionText = "Action",
+  onSelectionAction,
+  selectionKey = "id",
 }: CustomTableProps<T>) {
   const [search, setSearch] = useState("");
-  
+  // Row selection state
+  const [selectedRows, setSelectedRows] = useState<T[]>([]);
+
+
+  // Handle select all
+ 
   // Use provided pagination or local pagination
   const isServerPaginated = !!pagination && pagination.onPageChange !== undefined;
   const currentPage = pagination?.page || 1;
@@ -110,6 +126,33 @@ export function CustomTable<T extends { [key: string]: any }>({
     }
   };
 
+    // Helper to get unique row key
+  const getRowKey = (row: T) => row[selectionKey] ?? row["id"] ?? row["key"];
+
+
+   const allSelected = pagedData.length > 0 && selectedRows.length === pagedData.length;
+  const isRowSelected = (row: T) => selectedRows.some(r => getRowKey(r) === getRowKey(row));
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setSelectedRows([]);
+      onSelectedRowsChange?.([]);
+    } else {
+      setSelectedRows(pagedData);
+      onSelectedRowsChange?.(pagedData);
+    }
+  };
+  const handleSelectRow = (row: T) => {
+    let updated: T[];
+    if (isRowSelected(row)) {
+      updated = selectedRows.filter(r => getRowKey(r) !== getRowKey(row));
+    } else {
+      updated = [...selectedRows, row];
+    }
+    setSelectedRows(updated);
+    onSelectedRowsChange?.(updated);
+  };
+  
+
   return (
     <div className={cn("w-full bg-white p-4 rounded-2xl shadow-md", className)}>
       <div className="flex items-center justify-between mb-4">
@@ -120,6 +163,18 @@ export function CustomTable<T extends { [key: string]: any }>({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {selectableRows && selectedRows.length > 0 && (
+            <Button
+              variant="default"
+              className="rounded-2xl"
+              onClick={() => onSelectionAction?.(selectedRows)}
+            >
+              <span className="flex items-center gap-1">
+                {selectionActionText}
+                <span className="ml-1">({selectedRows.length})</span>
+              </span>
+            </Button>
+          )}
           {searchComponent && (
             <div className="relative w-64">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
@@ -192,6 +247,16 @@ export function CustomTable<T extends { [key: string]: any }>({
         <table className="min-w-full bg-white">
           <thead>
             <tr>
+              {selectableRows && (
+                <th className="px-4 py-2 text-left font-semibold text-gray-700 w-8">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={handleSelectAll}
+                    aria-label="Select all rows"
+                  />
+                </th>
+              )}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -209,6 +274,7 @@ export function CustomTable<T extends { [key: string]: any }>({
             {loading ? (
               [...Array(pageSize)].map((_, i) => (
                 <tr key={i} className="border-t animate-pulse ">
+                  {selectableRows && <td className="px-4 py-2"><div className="h-4 w-4 bg-gray-200 rounded" /></td>}
                   {columns.map((col) => (
                     <td
                       key={col.key}
@@ -222,7 +288,7 @@ export function CustomTable<T extends { [key: string]: any }>({
             ) : pagedData.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={columns.length + (selectableRows ? 1 : 0)}
                   className="text-center py-8 text-gray-400"
                 >
                   No data found
@@ -238,6 +304,19 @@ export function CustomTable<T extends { [key: string]: any }>({
                   )}
                   onClick={() => onRowClick?.(row, rowIndex)}
                 >
+                  {selectableRows && (
+                    <td className="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        checked={isRowSelected(row)}
+                        onChange={e => {
+                          e.stopPropagation();
+                          handleSelectRow(row);
+                        }}
+                        aria-label="Select row"
+                      />
+                    </td>
+                  )}
                   {columns.map((col) => (
                     <td
                       key={col.key}

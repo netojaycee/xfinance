@@ -2,6 +2,8 @@
 
 import React from "react";
 import { CustomTable } from "@/components/local/custom/custom-table";
+import { useStoreSupplyIssues } from "@/lib/api/hooks/useAssets";
+import { useDebounce } from "use-debounce";
 
 const issueData = [
   {
@@ -43,15 +45,15 @@ const columns = [
   {
     key: "date",
     title: "Date & Time",
-    render: (value: string) => <span>{value}</span>,
+    render: (value: string, row: any) => <span>{new Date(row?.createdAt).toLocaleDateString('en-NG')}</span>,
   },
   {
     key: "item",
     title: "Supply Item",
     render: (_: any, row: any) => (
       <div>
-        <div className="font-medium text-gray-900">{row.item}</div>
-        <div className="text-xs text-gray-500">{row.sku}</div>
+        <div className="font-medium text-gray-900">{row?.supply?.name}</div>
+        <div className="text-xs text-gray-500">{row?.supply?.sku}</div>
       </div>
     ),
   },
@@ -59,7 +61,9 @@ const columns = [
     key: "quantity",
     title: "Quantity",
     render: (value: number) => (
-      <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">-{value}</span>
+      <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">
+        -{value}
+      </span>
     ),
   },
   {
@@ -70,11 +74,15 @@ const columns = [
     key: "type",
     title: "Type",
     render: (value: string) => (
-      <span className={
-        value === "Department"
-          ? "bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium"
-          : "bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium"
-      }>
+      <span
+        className={
+          value === "department"
+            ? "bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium"
+            : value === "project"
+              ? "bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium"
+              : "bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium"
+        }
+      >
         {value}
       </span>
     ),
@@ -86,19 +94,51 @@ const columns = [
   {
     key: "issuedBy",
     title: "Issued By",
+    render: (value: string, row: any) => (
+      <span>
+        {row?.issuedBy?.firstName} {row?.issuedBy?.lastName}
+      </span>
+    ),
   },
 ];
 
 export default function IssueHistoryTable() {
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+  const [page, setPage] = React.useState(1);
+  const pageSize = 10;
+
+  const { data: storeSuppliesIssues, isPending: isLoading } =
+    useStoreSupplyIssues({
+      page: 1,
+      limit: pageSize,
+      search: debouncedSearchTerm,
+    });
+  console.log(storeSuppliesIssues, "Fetched store supply issues:"); // Debug log to check fetched data
+
+  const pagination = (storeSuppliesIssues as any)?.pagination;
+  const storeSuppliesIssuesData = (storeSuppliesIssues as any)?.data || [];
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1); // Reset to first page on search
+  };
+
   return (
     <div className="space-y-4">
       <CustomTable
         tableTitle="Issue History"
         columns={columns}
-        data={issueData}
-        // searchable
+        data={storeSuppliesIssuesData}
+        onSearchChange={handleSearchChange}
         searchPlaceholder="Search issue records..."
-        // filterable
+        pagination={{
+          page,
+          totalPages: pagination?.totalPages || 1,
+          total: pagination?.total,
+          onPageChange: setPage,
+        }}
+        loading={isLoading}
       />
     </div>
   );

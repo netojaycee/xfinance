@@ -29,7 +29,7 @@ export default function StoreInventoryActions({ row }: { row: any }) {
         }
         module={MODULES.ASSETS}
       >
-        <StoreSupplyForm supply={row} isEditMode onSuccess={() => closeModal(editKey)} />
+        <StoreSupplyForm supply={row} isEditMode closeModal={() => closeModal(editKey)} />
       </CustomModal>
     </>
   );

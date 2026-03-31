@@ -66,6 +66,20 @@ export interface UpdateUserPayload {
   entityAccessIds?: string[];
 }
 
+export interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  roles: number;
+  pendingInvites: number;
+}
+
+export const getUserStats = (): Promise<UserStats> => {
+  return apiClient<UserStats>('users/stats', {
+    method: 'GET',
+  });
+};
+
+
 /**
  * Create single or bulk users
  * Requires admin role

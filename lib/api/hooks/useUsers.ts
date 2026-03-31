@@ -17,6 +17,8 @@ import {
   CreateSingleUserPayload,
   CreateBulkUsersPayload,
   UpdateUserPayload,
+  getUserStats,
+  UserStats,
 } from '../services/userService';
 import { toast } from 'sonner';
 import { useModal } from '@/components/providers/ModalProvider';
@@ -38,7 +40,9 @@ export const useCreateUser = (
     mutationFn: createUser,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users', 'list'] });
-      const count = data.length;
+      queryClient.invalidateQueries({ queryKey: ['users', 'stats'] });
+      // console.log('Created usershhh:', data);
+      const count = (data as any).count;
       toast.success(`${count} user${count > 1 ? 's' : ''} created successfully`);
       closeModal(MODAL.ADMIN_USER_CREATE);
     },
@@ -145,14 +149,26 @@ export const useDeleteUser = (
     mutationFn: deleteUser,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users', 'list'] });
-      toast.success('User deactivated successfully');
+      queryClient.invalidateQueries({ queryKey: ['users', 'stats'] });
+      toast.success('User deleted successfully');
       closeModal(MODAL.ADMIN_USER_DELETE);
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to deactivate user'
+        error instanceof Error ? error.message : 'Failed to delete user'
       );
     },
+    ...options,
+  });
+};
+
+
+export const useUserStats = (options?: Omit<UseQueryOptions<UserStats>, 'queryKey' | 'queryFn'>) => {
+  return useQuery({
+    queryKey: ['users', 'stats'],
+    queryFn: getUserStats,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
     ...options,
   });
 };

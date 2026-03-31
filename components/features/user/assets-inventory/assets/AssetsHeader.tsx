@@ -17,10 +17,7 @@ export default function AssetsHeader({
     total: number;
     inUse: number;
     inStorage: number;
-    retired: number;
-    sold: number;
-    damaged: number;
-    totalValue: number;
+    depricableValue: number;
   };
   loading: boolean;
 }) {
@@ -57,7 +54,7 @@ export default function AssetsHeader({
           subtitle={
             <span>
               Worth ₦
-              {((summary?.totalValue || 0) / 100).toLocaleString(undefined, {
+              {((summary?.depricableValue || 0)).toLocaleString(undefined, {
                 maximumFractionDigits: 0,
               })}
             </span>
@@ -89,7 +86,7 @@ export default function AssetsHeader({
           value={
             <span className="text-3xl font-bold text-blue-800">
               ₦
-              {((summary?.totalValue || 0) / 100).toLocaleString(undefined, {
+              {((summary?.depricableValue || 0)).toLocaleString(undefined, {
                 maximumFractionDigits: 0,
               })}
             </span>

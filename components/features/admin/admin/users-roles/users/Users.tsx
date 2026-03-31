@@ -26,9 +26,7 @@ export default function Users() {
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const [isCreating, setIsCreating] = useState(false);
   const { isOpen: isModalOpen, openModal, closeModal } = useModal();
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Use actual API hook
   const { data: userData = { data: [], pagination: { page: 1, limit: 10, total: 0, pages: 1 } }, isLoading: isLoadingUsers } = useUsers({
@@ -55,15 +53,15 @@ export default function Users() {
 
   // Placeholder for create user logic
   // Create user logic using API
-  const { mutateAsync: createUser, isPending: isCreatingUser } = useCreateUser();
-  const handleCreateUser = async (formData: any) => {
-    setIsCreating(true);
-    try {
-      await createUser(formData);
-    } finally {
-      setIsCreating(false);
-    }
-  };
+  // const { mutateAsync: createUser, isPending: isCreatingUser } = useCreateUser();
+  // const handleCreateUser = async (formData: any) => {
+  //   setIsCreating(true);
+  //   try {
+  //     await createUser(formData);
+  //   } finally {
+  //     setIsCreating(false);
+  //   }
+  // };
 
   // Delete user logic
   const { mutate: deleteUser, status: deleteStatus } = useDeleteUser();
@@ -134,6 +132,7 @@ export default function Users() {
         onSearchChange={handleSearchChange}
         display={{
           searchComponent: true,
+          
         }}
         pagination={{
           page: (userData as any).pagination?.page || 1,
@@ -152,8 +151,8 @@ export default function Users() {
         }
       >
         <UsersForm
-          onSubmit={handleCreateUser}
-          isLoading={isCreating}
+          // onSubmit={handleCreateUser}
+          // isLoading={isCreating}
           onClose={() => closeModal(MODAL.ADMIN_USER_CREATE)}
         />
       </CustomModal>

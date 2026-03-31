@@ -1,6 +1,8 @@
 export const MODAL = {
+  ISSUE_SUPPLIES: "issue-supplies",
   SUPPLY_CREATE: "supply-create",
   SUPPLY_EDIT: "supply-edit",
+  SUPPLY_DELETE: "supply-delete",
   ENTITY_CREATE: "entity-create",
   ENTITY_EDIT: "entity-edit",
   ENTITY_DELETE: "entity-delete",

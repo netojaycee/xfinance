@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import UsersStatCardSmall from "./UsersStatCardSmall";
-import { useUserStats } from "@/lib/api/hooks/useUserStats";
+import { useUserStats } from "@/lib/api/hooks/useUsers";
 
 export default function UsersHeader() {
   const { openModal } = useModal();

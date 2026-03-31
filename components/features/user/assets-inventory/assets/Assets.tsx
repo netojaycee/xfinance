@@ -14,20 +14,14 @@ export default function Assets() {
     search: debouncedSearchTerm,
   });
 
-
   console.log(assetsResponse, "Fetched assets response:"); // Debug log to check fetched data
   const assetsData = (assetsResponse as any)?.data?.assets || [];
   const summary = (assetsResponse as any)?.data?.summary || {
-    total: 0,
+    depricableValue: 0,
     inUse: 0,
     inStorage: 0,
-    retired: 0,
-    sold: 0,
-    damaged: 0,
-    totalValue: 0,
+    total: 0,
   };
-
-
 
   return (
     <div className="flex flex-col gap-4 p-4">
