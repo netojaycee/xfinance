@@ -91,6 +91,8 @@ export type MenuItem = {
   menu?: string;
   actions?: string[];
   children?: MenuItem[]; // For grouped menu items
+  menuSortOrder?: number; // For sorting parent menus
+  moduleSortOrder?: number; // For sorting child menu items
 };
 
 // Subscription module structure

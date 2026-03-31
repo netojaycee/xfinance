@@ -83,9 +83,14 @@ function getMenuIcon(label: string, route?: string): LucideIcon | undefined {
 function buildDynamicSidebarMenu(whoami: WhoamiResponse): MenuItem[] {
   const items: MenuItem[] = [];
 
-  for (const menu of whoami.menus || []) {
+  // Sort menus by menuSortOrder (ascending, fallback to 0)
+  const sortedMenus = [...(whoami.menus || [])].sort((a, b) => (a.menuSortOrder ?? 0) - (b.menuSortOrder ?? 0));
+
+  for (const menu of sortedMenus) {
     if (menu.children && menu.children.length > 0) {
-      const childRoutes = menu.children
+      // Sort children by moduleSortOrder (ascending, fallback to 0)
+      const sortedChildren = [...menu.children].sort((a, b) => (a.moduleSortOrder ?? 0) - (b.moduleSortOrder ?? 0));
+      const childRoutes = sortedChildren
         .map((child) => child.route)
         .filter((route): route is string => Boolean(route));
 

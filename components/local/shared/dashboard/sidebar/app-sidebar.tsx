@@ -35,6 +35,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ role, user, ...props }: AppSidebarProps) {
   const router = useRouter();
   const whoami = useSessionStore((state) => state.whoami);
+  // console.log(whoami)
   const currentEntity = useSessionStore((state) => state.entity);
   const clearImpersonatedEntity = useSessionStore(
     (state) => state.clearImpersonatedEntity,
