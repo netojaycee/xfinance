@@ -4,7 +4,7 @@ export const itemFormSchema = z.object({
   code: z.string().min(1, "Item code is required"),
   name: z.string().min(1, "Item name is required"),
   description: z.string().optional(),
-  type: z.enum(["Service", "Good"]).refine((val) => val, {
+  type: z.enum(["service", "goods"]).refine((val) => val, {
     message: "Please select a valid type",
   }),
   category: z.string().min(1, "Category is required"),

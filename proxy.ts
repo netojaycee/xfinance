@@ -8,19 +8,7 @@ import {
 } from "./lib/server/auth";
 
 // Define which paths should be protected by this middleware
-const protectedPaths = [
-  "/dashboard",
-  "/sales",
-  "/purchases",
-  "/products",
-  "/quick-sale",
-  "/online-store",
-  "/banking",
-  "/hr",
-  "/accounts",
-  "/reports",
-  "/settings",
-];
+
 
 // Paths that don't require specific module permissions
 // (just auth cookie validation is enough)

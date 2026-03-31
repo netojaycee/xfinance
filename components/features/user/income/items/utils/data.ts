@@ -10,7 +10,7 @@ export const itemCategories = [
   "Development",
 ] as const;
 
-export const itemTypes = ["Service", "Good"] as const;
+export const itemTypes = ["service", "goods"] as const;
 
 // Mock data for items
 export const mockItemsData = {
@@ -20,7 +20,7 @@ export const mockItemsData = {
       code: "SRV-CONS-001",
       name: "Consulting Services",
       description: "Professional consulting and advisory services",
-      type: "Service" as const,
+      type: "service" as const,
       category: "Professional Services",
       unitPrice: 50000,
       incomeAccountId: "4100",

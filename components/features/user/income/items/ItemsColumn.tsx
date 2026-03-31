@@ -12,14 +12,24 @@ import ItemsActions from "./ItemsActions";
 export const itemsColumns: Column<Item>[] = [
   {
     key: "code",
-    title: "Item",
+    title: "Item Code",
+    className: "text-xs",
+    render: (value, row) => (
+      <span className="font-medium text-gray-900">{row.code}</span>
+    ),
+  },
+  {
+    key: "name",
+    title: "Item Name",
     className: "text-xs",
     render: (value, row) => (
       <div>
-        <div className="font-normal text-gray-900 line-clamp-1">
+        <div className="font-semibold text-gray-900 line-clamp-1">
           {row.name}
         </div>
-        <div className="text-xs text-gray-400 line-clamp-1">{row.code}</div>
+        <div className="text-xs text-gray-500 line-clamp-1">
+          {row.description}
+        </div>
       </div>
     ),
   },
@@ -28,11 +38,11 @@ export const itemsColumns: Column<Item>[] = [
     title: "Type",
     className: "text-xs",
     render: (value) => (
-      <Badge className={`px-3 py-1 rounded-full font-medium ${
-        value === "Service"
-          ? "bg-blue-100 text-blue-700"
-          : "bg-purple-100 text-purple-700"
-      }`}>
+      <Badge
+        className={`px-3 py-1 rounded-full font-semibold text-white ${
+          value === "Service" ? "bg-black" : "bg-gray-200 text-gray-900"
+        }`}
+      >
         {value}
       </Badge>
     ),
@@ -41,14 +51,14 @@ export const itemsColumns: Column<Item>[] = [
     key: "category",
     title: "Category",
     className: "text-xs",
-    render: (value) => <span className="text-gray-700">{value}</span>,
+    render: (value) => <span className="text-gray-900">{value}</span>,
   },
   {
     key: "unitPrice",
     title: "Unit Price",
     className: "text-xs",
     render: (value) => (
-      <span className="text-gray-700">
+      <span className="text-gray-900 font-medium">
         {value ? `₦${value.toLocaleString()}` : "-"}
       </span>
     ),
@@ -57,20 +67,13 @@ export const itemsColumns: Column<Item>[] = [
     key: "incomeAccountName",
     title: "Income Account",
     className: "text-xs",
-    render: (value) => <span className="text-gray-700">{value}</span>,
-  },
-  {
-    key: "isActive",
-    title: "Status",
-    className: "text-xs",
-    render: (value) => (
-      <Badge className={`px-3 py-1 rounded-full font-medium ${
-        value
-          ? "bg-green-100 text-green-700"
-          : "bg-gray-100 text-gray-700"
-      }`}>
-        {value ? "Active" : "Inactive"}
-      </Badge>
+    render: (value, row) => (
+      <span className="text-gray-900">
+        {(row as any)?.incomeAccount
+          ? `${(row as any)?.incomeAccount?.name} - `
+          : ""}
+        {(row as any)?.incomeAccount?.code}
+      </span>
     ),
   },
   {

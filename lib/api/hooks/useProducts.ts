@@ -116,10 +116,10 @@ export const useDeleteCollection = (
 };
 
 // ────────────────────────────────────────────────
-// Items
+// Store Items
 // ────────────────────────────────────────────────
 
-export const useItems = (params?: {
+export const useStoreItems = (params?: {
   search?: string;
   page?: number;
   limit?: number;
@@ -127,62 +127,62 @@ export const useItems = (params?: {
   type?: "product" | "service";
 }) => {
   return useQuery<StoreItemsResponse>({
-    queryKey: ["items", params?.search, params?.page, params?.limit, params?.category, params?.type],
-    queryFn: () => productsService.getItems(params) as Promise<StoreItemsResponse>,
+    queryKey: ["store-items", params?.search, params?.page, params?.limit, params?.category, params?.type],
+    queryFn: () => productsService.getStoreItems(params) as Promise<StoreItemsResponse>,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 };
 
-export const useItem = (id: string) => {
+export const useStoreItem = (id: string) => {
   return useQuery({
-    queryKey: ["items", "detail", id],
-    queryFn: () => productsService.getItemById(id),
+    queryKey: ["store-items", "detail", id],
+    queryFn: () => productsService.getStoreItemById(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 };
 
-export const useCreateItem = (
+export const useCreateStoreItem = (
   options?: UseMutationOptions<any, Error, any>,
 ) => {
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: productsService.createItem,
+    mutationFn: productsService.createStoreItem,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["items"] });
-      toast.success("Item created successfully");
+      queryClient.invalidateQueries({ queryKey: ["store-items"] });
+      toast.success("Store Item created successfully");
       closeModal(MODAL.ITEM_CREATE);
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create item",
+        error instanceof Error ? error.message : "Failed to create store item",
       );
     },
     ...options,
   });
 };
 
-export const useUpdateItem = (
+export const useUpdateStoreItem = (
   options?: UseMutationOptions<any, Error, { id: string; data: any }>,
 ) => {
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: ({ id, data }) => productsService.updateItem(id, data),
+    mutationFn: ({ id, data }) => productsService.updateStoreItem(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["items"] });
+      queryClient.invalidateQueries({ queryKey: ["store-items"] });
       if (variables?.id) {
         queryClient.invalidateQueries({
-          queryKey: ["items", "detail", variables.id],
+          queryKey: ["store-items", "detail", variables.id],
         });
       }
-      toast.success("Item updated successfully");
-      closeModal(MODAL.ITEM_EDIT);
+      toast.success("Store Item updated successfully");
+      closeModal(MODAL.ITEM_EDIT + '-' + variables.id);
     },
     onError: (error) => {
       toast.error(
@@ -193,22 +193,22 @@ export const useUpdateItem = (
   });
 };
 
-export const useDeleteItem = (
+export const useDeleteStoreItem = (
   options?: UseMutationOptions<any, Error, string>,
 ) => {
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: productsService.deleteItem,
+    mutationFn: productsService.deleteStoreItem,
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ["items"] });
+      queryClient.invalidateQueries({ queryKey: ["store-items"] });
       if (id) {
         queryClient.invalidateQueries({
-          queryKey: ["items", "detail", id],
+          queryKey: ["store-items", "detail", id],
         });
       }
-      toast.success("Item deleted successfully");
+      toast.success("Store item deleted successfully");
       closeModal(MODAL.ITEM_DELETE);
     },
     onError: (error) => {

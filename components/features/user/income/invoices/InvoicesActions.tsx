@@ -94,7 +94,7 @@ export default function InvoicesActions({ row }: { row: any }) {
               e.preventDefault();
               const invoiceNumber = row?.invoiceNumber.toString().toLowerCase();
               // View logic
-              router.push(`/sales/invoices/${invoiceNumber}`);
+              router.push(`/income/invoices/${invoiceNumber}`);
             }}
           >
             <Eye className="size-4 mr-2" /> View

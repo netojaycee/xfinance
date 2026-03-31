@@ -26,7 +26,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { useCreateItem, useUpdateItem } from "@/lib/api/hooks/useProducts";
+import { useCreateStoreItem, useUpdateStoreItem } from "@/lib/api/hooks/useProducts";
 import { StoreItemTypeEnum } from "@/lib/api/hooks/types/productsTypes";
 
 const defaultProduct = {
@@ -51,9 +51,9 @@ export default function StoreItemProductForm({
   item?: any;
   isEditMode?: boolean;
 }) {
-  const [loading, setLoading] = useState(false);
-  const createItem = useCreateItem();
-  const updateItem = useUpdateItem();
+  const createItem = useCreateStoreItem();
+  const updateItem = useUpdateStoreItem();
+  const loading = createItem.isPending || updateItem.isPending;
 
   const form = useForm({
     resolver: zodResolver(productSchema),
@@ -69,7 +69,7 @@ export default function StoreItemProductForm({
 
   const onSubmit = async (values: z.infer<typeof productSchema>) => {
     try {
-      setLoading(true);
+      // setLoading(true);
 
       const payload = {
         name: values.name,
@@ -89,18 +89,18 @@ export default function StoreItemProductForm({
 
       if (isEditMode && item?.id) {
         await updateItem.mutateAsync({ id: item.id, data: payload });
-        toast.success("Product updated successfully!");
+        // toast.success("Product updated successfully!");
       } else {
         await createItem.mutateAsync(payload);
-        toast.success("Product created successfully!");
+        // toast.success("Product created successfully!");
       }
 
-      form.reset();
-      setLoading(false);
+      // form.reset();
+      // setLoading(false);
     } catch (error) {
       console.error("Error submitting product:", error);
-      toast.error("Failed to save product");
-      setLoading(false);
+      // toast.error("Failed to save product");
+      // setLoading(false);
     }
   };
 

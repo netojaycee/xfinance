@@ -40,7 +40,7 @@ export default function StoreItemHeader({
             Export
           </Button>
           <Button onClick={() => openModal(MODAL.ITEM_CREATE)} className="rounded-xl">
-            <Plus /> Add Item
+            <Plus /> Add Store Item
           </Button>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default function StoreItemHeader({
       </div>
 
       <CustomModal
-        title="Add New Item"
+        title="Add New Store Item"
         module={MODULES.PRODUCTS}
         open={isOpen(MODAL.ITEM_CREATE)}
         onOpenChange={(open) => (open ? openModal(MODAL.ITEM_CREATE) : closeModal(MODAL.ITEM_CREATE))}

@@ -27,6 +27,9 @@ import {
 import { ArrowRight, Loader2 } from "lucide-react";
 import { itemFormSchema, ItemFormInputs } from "./utils/schema";
 import { itemCategories, itemTypes } from "./utils/data";
+import { useAccounts } from "@/lib/api/hooks/useAccounts";
+import { useCreateItem, useUpdateItem } from "@/lib/api/hooks/useSales";
+import z from "zod";
 
 interface ItemsFormProps {
   item?: Partial<ItemFormInputs> & { id?: string };
@@ -44,13 +47,21 @@ export default function ItemsForm({
 }: ItemsFormProps) {
   const { closeModal } = useModal();
 
+  const createItem = useCreateItem();
+  const updateItem = useUpdateItem();
+
+  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
+    subCategory: "Cash and Cash Equivalents",
+  });
+  const incomeAccounts = (accountsData?.data as any) || [];
+
   const form = useForm<ItemFormInputs>({
     resolver: zodResolver(itemFormSchema),
     defaultValues: {
       code: item?.code || "",
       name: item?.name || "",
       description: item?.description || "",
-      type: item?.type || "Service",
+      type: item?.type || "service",
       category: item?.category || "",
       unitPrice: item?.unitPrice || 0,
       incomeAccountId: item?.incomeAccountId || "4100",
@@ -65,7 +76,7 @@ export default function ItemsForm({
         code: item.code || "",
         name: item.name || "",
         description: item.description || "",
-        type: item.type || "Service",
+        type: item.type || "service",
         category: item.category || "",
         unitPrice: item.unitPrice || 0,
         incomeAccountId: item.incomeAccountId || "4100",
@@ -75,22 +86,38 @@ export default function ItemsForm({
     }
   }, [item]);
 
-  const onSubmit = async (values: ItemFormInputs) => {
+  const onSubmit = async (values: z.infer<typeof itemFormSchema>) => {
     try {
-      // TODO: Replace with actual API call
-      console.log("Submitted:", values);
-      closeModal(isEditMode ? MODAL.ITEM_EDIT + "-" + item?.id : MODAL.ITEM_CREATE);
+      // setLoading(true);
+
+      const payload = {
+        code: values.code,
+        name: values.name,
+        category: values.category,
+        description: values.description || "",
+        unitPrice: Math.round(Number(values.unitPrice)),
+        type: values.type.toLowerCase(),
+        isTaxable: values.isTaxable,
+        incomeAccountId: values.incomeAccountId,
+        isActive: values.isActive,
+      };
+
+      if (isEditMode && item?.id) {
+        await updateItem.mutateAsync({ id: item.id, data: payload });
+        // toast.success("Product updated successfully!");
+      } else {
+        await createItem.mutateAsync(payload);
+        // toast.success("Product created successfully!");
+      }
+
+      // form.reset();
+      // setLoading(false);
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error submitting product:", error);
+      // toast.error("Failed to save product");
+      // setLoading(false);
     }
   };
-
-  // Mock income accounts - replace with API call later
-  const incomeAccounts = [
-    { id: "4100", name: "4100 - Service Revenue" },
-    { id: "4200", name: "4200 - Product Sales" },
-    { id: "4300", name: "4300 - Consultation Revenue" },
-  ];
 
   return (
     <div className="w-full max-w-lg">
@@ -170,7 +197,7 @@ export default function ItemsForm({
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger className="rounded-lg">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -197,7 +224,7 @@ export default function ItemsForm({
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger className="rounded-lg">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -231,6 +258,7 @@ export default function ItemsForm({
                         type="number"
                         placeholder="0.00"
                         {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
                         className="rounded-lg"
                       />
                     </FormControl>
@@ -249,15 +277,24 @@ export default function ItemsForm({
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger className="rounded-lg">
-                          <SelectValue placeholder="Select account" />
+                        <SelectTrigger
+                          className="w-full truncate"
+                          disabled={accountsLoading}
+                        >
+                          <SelectValue placeholder="Select income account" />
                         </SelectTrigger>
                         <SelectContent>
-                          {incomeAccounts.map((acc) => (
-                            <SelectItem key={acc.id} value={acc.id}>
-                              {acc.name}
+                          {incomeAccounts.length > 0 ? (
+                            incomeAccounts.map((account: any) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name} ({account.code})
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-accounts" disabled>
+                              No cash accounts found
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -319,7 +356,7 @@ export default function ItemsForm({
                 closeModal(
                   isEditMode
                     ? MODAL.ITEM_EDIT + "-" + item?.id
-                    : MODAL.ITEM_CREATE
+                    : MODAL.ITEM_CREATE,
                 )
               }
             >
@@ -328,13 +365,14 @@ export default function ItemsForm({
             <Button
               type="submit"
               className="rounded-lg flex-1 gap-2"
-              disabled={form.formState.isSubmitting}
+              disabled={createItem.isPending || updateItem.isPending}
             >
-              {form.formState.isSubmitting ? (
+              {createItem.isPending || updateItem.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  {isEditMode ? "Update Item" : "Create Item"} <ArrowRight className="w-4 h-4" />
+                  {isEditMode ? "Update Item" : "Create Item"}{" "}
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </Button>

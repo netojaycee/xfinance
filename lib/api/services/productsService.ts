@@ -27,9 +27,9 @@ export const createCollection = async (formData: FormData) => {
   return apiClient("collections", {
     method: "POST",
     body: formData,
-    headers: {
+    // headers: {
       // Let the browser set Content-Type for FormData
-    },
+    // },
   });
 };
 
@@ -37,9 +37,9 @@ export const updateCollection = async (id: string, formData: FormData) => {
   return apiClient(`collections/${id}`, {
     method: "PUT",
     body: formData,
-    headers: {
+    // headers: {
       // Let the browser set Content-Type for FormData
-    },
+    // },
   });
 };
 
@@ -50,7 +50,7 @@ export const deleteCollection = async (id: string) => {
 /**
  * Items Endpoints
  */
-export const getItems = async (params?: {
+export const getStoreItems = async (params?: {
   page?: number;
   limit?: number;
   category?: string;
@@ -65,15 +65,15 @@ export const getItems = async (params?: {
   if (params?.search) queryParams.append("search", params.search);
 
   const queryString = queryParams.toString();
-  const url = queryString ? `items?${queryString}` : "items";
+  const url = queryString ? `store-items?${queryString}` : "store-items";
   return apiClient(url, { method: "GET" });
 };
 
-export const getItemById = async (id: string) => {
-  return apiClient(`items/${id}`, { method: "GET" });
+export const getStoreItemById = async (id: string) => {
+  return apiClient(`store-items/${id}`, { method: "GET" });
 };
 
-export const createItem = async (data: {
+export const createStoreItem = async (data: {
   name: string;
   category: string;
   sku: string;
@@ -87,16 +87,16 @@ export const createItem = async (data: {
   lowStock: number;
   type: "product" | "service";
 }) => {
-  return apiClient("items", {
+  return apiClient("store-items", {
     method: "POST",
     body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    // headers: {
+    //   "Content-Type": "application/json",
+    // },
   });
 };
 
-export const updateItem = async (
+export const updateStoreItem = async (
   id: string,
   data: {
     name?: string;
@@ -113,17 +113,17 @@ export const updateItem = async (
     type?: "product" | "service";
   }
 ) => {
-  return apiClient(`items/${id}`, {
+  return apiClient(`store-items/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    // headers: {
+    //   "Content-Type": "application/json",
+    // },
   });
 };
 
-export const deleteItem = async (id: string) => {
-  return apiClient(`items/${id}`, { method: "DELETE" });
+export const deleteStoreItem = async (id: string) => {
+  return apiClient(`store-items/${id}`, { method: "DELETE" });
 };
 
 /**
@@ -152,9 +152,9 @@ export const adjustInventory = async (data: {
   return apiClient("inventory/adjust", {
     method: "POST",
     body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    // headers: {
+    //   "Content-Type": "application/json",
+    // },
   });
 };
 

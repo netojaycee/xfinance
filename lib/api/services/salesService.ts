@@ -215,3 +215,83 @@ export const getPaymentReceivedReportsSummary: (params?: {
 
   return apiClient(url, { method: "GET" });
 };
+
+
+/**
+ * Items Endpoints
+ */
+export const getItems = async (params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+  type?: any;
+}) => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.limit) queryParams.append("limit", String(params.limit));
+  if (params?.category) queryParams.append("category", params.category);
+  if (params?.type) queryParams.append("type", params.type);
+  if (params?.search) queryParams.append("search", params.search);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `items?${queryString}` : "items";
+  return apiClient(url, { method: "GET" });
+};
+
+export const getItemById = async (id: string) => {
+  return apiClient(`items/${id}`, { method: "GET" });
+};
+
+export const createItem = async (data: {
+  name: string;
+  category: string;
+  sku: string;
+  unit: string;
+  description?: string;
+  sellingPrice: number;
+  costPrice?: number;
+  rate?: number;
+  taxable: boolean;
+  currentStock: number;
+  lowStock: number;
+  type: "product" | "service";
+}) => {
+  return apiClient("items", {
+    method: "POST",
+    body: JSON.stringify(data),
+    // headers: {
+    //   "Content-Type": "application/json",
+    // },
+  });
+};
+
+export const updateItem = async (
+  id: string,
+  data: {
+    name?: string;
+    category?: string;
+    sku?: string;
+    unit?: string;
+    description?: string;
+    sellingPrice?: number;
+    costPrice?: number;
+    rate?: number;
+    taxable?: boolean;
+    currentStock?: number;
+    lowStock?: number;
+    type?: "product" | "service";
+  }
+) => {
+  return apiClient(`items/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+    // headers: {
+    //   "Content-Type": "application/json",
+    // },
+  });
+};
+
+export const deleteItem = async (id: string) => {
+  return apiClient(`items/${id}`, { method: "DELETE" });
+};

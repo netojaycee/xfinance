@@ -22,13 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import {
   useCreateReceipt,
   useUpdateReceipt,
   useCustomers,
+  useItems,
 } from "@/lib/api/hooks/useSales";
-import { useItems } from "@/lib/api/hooks/useProducts";
 import { useAccounts } from "@/lib/api/hooks/useAccounts";
 import { ItemSelector } from "../invoices/ItemSelector";
 import { paymentMethodOptions } from "../payment-received/PaymentReceivedForm";
@@ -133,7 +132,7 @@ export default function SalesReceiptsForm({
               return {
                 receiptItemId: parsed.id || parsed.receiptItemId,
                 itemId: parsed.itemId,
-                rate: parsed.rate,
+                rate: parsed.unitPrice,
                 quantity: parsed.quantity,
               };
             })
@@ -410,7 +409,7 @@ export default function SalesReceiptsForm({
                               if (selectedItem) {
                                 form.setValue(
                                   `lineItems.${idx}.rate`,
-                                  Number(selectedItem.sellingPrice) || 0,
+                                  Number(selectedItem.unitPrice) || 0,
                                 );
                               }
                             }}

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
-import { useItems } from "@/lib/api/hooks/useProducts";
+import { useStoreItems } from "@/lib/api/hooks/useProducts";
 import { CustomTable } from "@/components/local/custom/custom-table";
 import { storeItemColumns } from "./StoreItemColumn";
 import StoreItemHeader from "./StoreItemHeader";
@@ -13,7 +13,7 @@ export default function StoreItem() {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 
-  const { data, isLoading } = useItems({
+  const { data, isLoading } = useStoreItems({
     page: currentPage,
     limit: rowsPerPage,
     category: categoryFilter === 'All Categories' ? '' : categoryFilter , 

@@ -15,8 +15,10 @@ export interface Item {
 
 export type ItemsResponse = {
   items: Item[];
+  totalItems: number;
+  serviceItems: number;
+  goodsItems: number;
+  avgPrice: number;
+  totalPages: number;
   total: number;
-  totalServices: number;
-  totalGoods: number;
-  averagePrice: number;
 };

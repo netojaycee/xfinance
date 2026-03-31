@@ -17,6 +17,7 @@ import { PaymentReceivedResponse } from "@/components/features/user/income/payme
 import { useModal } from "@/components/providers/ModalProvider";
 import { MODAL } from "@/lib/data/modal-data";
 import { toast } from "sonner";
+import { ItemsResponse } from "@/components/features/user/income/items";
 
 // ────────────────────────────────────────────────
 // Customers
@@ -618,5 +619,111 @@ export const usePaymentReceivedReportsSummary = (params?: {
       ) as Promise<PaymentReceivedResponse>,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
+  });
+};
+
+
+// ────────────────────────────────────────────────
+//  Items
+// ────────────────────────────────────────────────
+
+export const useItems = (params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+  category?: string;
+type?: any;
+}) => {
+  return useQuery<ItemsResponse>({
+    queryKey: ["items", params?.search, params?.page, params?.limit, params?.category, params?.type],
+    queryFn: () => salesService.getItems(params) as Promise<ItemsResponse>,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useItem = (id: string) => {
+  return useQuery({
+    queryKey: ["items", "detail", id],
+    queryFn: () => salesService.getItemById(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useCreateItem = (
+  options?: UseMutationOptions<any, Error, any>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.createItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["items"] });
+      toast.success("Item created successfully");
+      closeModal(MODAL.ITEM_CREATE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create item",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useUpdateItem = (
+  options?: UseMutationOptions<any, Error, { id: string; data: any }>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => salesService.updateItem(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["items"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["items", "detail", variables.id],
+        });
+      }
+      toast.success("Item updated successfully");
+      closeModal(MODAL.ITEM_EDIT);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update item",
+      );
+    },
+    ...options,
+  });
+};
+
+export const useDeleteItem = (
+  options?: UseMutationOptions<any, Error, string>,
+) => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: salesService.deleteItem,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["items"] });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: ["items", "detail", id],
+        });
+      }
+      toast.success("Item deleted successfully");
+      closeModal(MODAL.ITEM_DELETE);
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete item",
+      );
+    },
+    ...options,
   });
 };

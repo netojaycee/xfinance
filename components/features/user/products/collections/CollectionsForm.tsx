@@ -21,7 +21,7 @@ import { FolderArchive, Image, Plus, Trash2 } from "lucide-react";
 import { collectionSchema } from "./utils/schema";
 import {
   useCreateCollection,
-  useItems,
+  useStoreItems,
   useUpdateCollection,
 } from "@/lib/api/hooks/useProducts";
 import { CustomModal } from "@/components/local/custom/modal";
@@ -39,14 +39,16 @@ export default function CollectionsForm({
   isEditMode?: boolean;
 }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  console.log(collection, "collection in form");
+  // console.log(collection, "collection in form");
   const createCollection = useCreateCollection();
   const updateCollection = useUpdateCollection();
 
-  const itemsQuery = useItems() as {
+  const isSubmitting = createCollection.isPending || updateCollection.isPending;
+
+  const itemsQuery = useStoreItems() as {
     data?: StoreItemsResponse;
     isLoading: boolean;
   };
@@ -95,7 +97,7 @@ export default function CollectionsForm({
 
   const onSubmit = async (values: CollectionFormData) => {
     try {
-      setIsSubmitting(true);
+      // setIsSubmitting(true);
 
       const formData = new FormData();
       formData.append("name", values.name);
@@ -115,13 +117,13 @@ export default function CollectionsForm({
         await createCollection.mutateAsync(formData);
       }
 
-      form.reset();
+      // form.reset();
       setImagePreview(null);
-      setIsSubmitting(false);
+      // setIsSubmitting(false);
     } catch (error) {
       console.error("Error submitting collection:", error);
-      toast.error("Failed to save collection");
-      setIsSubmitting(false);
+      // toast.error("Failed to save collection");
+      // setIsSubmitting(false);
     }
   };
 

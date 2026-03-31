@@ -6,6 +6,7 @@ import { CustomTable } from "@/components/local/custom/custom-table";
 import ItemsHeader from "./ItemsHeader";
 import { itemsColumns } from "./ItemsColumn";
 import { mockItemsData } from "./utils/data";
+import { useItems } from "@/lib/api/hooks/useSales";
 
 /**
  * Main Items list component
@@ -20,21 +21,22 @@ export default function Items() {
   const pageSize = 10;
 
   // TODO: Replace with actual API hook
-  // const { data, isLoading } = useItems({
-  //   search: debouncedSearchTerm,
-  //   page,
-  //   limit: pageSize,
-  //   type: typeFilter === 'All Items' ? '' : typeFilter,
-  // });
+  const { data: itemsData, isPending } = useItems({
+    search: debouncedSearchTerm,
+    page,
+    limit: pageSize,
+    type: typeFilter === "All Items" ? "" : typeFilter,
+  });
 
+  console.log("Fetched items data:", itemsData); // Debug log to check fetched data
   // Using mock data for now
-  const isLoading = false;
-  const data = mockItemsData;
+  // const isLoading = false;
+  // const data = mockItemsData;
 
   // Filter by type from statusOptions
-  const filteredItems = data.items.filter((item) => {
-    return typeFilter === "All Items" || item.type === typeFilter;
-  });
+  // const filteredItems = data.items.filter((item) => {
+  //   return typeFilter === "All Items" || item.type === typeFilter;
+  // });
 
   // Handle search term change and reset pagination
   const handleSearchChange = (value: string) => {
@@ -44,14 +46,14 @@ export default function Items() {
 
   return (
     <div className="space-y-4">
-      <ItemsHeader data={data} loading={isLoading} />
+      <ItemsHeader data={itemsData} loading={isPending} />
       <CustomTable
         searchPlaceholder="Search items..."
         tableTitle="All Items"
         columns={itemsColumns}
-        data={filteredItems}
+        data={itemsData?.items || []}
         pageSize={pageSize}
-        loading={isLoading}
+        loading={isPending}
         onSearchChange={handleSearchChange}
         statusOptions={["All Items", "Service", "Good"]}
         onStatusChange={setTypeFilter}
@@ -60,8 +62,8 @@ export default function Items() {
         }}
         pagination={{
           page,
-          totalPages: Math.ceil(filteredItems.length / pageSize) || 1,
-          total: filteredItems.length,
+          totalPages: Math.ceil(itemsData?.totalPages || 1),
+          total: itemsData?.total,
           onPageChange: setPage,
         }}
       />

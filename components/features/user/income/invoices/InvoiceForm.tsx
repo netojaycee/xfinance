@@ -25,12 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar, Plus, Trash2 } from "lucide-react";
-import { CustomModal } from "@/components/local/custom/modal";
-import { MODULES } from "@/lib/types/enums";
 import { format } from "date-fns";
 import { paymentTermsOptions } from "../customers/utils/data";
-import { useCustomers } from "@/lib/api/hooks/useSales";
-import { useItems } from "@/lib/api/hooks/useProducts";
+import { useCustomers, useItems } from "@/lib/api/hooks/useSales";
 import { invoiceSchema } from "./utils/schema";
 import { ItemSelector } from "./ItemSelector";
 import type { StoreItemsResponse } from "@/lib/api/hooks/types/productsTypes";
@@ -119,7 +116,7 @@ export default function InvoiceForm({
       const mapped = (invoice as any)?.invoiceItem
         ? (invoice as any).invoiceItem.map((ii: any) => ({
             itemId: ii.itemId,
-            rate: ii.rate,
+            rate: ii.unitPrice,
             quantity: ii.quantity,
           }))
         : invoice?.lineItems || [{ itemId: "", quantity: 1, rate: 0 }];
@@ -223,7 +220,11 @@ export default function InvoiceForm({
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
-                        disabled={customersLoading || disabledCustomerSelect || isLockedForEditing}
+                        disabled={
+                          customersLoading ||
+                          disabledCustomerSelect ||
+                          isLockedForEditing
+                        }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue
@@ -430,7 +431,7 @@ export default function InvoiceForm({
                               if (selectedItem) {
                                 form.setValue(
                                   `lineItems.${idx}.rate`,
-                                  Number(selectedItem.sellingPrice) || Number(selectedItem.rate) || 0,
+                                  Number(selectedItem.unitPrice) || 0,
                                 );
                                 // Optional: if you had a description field
                                 // form.setValue(`lineItems.${idx}.description`, selectedItem.description || "");
@@ -486,7 +487,6 @@ export default function InvoiceForm({
                   </div>
                 );
               })}
-
             </div>
             {/* Subtotal, Tax, Total */}
             <div className="mt-2 flex flex-col gap-1 text-sm bg-white rounded-xl p-3">
@@ -557,7 +557,8 @@ export default function InvoiceForm({
               <div className="text-sm text-gray-500">
                 This invoice cannot be edited because it is not in Draft status.
               </div>
-            ) : (isEditMode && (invoice as any).status === "Draft") ||
+            ) : (
+              (isEditMode && (invoice as any).status === "Draft") ||
               (!isEditMode && (
                 <Button
                   type="submit"
@@ -575,7 +576,8 @@ export default function InvoiceForm({
                       ? "Update as Draft"
                       : "Save as Draft"}
                 </Button>
-              ))}
+              ))
+            )}
             {!isEditMode && (
               <Button
                 type="submit"

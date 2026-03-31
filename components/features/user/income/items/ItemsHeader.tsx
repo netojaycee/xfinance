@@ -24,10 +24,10 @@ interface ItemsHeaderProps {
 export default function ItemsHeader({ data, loading }: ItemsHeaderProps) {
   const { isOpen, openModal, closeModal } = useModal();
 
-  const totalCount = data?.total || 0;
-  const totalServices = data?.totalServices || 0;
-  const totalGoods = data?.totalGoods || 0;
-  const avgPrice = data?.averagePrice || 0;
+  const totalCount = data?.totalItems || 0;
+  const totalServices = data?.serviceItems || 0;
+  const totalGoods = data?.goodsItems || 0;
+  const avgPrice = data?.avgPrice || 0;
 
   return (
     <div className="mb-6">

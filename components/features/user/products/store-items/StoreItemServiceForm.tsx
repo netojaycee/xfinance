@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateItem, useUpdateItem } from "@/lib/api/hooks/useProducts";
+import { useCreateStoreItem, useUpdateStoreItem } from "@/lib/api/hooks/useProducts";
 import { StoreItemTypeEnum } from "@/lib/api/hooks/types/productsTypes";
 
 const defaultService = {
@@ -46,8 +46,8 @@ export default function StoreItemServiceForm({
   isEditMode?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
-  const createItem = useCreateItem();
-  const updateItem = useUpdateItem();
+  const createItem = useCreateStoreItem();
+  const updateItem = useUpdateStoreItem();
 
   const form = useForm({
     resolver: zodResolver(serviceSchema),
