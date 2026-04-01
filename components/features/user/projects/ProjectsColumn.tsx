@@ -27,7 +27,7 @@ export const projectsColumns: Column<Project>[] = [
     key: "customerName",
     title: "Customer",
     className: "text-xs",
-    render: (value) => <span className="text-gray-700">{value}</span>,
+    render: (value, row) => <span className="text-gray-700">{(row as any)?.customer?.name}</span>,
   },
   {
     key: "status",
@@ -35,10 +35,10 @@ export const projectsColumns: Column<Project>[] = [
     className: "text-xs",
     render: (value) => {
       const statusStyles = {
-        "In Progress": "bg-blue-100 text-blue-700",
+        "In_Progress": "bg-blue-100 text-blue-700",
         Completed: "bg-green-100 text-green-700",
         Planning: "bg-purple-100 text-purple-700",
-        "On Hold": "bg-yellow-100 text-yellow-700",
+        "On_Hold": "bg-orange-100 text-yellow-700",
       };
       return (
         <Badge className={`px-3 py-1 rounded-full font-medium ${statusStyles[value as keyof typeof statusStyles]}`}>
@@ -61,13 +61,13 @@ export const projectsColumns: Column<Project>[] = [
     ),
   },
   {
-    key: "budgetRevenue",
+    key: "budgetedRevenue",
     title: "Budget Revenue",
     className: "text-xs",
     render: (value) => (
-      <span className="text-gray-700">
-        ₦{(value / 1000000).toFixed(0)}M
-      </span>
+      typeof value === "number" && !isNaN(value)
+        ? <span className="text-gray-700">₦{(value / 1000).toFixed(2)}K</span>
+        : <span className="text-gray-400">--</span>
     ),
   },
   {
@@ -75,19 +75,19 @@ export const projectsColumns: Column<Project>[] = [
     title: "Actual Revenue",
     className: "text-xs",
     render: (value) => (
-      <span className="text-green-600 font-medium">
-        ₦{(value / 1000000).toFixed(0)}M
-      </span>
+      typeof value === "number" && !isNaN(value)
+        ? <span className="text-green-600 font-medium">₦{(value / 1000).toFixed(2)}K</span>
+        : <span className="text-gray-400">--</span>
     ),
   },
   {
-    key: "budgetCost",
+    key: "budgetedCost",
     title: "Budget Cost",
     className: "text-xs",
     render: (value) => (
-      <span className="text-gray-700">
-        ₦{(value / 1000000).toFixed(0)}M
-      </span>
+      typeof value === "number" && !isNaN(value)
+        ? <span className="text-gray-700">₦{(value / 1000).toFixed(2)}K</span>
+        : <span className="text-gray-400">--</span>
     ),
   },
   {
@@ -95,16 +95,20 @@ export const projectsColumns: Column<Project>[] = [
     title: "Actual Cost",
     className: "text-xs",
     render: (value) => (
-      <span className="text-red-600 font-medium">
-        ₦{(value / 1000000).toFixed(0)}M
-      </span>
+      typeof value === "number" && !isNaN(value)
+        ? <span className="text-red-600 font-medium">₦{(value / 1000000).toFixed(0)}M</span>
+        : <span className="text-gray-400">--</span>
     ),
   },
   {
     key: "profitMargin",
     title: "Margin",
     className: "text-xs",
-    render: (value) => <span className="text-gray-700">{value.toFixed(1)}%</span>,
+    render: (value) => (
+      typeof value === "number" && !isNaN(value)
+        ? <span className="text-gray-700">{value.toFixed(1)}%</span>
+        : <span className="text-gray-400">--</span>
+    ),
   },
   {
     key: "progress",
@@ -115,10 +119,10 @@ export const projectsColumns: Column<Project>[] = [
         <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-blue-500"
-            style={{ width: `${value}%` }}
+            style={{ width: `${value || 0}%` }}
           ></div>
         </div>
-        <span className="text-xs text-gray-700">{value}%</span>
+        <span className="text-xs text-gray-700">{value || 0}%</span>
       </div>
     ),
   },

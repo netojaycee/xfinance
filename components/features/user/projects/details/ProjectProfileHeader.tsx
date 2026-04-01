@@ -26,9 +26,9 @@ export default function ProjectProfileHeader({ project }: ProjectProfileHeaderPr
   };
 
   // Calculate variance
-  const revenueVariance = ((project.actualRevenue - project.budgetRevenue) / project.budgetRevenue) * 100;
-  const costVariance = ((project.actualCost - project.budgetCost) / project.budgetCost) * 100;
-  const profitVariance = ((project.actualRevenue - project.actualCost) - (project.budgetRevenue - project.budgetCost)) / (project.budgetRevenue - project.budgetCost) * 100;
+  const revenueVariance = ((project.actualRevenue - project.budgetedRevenue) / project.budgetedRevenue) * 100;
+  const costVariance = ((project.actualCost - project.budgetedCost) / project.budgetedCost) * 100;
+  const profitVariance = ((project.actualRevenue - project.actualCost) - (project.budgetedRevenue - project.budgetedCost)) / (project.budgetedRevenue - project.budgetedCost) * 100;
 
   return (
     <div className="mb-6">
@@ -99,7 +99,7 @@ export default function ProjectProfileHeader({ project }: ProjectProfileHeaderPr
             </div>
             <div>
               <div className="text-xs text-gray-500">Budget</div>
-              <div className="text-sm text-gray-700">₦{(project.budgetRevenue / 1000000).toFixed(0)}M</div>
+              <div className="text-sm text-gray-700">₦{(project.budgetedRevenue / 1000000).toFixed(0)}M</div>
             </div>
             <div className={`text-sm font-medium ${revenueVariance < 0 ? "text-red-600" : "text-green-600"}`}>
               {revenueVariance < 0 ? "-" : "+"}{Math.abs(revenueVariance).toFixed(1)}% variance
@@ -123,7 +123,7 @@ export default function ProjectProfileHeader({ project }: ProjectProfileHeaderPr
             </div>
             <div>
               <div className="text-xs text-gray-500">Budget</div>
-              <div className="text-sm text-gray-700">₦{(project.budgetCost / 1000000).toFixed(0)}M</div>
+              <div className="text-sm text-gray-700">₦{(project.budgetedCost / 1000000).toFixed(0)}M</div>
             </div>
             <div className={`text-sm font-medium ${costVariance > 0 ? "text-red-600" : "text-green-600"}`}>
               {costVariance > 0 ? "+" : ""}{costVariance.toFixed(1)}% variance
@@ -147,7 +147,7 @@ export default function ProjectProfileHeader({ project }: ProjectProfileHeaderPr
             <div>
               <div className="text-xs text-gray-500">Budget</div>
               <div className="text-sm text-gray-700">
-                ₦{((project.budgetRevenue - project.budgetCost) / 1000000).toFixed(0)}M
+                ₦{((project.budgetedRevenue - project.budgetedCost) / 1000000).toFixed(0)}M
               </div>
             </div>
             <div className={`text-sm font-medium ${profitVariance < 0 ? "text-red-600" : "text-green-600"}`}>

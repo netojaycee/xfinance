@@ -24,10 +24,12 @@ interface ProjectsHeaderProps {
 export default function ProjectsHeader({ data, loading }: ProjectsHeaderProps) {
   const { isOpen, openModal, closeModal } = useModal();
 
-  const activeProjects = data?.activeProjects || 0;
-  const totalRevenue = data?.totalRevenue || 0;
-  const totalCosts = data?.totalCosts || 0;
-  const avgMargin = data?.avgProfitMargin || 0;
+  const totalProjects = data?.totalProjects || 0;
+  const totalActive = data?.totalActive || 0;
+  const totalBudgetedRevenue = data?.totalBudgetedRevenue || 0;
+  const totalBudgetedCost = data?.totalBudgetedCost || 0;
+  // const totalProfit = data?.totalProfit || 0;
+  const averageProfitMargin = data?.averageProfitMargin || "0%";
 
   return (
     <div className="mb-6">
@@ -57,22 +59,27 @@ export default function ProjectsHeader({ data, loading }: ProjectsHeaderProps) {
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProjectsStatCardSmall
           title="Active Projects"
-          value={<span className="text-2xl font-bold text-indigo-900">{activeProjects}</span>}
-          subtitle={`Of ${data?.total || 0} total`}
+          value={<span className="text-2xl font-bold text-indigo-900">{totalActive}</span>}
+          subtitle={`Of ${totalProjects} total`}
         />
         <ProjectsStatCardSmall
           title="Total Revenue"
-          value={<span className="text-2xl font-bold text-green-600">₦{(totalRevenue / 1000000).toFixed(0)}M</span>}
-          subtitle="Budget: ₦485M"
+          value={<span className="text-2xl font-bold text-green-600">₦{totalBudgetedRevenue.toLocaleString()}</span>}
+          subtitle="Budgeted Revenue"
         />
         <ProjectsStatCardSmall
           title="Total Costs"
-          value={<span className="text-2xl font-bold text-red-600">₦{(totalCosts / 1000000).toFixed(1)}M</span>}
-          subtitle="Budget: ₦318M"
+          value={<span className="text-2xl font-bold text-red-600">₦{totalBudgetedCost.toLocaleString()}</span>}
+          subtitle="Budgeted Cost"
         />
+        {/* <ProjectsStatCardSmall
+          title="Total Profit"
+          value={<span className="text-2xl font-bold text-indigo-900">₦{totalProfit.toLocaleString()}</span>}
+          subtitle="Budgeted Profit"
+        /> */}
         <ProjectsStatCardSmall
           title="Avg Profit Margin"
-          value={<span className="text-2xl font-bold text-indigo-900">{avgMargin.toFixed(1)}%</span>}
+          value={<span className="text-2xl font-bold text-indigo-900">{averageProfitMargin}</span>}
           subtitle="Across all projects"
         />
       </div>

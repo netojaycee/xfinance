@@ -7,6 +7,7 @@ import { CustomTable } from "@/components/local/custom/custom-table";
 import ProjectsHeader from "./ProjectsHeader";
 import { projectsColumns } from "./ProjectsColumn";
 import { mockProjectsData } from "./utils/data";
+import { useProjects } from "@/lib/api/hooks/useProjects";
 
 /**
  * Main Projects list component
@@ -22,21 +23,18 @@ export default function Projects() {
   const pageSize = 10;
 
   // TODO: Replace with actual API hook
-  // const { data, isLoading } = useProjects({
-  //   search: debouncedSearchTerm,
-  //   page,
-  //   limit: pageSize,
-  //   status: statusFilter === 'All' ? '' : statusFilter,
-  // });
+  const { data: projectsData, isPending } = useProjects({
+    search: debouncedSearchTerm,
+    page,
+    limit: pageSize,
+    // status: statusFilter === "All" ? "" : statusFilter,
+  });
 
+  console.log(projectsData, "Fetched projects data:"); // Debug log to check fetched data
   // Using mock data for now
-  const isLoading = false;
-  const data = mockProjectsData;
 
   // Filter by status from filter options
-  const filteredProjects = data.projects.filter((project) => {
-    return statusFilter === "All" || project.status === statusFilter;
-  });
+  
 
   // Handle search term change and reset pagination
   const handleSearchChange = (value: string) => {
@@ -46,30 +44,36 @@ export default function Projects() {
 
   // Navigate to project details page
   const handleRowClick = (project: any) => {
-    router.push(`/projects/${project.id}`);
+    router.push(`/projects/${project.projectNumber.toLowerCase()}`);
   };
 
   return (
     <div className="space-y-4 p-4">
-      <ProjectsHeader data={data} loading={isLoading} />
+      <ProjectsHeader data={(projectsData as any)?.stats} loading={isPending} />
       <CustomTable
         searchPlaceholder="Search projects..."
         tableTitle="All Projects"
         columns={projectsColumns}
-        data={filteredProjects}
+        data={(projectsData as any)?.data || []}
         pageSize={pageSize}
-        loading={isLoading}
+        loading={isPending}
         onSearchChange={handleSearchChange}
         onRowClick={handleRowClick}
-        statusOptions={["All", "In Progress", "Completed", "Planning", "On Hold"]}
+        statusOptions={[
+          "All",
+          "In_Progress",
+          "Completed",
+          "Planning",
+          "On_Hold",
+        ]}
         onStatusChange={setStatusFilter}
         display={{
           searchComponent: true,
         }}
         pagination={{
           page,
-          totalPages: Math.ceil(filteredProjects.length / pageSize) || 1,
-          total: filteredProjects.length,
+          totalPages: Math.ceil((projectsData as any)?.pagination?.totalPages) || 1,
+          total: (projectsData as any)?.pagination?.total || 0,
           onPageChange: setPage,
         }}
       />

@@ -10,28 +10,28 @@ export const getProjects = async (params?: { search?: string; page?: number; lim
   if (params?.limit) queryParams.append("limit", params.limit.toString());
 
   const queryString = queryParams.toString();
-  const url = queryString ? `project?${queryString}` : "project";
+  const url = queryString ? `projects?${queryString}` : "projects";
   return apiClient(url, { method: "GET" });
 };
 
 export const getProjectById = async (id: string) => {
-  return apiClient(`project/${id}`, { method: "GET" });
+  return apiClient(`projects/${id}`, { method: "GET" });
 };
 
 export const createProject = async (data: any) => {
-  return apiClient("project", {
+  return apiClient("projects", {
     method: "POST",
     body: JSON.stringify(data),
   });
 };
 
 export const updateProject = async (id: string, data: any) => {
-  return apiClient(`project/${id}`, {
+  return apiClient(`projects/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 };
 
 export const deleteProject = async (id: string) => {
-  return apiClient(`project/${id}`, { method: "DELETE" });
+  return apiClient(`projects/${id}`, { method: "DELETE" });
 };

@@ -5,12 +5,12 @@ export interface Project {
   description: string;
   customerId: string;
   customerName: string;
-  status: "Planning" | "In Progress" | "Completed" | "On Hold";
+  status: "Planning" | "In_Progress" | "Completed" | "On_Hold";
   startDate: string;
   endDate: string;
-  budgetRevenue: number;
+  budgetedRevenue: number;
   actualRevenue: number;
-  budgetCost: number;
+  budgetedCost: number;
   actualCost: number;
   profitMargin: number;
   progress: number;
@@ -21,8 +21,9 @@ export interface Project {
 export type ProjectsResponse = {
   projects: Project[];
   total: number;
-  activeProjects: number;
-  totalRevenue: number;
-  totalCosts: number;
-  avgProfitMargin: number;
+  totalProjects: number;
+  totalActive: number;
+  totalBudgetedRevenue: number;
+  totalBudgetedCost: number;
+  averageProfitMargin: number;
 };

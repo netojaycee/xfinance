@@ -3,7 +3,7 @@ export interface Item {
   code: string;
   name: string;
   description: string;
-  type: "Service" | "Good";
+  type: "service" | "goods";
   category: string;
   unitPrice: number;
   incomeAccountId: string;
